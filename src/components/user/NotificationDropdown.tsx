@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Bell } from "lucide-react";
+import { Bell, CheckCheck, LucideCheckCheck } from "lucide-react";
 import { NotificationService } from "@/services/notification-service";
 import type { Notification } from "@/services/notification-service";
 import { notificationSocketService } from "@/services/notification-socket-service";
@@ -26,7 +26,7 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
     // Listen for new notifications via Socket.IO
     const handleNewNotification = (notification: Notification) => {
       console.log('🔔 New notification received in dropdown:', notification);
-      
+
       // Add to notifications list (avoid duplicates)
       setNotifications(prev => {
         const exists = prev.find(n => n.id === notification.id);
@@ -37,7 +37,7 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
         console.log('✅ Adding new notification to list');
         return [notification, ...prev];
       });
-      
+
       // Increment unread count ONLY if the notification is unread
       if (!notification.isRead) {
         setUnreadCount(prev => {
@@ -45,7 +45,7 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
           return prev + 1;
         });
       }
-      
+
       // Show browser notification if permitted
       if (Notification.permission === 'granted') {
         new Notification(notification.title, {
@@ -114,12 +114,12 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
     if (!notification.isRead) {
       try {
         await NotificationService.markAsRead(notification.id);
-        
+
         // Update local state
         setNotifications(prev =>
           prev.map(n => n.id === notification.id ? { ...n, isRead: true } : n)
         );
-        
+
         // Decrement unread count
         setUnreadCount(prev => Math.max(0, prev - 1));
       } catch (error) {
@@ -189,17 +189,51 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
       {isOpen && (
         <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border z-50 max-h-[500px] overflow-hidden flex flex-col">
           {/* Header */}
-          <div className="p-4 border-b flex items-center justify-between">
-            <h3 className="font-semibold text-lg">Notifications</h3>
-            {unreadCount > 0 && (
-              <button
-                onClick={handleMarkAllAsRead}
-                className="text-sm text-blue-600 hover:text-blue-800"
-              >
-                Mark all as read
-              </button>
-            )}
+          <div className="border-b">
+
+            {/* Title */}
+            <div className="p-4 pb-2">
+              <h3 className="font-semibold text-lg">Notifications</h3>
+            </div>
+
+            {/* Tabs + Mark all */}
+            <div className="px-4 pb-3 flex items-center justify-between">
+
+              {/* Tabs */}
+              <div className="flex bg-gray-100 rounded-full p-1">
+
+                {/* All Tab */}
+                <button
+                  className="px-3 py-1 text-sm rounded-full bg-white shadow font-medium"
+                >
+                  All
+                </button>
+
+                {/* Unread Tab */}
+                <button
+                  className="px-3 py-1 text-sm rounded-full text-gray-600 hover:text-black"
+                >
+                  Unread
+                </button>
+
+              </div>
+
+              {/* Mark all as read */}
+              {unreadCount > 0 && (
+                <button
+                  onClick={handleMarkAllAsRead}
+                  className="text-sm text-black whitespace-nowrap"
+                >
+                  Mark all as read
+                </button>
+              )}
+
+            </div>
+
           </div>
+
+
+
 
           {/* Notifications List */}
           <div className="overflow-y-auto flex-1">
@@ -216,26 +250,43 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
                 <div
                   key={notification.id}
                   onClick={() => handleNotificationClick(notification)}
-                  className={`p-4 border-b cursor-pointer hover:bg-gray-50 transition ${
-                    !notification.isRead ? 'bg-blue-50' : ''
-                  }`}
+                  className={`p-4 border-b cursor-pointer hover:bg-gray-50 transition ${!notification.isRead ? 'bg-blue-50' : ''
+                    }`}
                 >
-                  <div className="flex gap-3">
-                    <div className="text-2xl">{getNotificationIcon(notification.type)}</div>
+                  <div className="flex items-start justify-between gap-3">
+
+                    {/* LEFT: Notification icon */}
+                    <div className="text-2xl">
+                      {getNotificationIcon(notification.type)}
+                    </div>
+
+                    {/* MIDDLE: Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <h4 className="font-medium text-sm">{notification.title}</h4>
+
                         {!notification.isRead && (
-                          <span className="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0 mt-1"></span>
+                          <span className="w-2 h-2 bg-blue-900 rounded-full mt-1"></span>
                         )}
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
+
+                      <p className="text-sm text-gray-600 mt-1">
+                        {notification.message}
+                      </p>
+
                       <p className="text-xs text-gray-400 mt-1">
                         {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
                       </p>
                     </div>
+
+                    {/* RIGHT: Check icon */}
+                    <div className="flex items-center justify-center">
+                      <LucideCheckCheck className="w-5 h-5 text-gray-500" />
+                    </div>
+
                   </div>
                 </div>
+
               ))
             )}
           </div>
