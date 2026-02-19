@@ -23,7 +23,7 @@ export default function Login() {
         <div className="flex-1 max-w-md mx-auto mr-25">
           <div className="flex-1 max-w-2xl">
             <h1 className="text-5xl font-bold text-foreground mb-4 leading-tight">
-              Assign your task
+              Assign your Work
               <br />
               to someone in just
               <br />
