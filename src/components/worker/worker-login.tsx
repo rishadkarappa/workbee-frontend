@@ -80,7 +80,7 @@ export function WorkerLoginForm({
                         href="mailto:workbee.support@mail.com"
                         className="text-black-10 underline ml-1"
                     >
-                        workbee@support.mail.com
+                        workbee.support@mail.com
                     </a>
                 </div>
             )}
