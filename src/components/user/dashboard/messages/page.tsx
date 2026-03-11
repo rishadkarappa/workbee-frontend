@@ -369,7 +369,7 @@ export default function ClientMessages() {
                   className="px-6 py-2 bg-black text-white rounded-lg hover:bg-black disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   <Send className="w-4 h-4" />
-                  Send
+            
                 </button>
               </div>
             </div>
