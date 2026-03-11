@@ -1,4 +1,3 @@
-
 import { io, Socket } from 'socket.io-client';
 import type { Notification } from './notification-service';
 
@@ -6,7 +5,8 @@ class NotificationSocketService {
   private static instance: NotificationSocketService;
   private socket: Socket | null = null;
   private token: string | null = null;
-  private notificationCallbacks: ((notification: Notification) => void)[] = [];
+  // Use Set so same callback reference is never registered twice
+  private notificationCallbacks: Set<(notification: Notification) => void> = new Set();
 
   private constructor() {}
 
@@ -18,13 +18,26 @@ class NotificationSocketService {
   }
 
   connect(token: string) {
-    if (this.socket?.connected) {
+    // If already connected with the same token, do nothing
+    if (this.socket?.connected && this.token === token) {
       console.log('Notification socket already connected');
       return;
     }
 
-    this.token = token;
+    // FIX: Always tear down the old socket fully before creating a new one.
+    // Without this, calling connect() a second time (React StrictMode, re-renders,
+    // token refresh) skips the `if (socket?.connected)` guard but the OLD socket
+    // still has its `new_notification` listener registered. The new socket adds
+    // a second listener → every event fires twice → count doubles.
     
+    if (this.socket) {
+      this.socket.removeAllListeners(); // remove new_notification + all others
+      this.socket.disconnect();
+      this.socket = null;
+    }
+
+    this.token = token;
+
     this.socket = io(import.meta.env.VITE_NOTIFICATION_URL || 'http://localhost:4004', {
       auth: { token },
       transports: ['websocket', 'polling'],
@@ -45,6 +58,7 @@ class NotificationSocketService {
       console.log('Notification socket disconnected:', reason);
     });
 
+    // Registered exactly ONCE per fresh socket instance
     this.socket.on('new_notification', (notification: Notification) => {
       console.log('New notification received:', notification);
       this.notificationCallbacks.forEach(callback => callback(notification));
@@ -53,17 +67,19 @@ class NotificationSocketService {
 
   disconnect() {
     if (this.socket) {
+      this.socket.removeAllListeners();
       this.socket.disconnect();
       this.socket = null;
     }
+    this.token = null;
   }
 
   onNotification(callback: (notification: Notification) => void) {
-    this.notificationCallbacks.push(callback);
+    this.notificationCallbacks.add(callback);
   }
 
   offNotification(callback: (notification: Notification) => void) {
-    this.notificationCallbacks = this.notificationCallbacks.filter(cb => cb !== callback);
+    this.notificationCallbacks.delete(callback);
   }
 
   isConnected(): boolean {

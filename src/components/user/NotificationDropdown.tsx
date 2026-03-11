@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { Bell, CheckCheck, LucideCheckCheck } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Bell, LucideCheckCheck } from "lucide-react";
 import { NotificationService } from "@/services/notification-service";
 import type { Notification } from "@/services/notification-service";
 import { notificationSocketService } from "@/services/notification-socket-service";
@@ -18,68 +18,62 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  // Load initial data - REMOVED socket connection from here
+  // Stable reference — same function object across all renders.
+  // Without useCallback, every render creates a NEW function reference.
+  // The cleanup `offNotification(oldRef)` would fail to find the new ref
+  // that was passed to `onNotification`, so old callbacks pile up.
+  const handleNewNotification = useCallback((notification: Notification) => {
+    console.log('🔔 New notification received in dropdown:', notification);
+
+    setNotifications(prev => {
+      const exists = prev.find(n => n.id === notification.id);
+      if (exists) {
+        console.log('⚠️ Duplicate notification blocked:', notification.id);
+        return prev;
+      }
+      console.log('✅ Adding new notification to list');
+      return [notification, ...prev];
+    });
+
+    if (!notification.isRead) {
+      setUnreadCount(prev => prev + 1);
+    }
+
+    if (Notification.permission === 'granted') {
+      new Notification(notification.title, {
+        body: notification.message,
+        icon: '/logo.png'
+      });
+    }
+  }, []); // empty deps — this never needs to change
+
   useEffect(() => {
     loadNotifications();
     loadUnreadCount();
 
-    // Listen for new notifications via Socket.IO
-    const handleNewNotification = (notification: Notification) => {
-      console.log('🔔 New notification received in dropdown:', notification);
-
-      // Add to notifications list (avoid duplicates)
-      setNotifications(prev => {
-        const exists = prev.find(n => n.id === notification.id);
-        if (exists) {
-          console.log('⚠️ Duplicate notification blocked:', notification.id);
-          return prev;
-        }
-        console.log('✅ Adding new notification to list');
-        return [notification, ...prev];
-      });
-
-      // Increment unread count ONLY if the notification is unread
-      if (!notification.isRead) {
-        setUnreadCount(prev => {
-          console.log('📈 Incrementing unread count from', prev, 'to', prev + 1);
-          return prev + 1;
-        });
-      }
-
-      // Show browser notification if permitted
-      if (Notification.permission === 'granted') {
-        new Notification(notification.title, {
-          body: notification.message,
-          icon: '/logo.png'
-        });
-      }
-    };
-
+    // ✅ Same stable reference passed to both on and off
     notificationSocketService.onNotification(handleNewNotification);
 
     return () => {
+      // This now correctly removes the exact same reference
       notificationSocketService.offNotification(handleNewNotification);
     };
-  }, []);
+  }, [handleNewNotification]);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
-
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
-
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isOpen]);
 
-  // Request browser notification permission
   useEffect(() => {
     if (Notification.permission === 'default') {
       Notification.requestPermission();
@@ -102,7 +96,6 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
     try {
       const response = await NotificationService.getUnreadCount();
       const count = response.data.data.count || 0;
-      console.log('Unread count from server:', count);
       setUnreadCount(count);
     } catch (error) {
       console.error('Failed to load unread count:', error);
@@ -110,24 +103,18 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
   };
 
   const handleNotificationClick = async (notification: Notification) => {
-    // Mark as read
     if (!notification.isRead) {
       try {
         await NotificationService.markAsRead(notification.id);
-
-        // Update local state
         setNotifications(prev =>
           prev.map(n => n.id === notification.id ? { ...n, isRead: true } : n)
         );
-
-        // Decrement unread count
         setUnreadCount(prev => Math.max(0, prev - 1));
       } catch (error) {
         console.error('Failed to mark as read:', error);
       }
     }
 
-    // Navigate based on notification type
     if (notification.type === 'NEW_MESSAGE' && notification.data?.chatId) {
       navigate('/user-dashboard/messages', {
         state: {
@@ -139,7 +126,6 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
 
     setIsOpen(false);
 
-    // Custom callback
     if (onNotificationClick) {
       onNotificationClick(notification);
     }
@@ -157,22 +143,16 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'NEW_MESSAGE':
-        return '💬';
-      case 'WORK_UPDATE':
-        return '📋';
-      case 'BOOKING_UPDATE':
-        return '📅';
-      case 'PAYMENT':
-        return '💰';
-      default:
-        return '🔔';
+      case 'NEW_MESSAGE': return '💬';
+      case 'WORK_UPDATE': return '📋';
+      case 'BOOKING_UPDATE': return '📅';
+      case 'PAYMENT': return '💰';
+      default: return '🔔';
     }
   };
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* Bell Icon */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="p-2 rounded-full border hover:bg-gray-100 transition relative"
@@ -185,40 +165,21 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
         )}
       </button>
 
-      {/* Dropdown */}
       {isOpen && (
         <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border z-50 max-h-[500px] overflow-hidden flex flex-col">
-          {/* Header */}
           <div className="border-b">
-
-            {/* Title */}
             <div className="p-4 pb-2">
               <h3 className="font-semibold text-lg">Notifications</h3>
             </div>
-
-            {/* Tabs + Mark all */}
             <div className="px-4 pb-3 flex items-center justify-between">
-
-              {/* Tabs */}
               <div className="flex bg-gray-100 rounded-full p-1">
-
-                {/* All Tab */}
-                <button
-                  className="px-3 py-1 text-sm rounded-full bg-white shadow font-medium"
-                >
-                  All
-                </button>
-
-                {/* Unread Tab */}
-                <button
-                  className="px-3 py-1 text-sm rounded-full text-gray-600 hover:text-black"
-                >
+                <button className="px-3 py-1 text-sm rounded-full bg-white shadow font-medium">
                   Unread
                 </button>
-
+                <button className="px-3 py-1 text-sm rounded-full text-gray-600 hover:text-black">
+                  All
+                </button>
               </div>
-
-              {/* Mark all as read */}
               {unreadCount > 0 && (
                 <button
                   onClick={handleMarkAllAsRead}
@@ -227,15 +188,9 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
                   Mark all as read
                 </button>
               )}
-
             </div>
-
           </div>
 
-
-
-
-          {/* Notifications List */}
           <div className="overflow-y-auto flex-1">
             {loading ? (
               <div className="p-8 text-center">
@@ -250,43 +205,31 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
                 <div
                   key={notification.id}
                   onClick={() => handleNotificationClick(notification)}
-                  className={`p-4 border-b cursor-pointer hover:bg-gray-50 transition ${!notification.isRead ? 'bg-blue-50' : ''
-                    }`}
+                  className={`p-4 border-b cursor-pointer hover:bg-gray-50 transition ${
+                    !notification.isRead ? 'bg-blue-50' : ''
+                  }`}
                 >
                   <div className="flex items-start justify-between gap-3">
-
-                    {/* LEFT: Notification icon */}
                     <div className="text-2xl">
                       {getNotificationIcon(notification.type)}
                     </div>
-
-                    {/* MIDDLE: Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <h4 className="font-medium text-sm">{notification.title}</h4>
-
                         {!notification.isRead && (
                           <span className="w-2 h-2 bg-blue-900 rounded-full mt-1"></span>
                         )}
                       </div>
-
-                      <p className="text-sm text-gray-600 mt-1">
-                        {notification.message}
-                      </p>
-
+                      <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
                       <p className="text-xs text-gray-400 mt-1">
                         {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
                       </p>
                     </div>
-
-                    {/* RIGHT: Check icon */}
                     <div className="flex items-center justify-center">
                       <LucideCheckCheck className="w-5 h-5 text-gray-500" />
                     </div>
-
                   </div>
                 </div>
-
               ))
             )}
           </div>

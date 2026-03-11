@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Sun } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -11,6 +11,8 @@ import { notificationSocketService } from "@/services/notification-socket-servic
 const Navbar = () => {
   const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
+  //  Track whether we've already initiated the connection attempt this mount
+  const socketConnectedRef = useRef(false);
 
   useEffect(() => {
     const verifyUser = async () => {
@@ -24,8 +26,9 @@ const Navbar = () => {
           AuthHelper.setUserId(storedUser._id || storedUser.id);
         }
 
-        // Connect to notification socket when user is authenticated
-        if (accessToken && !notificationSocketService.isConnected()) {
+        //  Only connect once per mount cycle
+        if (accessToken && !socketConnectedRef.current) {
+          socketConnectedRef.current = true;
           notificationSocketService.connect(accessToken);
         }
 
@@ -41,12 +44,14 @@ const Navbar = () => {
           const loggedUser = res.data.data;
 
           setUser(loggedUser);
-
           AuthHelper.setUser(loggedUser);
           AuthHelper.setUserId(loggedUser._id || loggedUser.id);
 
-          // Connect to notification socket
-          notificationSocketService.connect(accessToken);
+          //  Only connect once per mount cycle
+          if (!socketConnectedRef.current) {
+            socketConnectedRef.current = true;
+            notificationSocketService.connect(accessToken);
+          }
         } else {
           AuthHelper.clearAuth();
           setUser(null);
@@ -59,6 +64,12 @@ const Navbar = () => {
     };
 
     verifyUser();
+
+    // On unmount (StrictMode double-invoke), reset the ref so a fresh
+    // mount can reconnect if needed
+    return () => {
+      socketConnectedRef.current = false;
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -67,9 +78,7 @@ const Navbar = () => {
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
-      // Disconnect notification socket
       notificationSocketService.disconnect();
-      
       AuthHelper.clearAuth();
       setUser(null);
       navigate("/");
@@ -130,10 +139,7 @@ const Navbar = () => {
 
           {user ? (
             <div className="flex items-center space-x-3">
-              {/* Notification Dropdown */}
               <NotificationDropdown />
-
-              {/* Profile Dropdown */}
               <ProfileDropDownMenu user={user} onLogout={handleLogout} />
             </div>
           ) : (
