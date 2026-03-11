@@ -20,6 +20,7 @@ import BackButton from "../common/back-button"
 import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthService } from "@/services/auth-service"
 import { AuthHelper } from "@/utils/auth-helper"
+import { useBlockedMessage } from "@/hooks/useBlockedMessage"
 
 export function LoginForm({
     className,
@@ -30,6 +31,8 @@ export function LoginForm({
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+
+    const blockedMessage = useBlockedMessage();
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -103,6 +106,20 @@ export function LoginForm({
 
     return (
         <div className={cn("flex flex-col gap-6", className)} {...props}>
+
+            {/* make this a sweet alert in futer */}
+            {blockedMessage && (
+                <div className="bg-green-50 border border-green-300 text-black text-xs px-3 py-2 rounded mb-2 w-fit">
+                    {blockedMessage}
+                    <a
+                        href="mailto:workbee.support@mail.com"
+                        className="text-black-10 underline ml-1"
+                    >
+                        workbee@support.mail.com
+                    </a>
+                </div>
+            )}
+
             <Card>
                 <CardHeader>
                     <BackButton />

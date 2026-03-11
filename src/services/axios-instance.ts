@@ -1,5 +1,6 @@
 import { AuthHelper } from "@/utils/auth-helper";
 import axios from "axios";
+import { notificationSocketService } from "@/services/notification-socket-service";
 
 const baseURL = import.meta.env.VITE_GATEWAY_URL;
 
@@ -15,64 +16,93 @@ let failedQueue: any[] = [];
 
 const processQueue = (error: any, token: string | null = null) => {
   failedQueue.forEach(prom => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token);
-    }
+    if (error) prom.reject(error);
+    else prom.resolve(token);
   });
-  
   failedQueue = [];
 };
+
+// ─── Shared logout helper ────────────────────────────────────────────────────
+const forceLogout = (reason: "blocked" | "expired") => {
+  notificationSocketService.disconnect();
+  
+  const userRole = AuthHelper.getUserRole();
+  AuthHelper.clearAuth();
+
+  if (reason === "blocked") {
+    // Small delay so any in-flight UI renders complete
+    setTimeout(() => {
+      const loginPath =
+        userRole === "admin" ? "/admin" :
+        userRole === "worker" ? "/worker/worker-login" :
+        "/login";
+
+      // Pass a flag so the login page can show "Your account has been blocked"
+      window.location.href = `${loginPath}?blocked=true`;
+    }, 100);
+  } else {
+    const loginPath =
+      userRole === "admin" ? "/admin" :
+      userRole === "worker" ? "/worker/worker-login" :
+      "/login";
+    window.location.href = loginPath;
+  }
+};
+// ─────────────────────────────────────────────────────────────────────────────
 
 // Request Interceptor
 api.interceptors.request.use(
   (config) => {
     const token = AuthHelper.getAccessToken();
-    
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    
+    if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 // Response Interceptor
 api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    const status = error.response?.status;
+    const responseData = error.response?.data;
 
-    // Handle both 401 and 403 errors (token expired/invalid)
-    if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry) {
-      
-      // Check if error is specifically about invalid/expired token
-      const isTokenError = error.response?.data?.error?.includes('token') || 
-                          error.response?.data?.error?.includes('Token') ||
-                          error.response?.data?.message?.includes('token') ||
-                          error.response?.data?.message?.includes('Token');
+    // Case 1: Account blocked — immediate logout, no refresh attempt
+    // Gateway returns 401 with code "ACCOUNT_BLOCKED"
+    const isBlockedError =
+      responseData?.code === "ACCOUNT_BLOCKED" ||
+      responseData?.error?.toLowerCase().includes("blocked") ||
+      responseData?.message?.toLowerCase().includes("blocked");
+
+    if (isBlockedError) {
+      console.warn("Account blocked — forcing logout");
+      forceLogout("blocked");
+      return Promise.reject(error);
+    }
+
+    // Case 2: Token expired/invalid — attempt refresh
+    if ((status === 401 || status === 403) && !originalRequest._retry) {
+
+      const isTokenError =
+        responseData?.error?.toLowerCase().includes("token") ||
+        responseData?.message?.toLowerCase().includes("token") ||
+        responseData?.error?.toLowerCase().includes("expired") ||
+        responseData?.error?.toLowerCase().includes("invalid") ||
+        status === 403; // 403 from gateway always means bad/expired token
 
       if (!isTokenError) {
-        // Not a token error, just reject
         return Promise.reject(error);
       }
 
+      // Queue concurrent requests while refresh is in progress
       if (isRefreshing) {
-        // If already refreshing, queue this request
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         }).then(token => {
           originalRequest.headers.Authorization = `Bearer ${token}`;
           return api(originalRequest);
-        }).catch(err => {
-          return Promise.reject(err);
-        });
+        }).catch(err => Promise.reject(err));
       }
 
       originalRequest._retry = true;
@@ -81,25 +111,14 @@ api.interceptors.response.use(
       const refreshToken = AuthHelper.getRefreshToken();
 
       if (!refreshToken) {
-        console.log("No refresh token available, redirecting to login");
-        AuthHelper.clearAuth();
-        
-        // Get user role to redirect appropriately
-        const userRole = AuthHelper.getUserRole();
-        if (userRole === 'admin') {
-          window.location.href = "/admin";
-        } else if (userRole === 'worker') {
-          window.location.href = "/worker/worker-login";
-        } else {
-          window.location.href = "/login";
-        }
+        console.log("No refresh token — redirecting to login");
+        forceLogout("expired");
         return Promise.reject(error);
       }
 
       try {
         console.log("Access token expired, refreshing...");
-        
-        // Call refresh token endpoint
+
         const response = await axios.post(`${baseURL}/auth/refresh-token`, {
           refreshToken
         });
@@ -108,36 +127,25 @@ api.interceptors.response.use(
 
         console.log("Token refreshed successfully");
 
-        // Update tokens
         AuthHelper.setAccessToken(accessToken);
         AuthHelper.setRefreshToken(newRefreshToken);
 
-        // Update authorization header
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-        
-        // Process queued requests
         processQueue(null, accessToken);
 
-        // Retry original request
         return api(originalRequest);
+
       } catch (refreshError: any) {
         console.error("Token refresh failed:", refreshError);
         processQueue(refreshError, null);
-        
-        // Get user role before clearing auth
-        const userRole = AuthHelper.getUserRole();
-        
-        AuthHelper.clearAuth();
-        
-        // Redirect based on role
-        if (userRole === 'admin') {
-          window.location.href = "/admin";
-        } else if (userRole === 'worker') {
-          window.location.href = "/worker/worker-login";
-        } else {
-          window.location.href = "/login";
-        }
-        
+
+        // Check if refresh itself failed due to block
+        const refreshBlocked =
+          refreshError.response?.data?.code === "ACCOUNT_BLOCKED" ||
+          refreshError.response?.data?.error?.toLowerCase().includes("blocked");
+
+        forceLogout(refreshBlocked ? "blocked" : "expired");
+
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
