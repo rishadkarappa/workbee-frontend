@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Bell, CheckCheck } from "lucide-react";
+import { Bell, CalendarDays, CheckCheck, ClipboardList, CreditCard, MessageCircle } from "lucide-react";
 import { NotificationService } from "@/services/notification-service";
 import type { Notification } from "@/services/notification-service";
 import { notificationSocketService } from "@/services/notification-socket-service";
@@ -13,18 +13,16 @@ interface NotificationDropdownProps {
 type TabType = "unread" | "all";
 
 const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps) => {
+
   const [isOpen, setIsOpen] = useState(false);
-  // Single source of truth — ALL notifications live here.
-  // Filtering happens client-side based on activeTab. No separate API call per tab.
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
-  // activeTab drives what's shown
   const [activeTab, setActiveTab] = useState<TabType>("unread");
+
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  // Derived from state — no extra API calls
   const displayedNotifications =
     activeTab === "unread"
       ? notifications.filter((n) => !n.isRead)
@@ -36,10 +34,11 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
       if (exists) return prev;
       return [notification, ...prev];
     });
+
     if (!notification.isRead) {
       setUnreadCount((prev) => prev + 1);
     }
-    // Use window.Notification to avoid name conflict with our Notification type
+
     if (window.Notification?.permission === "granted") {
       new window.Notification(notification.title, {
         body: notification.message,
@@ -52,6 +51,7 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
     loadNotifications();
     loadUnreadCount();
     notificationSocketService.onNotification(handleNewNotification);
+
     return () => {
       notificationSocketService.offNotification(handleNewNotification);
     };
@@ -63,7 +63,9 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
         setIsOpen(false);
       }
     };
+
     if (isOpen) document.addEventListener("mousedown", handleClickOutside);
+
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
@@ -73,9 +75,6 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
     }
   }, []);
 
-  // Loads all notifications from DB on mount.
-  // Notifications persist across refreshes because they're in MongoDB.
-  // They were disappearing because the GET was returning 401 (fixed in backend).
   const loadNotifications = async () => {
     try {
       setLoading(true);
@@ -97,32 +96,40 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
     }
   };
 
-  // Clicking the icon marks ONE notification as read.
-  // It disappears from Unread tab and stays visible in All tab (as read).
   const handleMarkOneAsRead = async (e: React.MouseEvent, notification: Notification) => {
-    e.stopPropagation(); // don't trigger the row click / navigation
+    e.stopPropagation();
+
     if (notification.isRead) return;
 
     try {
       await NotificationService.markAsRead(notification.id);
+
       setNotifications((prev) =>
-        prev.map((n) => (n.id === notification.id ? { ...n, isRead: true } : n))
+        prev.map((n) =>
+          n.id === notification.id ? { ...n, isRead: true } : n
+        )
       );
+
       setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (error) {
       console.error("Failed to mark as read:", error);
     }
   };
 
-  // Clicking a row marks it read AND navigates if it's a message
   const handleNotificationClick = async (notification: Notification) => {
+
     if (!notification.isRead) {
       try {
         await NotificationService.markAsRead(notification.id);
+
         setNotifications((prev) =>
-          prev.map((n) => (n.id === notification.id ? { ...n, isRead: true } : n))
+          prev.map((n) =>
+            n.id === notification.id ? { ...n, isRead: true } : n
+          )
         );
+
         setUnreadCount((prev) => Math.max(0, prev - 1));
+
       } catch (error) {
         console.error("Failed to mark as read:", error);
       }
@@ -141,12 +148,14 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
     onNotificationClick?.(notification);
   };
 
-  // Marks ALL as read.
-  // After this: Unread tab → empty, All tab → all shown without blue dot.
   const handleMarkAllAsRead = async () => {
     try {
       await NotificationService.markAllAsRead();
-      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+
+      setNotifications((prev) =>
+        prev.map((n) => ({ ...n, isRead: true }))
+      );
+
       setUnreadCount(0);
     } catch (error) {
       console.error("Failed to mark all as read:", error);
@@ -154,136 +163,191 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
   };
 
   const getNotificationIcon = (type: string) => {
+
     switch (type) {
-      case "NEW_MESSAGE": return "💬";
-      case "WORK_UPDATE": return "📋";
-      case "BOOKING_UPDATE": return "📅";
-      case "PAYMENT": return "💰";
-      default: return "🔔";
+
+      case "NEW_MESSAGE":
+        return <MessageCircle className="w-5 h-5 text-blue-500" />;
+
+      case "WORK_UPDATE":
+        return <ClipboardList className="w-5 h-5 text-purple-500" />;
+
+      case "BOOKING_UPDATE":
+        return <CalendarDays className="w-5 h-5 text-green-500" />;
+
+      case "PAYMENT":
+        return <CreditCard className="w-5 h-5 text-yellow-500" />;
+
+      default:
+        return <Bell className="w-5 h-5 text-gray-500" />;
     }
   };
 
   return (
+
     <div className="relative" ref={dropdownRef}>
-      {/* Bell button */}
+
+      {/* Bell Icon */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="p-2 rounded-full border hover:bg-gray-100 transition relative"
       >
         <Bell className="w-5 h-5" />
+
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+          <span className="absolute -top-1 -right-1 bg-gray-700 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border z-50 max-h-[500px] overflow-hidden flex flex-col">
+
+        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border z-50 max-h-[420px] overflow-hidden flex flex-col">
 
           {/* Header */}
-          <div className="border-b flex-shrink-0">
-            <div className="p-4 pb-2">
-              <h3 className="font-semibold text-lg">Notifications</h3>
+          <div className="border-b">
+
+            <div className="px-4 pt-3 pb-2">
+              <h3 className="font-semibold text-base">Notifications</h3>
             </div>
 
-            {/* ab buttons wired to activeTab state */}
+            {/* Tabs */}
             <div className="px-4 pb-3 flex items-center justify-between">
+
               <div className="flex bg-gray-100 rounded-full p-1 gap-1">
+
                 <button
                   onClick={() => setActiveTab("unread")}
-                  className={`px-3 py-1 text-sm rounded-full font-medium transition-all ${activeTab === "unread"
+                  className={`px-3 py-1 text-xs rounded-full font-medium transition ${
+                    activeTab === "unread"
                       ? "bg-white shadow text-black"
                       : "text-gray-500 hover:text-black"
-                    }`}
+                  }`}
                 >
                   Unread
                   {unreadCount > 0 && (
-                    <span className="ml-1.5 bg-gray-700 text-white text-xs rounded-full px-1.5 py-0.5 font-bold">
+                    <span className="ml-1.5 bg-gray-700 text-white text-[10px] rounded-full px-1.5 py-[1px] font-bold">
                       {unreadCount}
                     </span>
                   )}
                 </button>
+
                 <button
                   onClick={() => setActiveTab("all")}
-                  className={`px-3 py-1 text-sm rounded-full font-medium transition-all ${activeTab === "all"
+                  className={`px-3 py-1 text-xs rounded-full font-medium transition ${
+                    activeTab === "all"
                       ? "bg-white shadow text-black"
                       : "text-gray-500 hover:text-black"
-                    }`}
+                  }`}
                 >
                   All
                 </button>
+
               </div>
 
               {unreadCount > 0 && (
                 <button
                   onClick={handleMarkAllAsRead}
-                  className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-full shadow-sm hover:bg-gray-50 transition cursor-pointer"
+                  className="px-3 py-1 text-[11px] font-medium text-gray-700 bg-gray-100 rounded-full shadow-sm hover:bg-gray-200 transition cursor-pointer"
                 >
                   Mark all as read
                 </button>
               )}
+
             </div>
           </div>
 
-          {/* List */}
+          {/* Notifications List */}
+
           <div className="overflow-y-auto flex-1">
+
             {loading ? (
-              <div className="p-8 text-center">
-                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
+
+              <div className="p-6 text-center">
+                <div className="w-7 h-7 border-4 border-gray-600 border-t-transparent rounded-full animate-spin mx-auto" />
                 <p className="text-xs text-gray-400 mt-2">Loading...</p>
               </div>
+
             ) : displayedNotifications.length === 0 ? (
-              <div className="p-8 text-center text-gray-400">
-                <Bell className="w-10 h-10 mx-auto mb-2 opacity-20" />
-                <p className="text-sm font-medium">
-                  {activeTab === "unread" ? "No unread notifications" : "No notifications yet"}
+
+              <div className="p-6 text-center text-gray-400">
+                <Bell className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                <p className="text-sm">
+                  {activeTab === "unread"
+                    ? "No unread notifications"
+                    : "No notifications yet"}
                 </p>
               </div>
+
             ) : (
+
               displayedNotifications.map((notification) => (
+
                 <div
                   key={notification.id}
                   onClick={() => handleNotificationClick(notification)}
-                  className={`p-4 border-b cursor-pointer hover:bg-gray-50 transition-colors ${!notification.isRead ? "bg-white" : "bg-white"
-                    }`}
+                  className="px-4 py-3 border-b cursor-pointer hover:bg-gray-50 transition"
                 >
-                  <div className="flex items-start gap-3">
-                    <div className="text-xl flex-shrink-0 mt-0.5">
+
+                  <div className="flex gap-3 items-start">
+
+                    <div className="mt-1">
                       {getNotificationIcon(notification.type)}
                     </div>
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <h4 className="font-medium text-sm leading-snug">{notification.title}</h4>
+                    <div className="flex-1">
+
+                      <div className="flex justify-between items-start">
+
+                        <h4 className="text-sm font-medium leading-tight">
+                          {notification.title}
+                        </h4>
+
                         {!notification.isRead && (
-                          <span className="w-2 h-2 bg-black rounded-full mt-5 flex-shrink-0" />
+                          <span className="w-2 h-2 bg-black rounded-full mt-1 ml-2" />
                         )}
+
                       </div>
-                      <p className="text-sm text-gray-600 mt-0.5">{notification.message}</p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+
+                      <p className="text-xs text-gray-600 mt-1 leading-relaxed">
+                        {notification.message}
                       </p>
+
+                      <p className="text-[11px] text-gray-400 mt-1">
+                        {formatDistanceToNow(
+                          new Date(notification.createdAt),
+                          { addSuffix: true }
+                        )}
+                      </p>
+
                     </div>
 
-                    {/* Real button — marks individual notification as read */}
                     <button
                       onClick={(e) => handleMarkOneAsRead(e, notification)}
-                      title={notification.isRead ? "Already read" : "Mark as read"}
-                      className={`flex-shrink-0 p-1.5 rounded-full transition-colors mt-2 ${notification.isRead
-                          ? "text-green-900 cursor-default"
-                          : "text-gray-600 hover:text-gray-500 hover:bg-gray-750 cursor-pointer"
-                        }`}
+                      className={`p-1.5 rounded-full mt-1 ${
+                        notification.isRead
+                          ? "text-green-700"
+                          : "text-gray-500 hover:bg-gray-100"
+                      }`}
                     >
-                      <CheckCheck className="w-5 h-5" />
+                      <CheckCheck className="w-4 h-4" />
                     </button>
+
                   </div>
+
                 </div>
+
               ))
+
             )}
+
           </div>
+
         </div>
+
       )}
+
     </div>
   );
 };
