@@ -155,11 +155,11 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case "NEW_MESSAGE":    return "💬";
-      case "WORK_UPDATE":    return "📋";
+      case "NEW_MESSAGE": return "💬";
+      case "WORK_UPDATE": return "📋";
       case "BOOKING_UPDATE": return "📅";
-      case "PAYMENT":        return "💰";
-      default:               return "🔔";
+      case "PAYMENT": return "💰";
+      default: return "🔔";
     }
   };
 
@@ -192,26 +192,24 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
               <div className="flex bg-gray-100 rounded-full p-1 gap-1">
                 <button
                   onClick={() => setActiveTab("unread")}
-                  className={`px-3 py-1 text-sm rounded-full font-medium transition-all ${
-                    activeTab === "unread"
+                  className={`px-3 py-1 text-sm rounded-full font-medium transition-all ${activeTab === "unread"
                       ? "bg-white shadow text-black"
                       : "text-gray-500 hover:text-black"
-                  }`}
+                    }`}
                 >
                   Unread
                   {unreadCount > 0 && (
-                    <span className="ml-1.5 bg-blue-600 text-white text-xs rounded-full px-1.5 py-0.5 font-bold">
+                    <span className="ml-1.5 bg-gray-700 text-white text-xs rounded-full px-1.5 py-0.5 font-bold">
                       {unreadCount}
                     </span>
                   )}
                 </button>
                 <button
                   onClick={() => setActiveTab("all")}
-                  className={`px-3 py-1 text-sm rounded-full font-medium transition-all ${
-                    activeTab === "all"
+                  className={`px-3 py-1 text-sm rounded-full font-medium transition-all ${activeTab === "all"
                       ? "bg-white shadow text-black"
                       : "text-gray-500 hover:text-black"
-                  }`}
+                    }`}
                 >
                   All
                 </button>
@@ -220,7 +218,7 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
               {unreadCount > 0 && (
                 <button
                   onClick={handleMarkAllAsRead}
-                  className="text-sm text-blue-600 hover:text-blue-800 font-medium whitespace-nowrap"
+                  className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-full shadow-sm hover:bg-gray-50 transition cursor-pointer"
                 >
                   Mark all as read
                 </button>
@@ -247,9 +245,8 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
                 <div
                   key={notification.id}
                   onClick={() => handleNotificationClick(notification)}
-                  className={`p-4 border-b cursor-pointer hover:bg-gray-50 transition-colors ${
-                    !notification.isRead ? "bg-blue-50" : "bg-white"
-                  }`}
+                  className={`p-4 border-b cursor-pointer hover:bg-gray-50 transition-colors ${!notification.isRead ? "bg-white" : "bg-white"
+                    }`}
                 >
                   <div className="flex items-start gap-3">
                     <div className="text-xl flex-shrink-0 mt-0.5">
@@ -260,7 +257,7 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
                       <div className="flex items-start justify-between gap-2">
                         <h4 className="font-medium text-sm leading-snug">{notification.title}</h4>
                         {!notification.isRead && (
-                          <span className="w-2 h-2 bg-blue-600 rounded-full mt-1 flex-shrink-0" />
+                          <span className="w-2 h-2 bg-black rounded-full mt-5 flex-shrink-0" />
                         )}
                       </div>
                       <p className="text-sm text-gray-600 mt-0.5">{notification.message}</p>
@@ -273,13 +270,12 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
                     <button
                       onClick={(e) => handleMarkOneAsRead(e, notification)}
                       title={notification.isRead ? "Already read" : "Mark as read"}
-                      className={`flex-shrink-0 p-1.5 rounded-full transition-colors mt-0.5 ${
-                        notification.isRead
-                          ? "text-green-500 cursor-default"
-                          : "text-gray-300 hover:text-blue-600 hover:bg-blue-100"
-                      }`}
+                      className={`flex-shrink-0 p-1.5 rounded-full transition-colors mt-2 ${notification.isRead
+                          ? "text-green-900 cursor-default"
+                          : "text-gray-600 hover:text-gray-500 hover:bg-gray-750 cursor-pointer"
+                        }`}
                     >
-                      <CheckCheck className="w-4 h-4" />
+                      <CheckCheck className="w-5 h-5" />
                     </button>
                   </div>
                 </div>
