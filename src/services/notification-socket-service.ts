@@ -24,7 +24,7 @@ class NotificationSocketService {
       return;
     }
 
-    // FIX: Always tear down the old socket fully before creating a new one.
+    // Always tear down the old socket fully before creating a new one.
     // Without this, calling connect() a second time (React StrictMode, re-renders,
     // token refresh) skips the `if (socket?.connected)` guard but the OLD socket
     // still has its `new_notification` listener registered. The new socket adds

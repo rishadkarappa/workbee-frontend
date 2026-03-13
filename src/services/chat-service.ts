@@ -16,7 +16,7 @@ export const ChatService = {
     });
   },
 
-  // markChatAsRead: (chatId: string) => {
-  //   return api.patch(`/chat/${chatId}/read`);
-  // }
+  markChatAsRead: (chatId: string) => {
+    return api.patch(`/communication/chat/${chatId}/read`);
+  }
 };
