@@ -15,7 +15,7 @@ export function SiteHeader() {
         />
         <div className="ml-auto flex items-center gap-6">
           <WorkerNotificationDropdown />
-          <UserCircle className="h-7 w-7" />
+          {/* <UserCircle className="h-7 w-7" /> */}
         </div>
       </div>
     </header>

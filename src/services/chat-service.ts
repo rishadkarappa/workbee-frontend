@@ -14,5 +14,9 @@ export const ChatService = {
     return api.get(`/communication/chat/${chatId}/messages`, {
       params: { limit, offset }
     });
-  }
+  },
+
+  // markChatAsRead: (chatId: string) => {
+  //   return api.patch(`/chat/${chatId}/read`);
+  // }
 };
