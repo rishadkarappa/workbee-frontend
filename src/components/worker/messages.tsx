@@ -115,8 +115,8 @@ export default function WorkerMessages() {
     init();
 
     return () => {
-      socketService.offNewMessage();
-      socketService.offUserTyping();
+      socketService.offNewMessage(handleNewMessage);
+      socketService.offUserTyping(handleUserTyping);
     };
   }, [token, navChatId, userId]);
 
