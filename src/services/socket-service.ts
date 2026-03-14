@@ -4,6 +4,7 @@ class SocketService {
   private static instance: SocketService;
   private socket: Socket | null = null;
   private token: string | null = null;
+
   // Store callbacks by reference so we can remove exactly the right one
   private messageCallbacks: Set<(message: any) => void> = new Set();
   private typingCallbacks: Set<(data: { userId: string; isTyping: boolean }) => void> = new Set();
@@ -150,7 +151,7 @@ class SocketService {
       this.messageCallbacks.delete(callback);
       this.socket?.off('new_message', callback);
     } else {
-      // No callback given — remove all (legacy fallback)
+      // No callback given — remove all
       this.messageCallbacks.forEach(cb => this.socket?.off('new_message', cb));
       this.messageCallbacks.clear();
     }
