@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { socketService } from '@/services/socket-service';
 import { ChatService } from '@/services/chat-service';
@@ -34,27 +34,52 @@ interface Chat {
 export default function ClientMessages() {
   const location  = useLocation();
   const navigate  = useNavigate();
-  const [messages,      setMessages]      = useState<Message[]>([]);
-  const [newMessage,    setNewMessage]    = useState('');
-  const [isTyping,      setIsTyping]      = useState(false);
-  const [selectedChat,  setSelectedChat]  = useState<Chat | null>(null);
-  const [chats,         setChats]         = useState<Chat[]>([]);
-  const [loading,       setLoading]       = useState(true);
-  const [unreadCounts,  setUnreadCounts]  = useState<Record<string, number>>({});
-  // Pending media that has already been uploaded to Cloudinary, waiting to be sent
-  const [pendingMedia,  setPendingMedia]  = useState<UploadedMedia | null>(null);
+  const [messages,     setMessages]     = useState<Message[]>([]);
+  const [newMessage,   setNewMessage]   = useState('');
+  const [isTyping,     setIsTyping]     = useState(false);
+  const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
+  const [chats,        setChats]        = useState<Chat[]>([]);
+  const [loading,      setLoading]      = useState(true);
+  const [sendError,    setSendError]    = useState<string | null>(null);
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+  const [pendingMedia, setPendingMedia] = useState<UploadedMedia | null>(null);
 
   const user   = AuthHelper.getUser();
   const token  = AuthHelper.getAccessToken();
   const userId = user?.id || user?._id || AuthHelper.getUserId();
   const { chatId: navChatId, workTitle, userName } = location.state || {};
 
-  const messagesEndRef   = useRef<HTMLDivElement>(null);
-  const selectedChatRef  = useRef<Chat | null>(null);
+  const messagesEndRef  = useRef<HTMLDivElement>(null);
+  const selectedChatRef = useRef<Chat | null>(null);
 
-  useEffect(() => {
+  /**
+   * true  = chat was just opened / refreshed → next scroll must be instant
+   * false = a new message arrived while chat was open → smooth scroll
+   */
+  const isInitialLoadRef = useRef(false);
+
+  // ── Scroll helpers ────────────────────────────────────────────────────────
+  const scrollToBottomInstant = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'instant' as ScrollBehavior });
+  }, []);
+
+  const scrollToBottomSmooth = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, []);
+
+  // Fires whenever messages array changes
+  useEffect(() => {
+    if (messages.length === 0) return;
+
+    if (isInitialLoadRef.current) {
+      // First load of this chat — jump instantly so user sees last message
+      scrollToBottomInstant();
+      isInitialLoadRef.current = false;
+    } else {
+      // New message arrived while chat was open — smooth scroll
+      scrollToBottomSmooth();
+    }
+  }, [messages, scrollToBottomInstant, scrollToBottomSmooth]);
 
   useEffect(() => {
     selectedChatRef.current = selectedChat;
@@ -156,6 +181,8 @@ export default function ClientMessages() {
 
   const loadMessages = async (chatId: string) => {
     try {
+      // Mark next scroll as initial — will be instant regardless of images
+      isInitialLoadRef.current = true;
       const response = await ChatService.getMessages(chatId);
       setMessages(response.data.data || []);
     } catch (error) {
@@ -170,43 +197,45 @@ export default function ClientMessages() {
     setSelectedChat(chat);
     setUnreadCounts(prev => ({ ...prev, [chat.id]: 0 }));
     setPendingMedia(null);
+    setSendError(null);
   };
 
-  // Called after Cloudinary upload succeeds — stage the media, clear text input
   const handleMediaUploaded = (media: UploadedMedia) => {
     setPendingMedia(media);
     setNewMessage('');
   };
 
-  // Send text OR media message
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!selectedChat) return;
+    setSendError(null);
 
-    // ── Send media message ────────────────────────────────────────────────
-    if (pendingMedia) {
-      socketService.sendMessage({
-        chatId:       selectedChat.id,
-        content:      pendingMedia.resourceType === 'image' ? '📷 Image' : '🎥 Video',
-        type:         pendingMedia.resourceType,
-        recipientId:  getRecipientId(selectedChat),
-        mediaUrl:     pendingMedia.url,
-        mediaPublicId: pendingMedia.publicId,
-      } as any);
-      setPendingMedia(null);
+    try {
+      if (pendingMedia) {
+        await socketService.sendMessage({
+          chatId:        selectedChat.id,
+          content:       pendingMedia.resourceType === 'image' ? '📷 Image' : '🎥 Video',
+          type:          pendingMedia.resourceType,
+          recipientId:   getRecipientId(selectedChat),
+          mediaUrl:      pendingMedia.url,
+          mediaPublicId: pendingMedia.publicId,
+        } as any);
+        setPendingMedia(null);
+        socketService.sendTyping(selectedChat.id, false);
+        return;
+      }
+
+      if (!newMessage.trim()) return;
+      await socketService.sendMessage({
+        chatId:      selectedChat.id,
+        content:     newMessage,
+        type:        'text',
+        recipientId: getRecipientId(selectedChat),
+      });
+      setNewMessage('');
       socketService.sendTyping(selectedChat.id, false);
-      return;
+    } catch {
+      setSendError('Failed to send. Tap retry or check your connection.');
     }
-
-    // ── Send text message ─────────────────────────────────────────────────
-    if (!newMessage.trim()) return;
-    socketService.sendMessage({
-      chatId:      selectedChat.id,
-      content:     newMessage,
-      type:        'text',
-      recipientId: getRecipientId(selectedChat),
-    });
-    setNewMessage('');
-    socketService.sendTyping(selectedChat.id, false);
   };
 
   const handleTyping = (value: string) => {
@@ -217,7 +246,6 @@ export default function ClientMessages() {
   const getOtherParticipant = (chat: Chat) =>
     user?.role === 'worker' ? chat.participantDetails?.user : chat.participantDetails?.worker;
 
-  // ── Can the send button be triggered? ──────────────────────────────────────
   const canSend = !!pendingMedia || !!newMessage.trim();
 
   if (loading) {
@@ -230,7 +258,7 @@ export default function ClientMessages() {
 
   return (
     <div className="flex w-full h-[calc(100vh-250px)] bg-gray-50">
-      {/* ── Chat List Sidebar ─────────────────────────────────────────────── */}
+      {/* Sidebar */}
       <div className="w-80 bg-white border-r flex flex-col">
         <div className="flex-1 overflow-y-auto">
           {chats.length === 0 ? (
@@ -275,11 +303,10 @@ export default function ClientMessages() {
         </div>
       </div>
 
-      {/* ── Chat Window ───────────────────────────────────────────────────── */}
+      {/* Chat Window */}
       <div className="flex-1 flex flex-col">
         {selectedChat ? (
           <>
-            {/* Header */}
             <div className="bg-white border-b p-4 flex items-center gap-3">
               <button onClick={() => navigate(-1)} className="lg:hidden p-2 hover:bg-gray-100 rounded-full">
                 <ArrowLeft className="w-5 h-5" />
@@ -304,7 +331,6 @@ export default function ClientMessages() {
               })()}
             </div>
 
-            {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.length === 0 ? (
                 <div className="text-center text-gray-500 mt-8">No messages yet. Start the conversation!</div>
@@ -317,14 +343,16 @@ export default function ClientMessages() {
                         {!isSent && msg.senderDetails && (
                           <p className="text-xs text-gray-500 mb-1">{msg.senderDetails.name}</p>
                         )}
-
-                        {/* Media or text content */}
                         {(msg.type === 'image' || msg.type === 'video') && msg.mediaUrl ? (
-                          <MediaMessage type={msg.type} mediaUrl={msg.mediaUrl} isSent={isSent} />
+                          <MediaMessage
+                            type={msg.type}
+                            mediaUrl={msg.mediaUrl}
+                            isSent={isSent}
+                            onLoaded={scrollToBottomInstant}
+                          />
                         ) : (
                           <p>{msg.content}</p>
                         )}
-
                         <p className={`text-xs mt-1 ${isSent ? 'text-blue-100' : 'text-gray-500'}`}>
                           {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
@@ -343,9 +371,18 @@ export default function ClientMessages() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input */}
             <div className="bg-white border-t p-4">
-              {/* Pending media preview */}
+              {sendError && (
+                <div className="mb-2 flex items-center justify-between bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-3 py-2">
+                  <span>{sendError}</span>
+                  <button
+                    onClick={() => { setSendError(null); handleSendMessage(); }}
+                    className="ml-3 text-red-700 font-medium underline"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
               {pendingMedia && (
                 <div className="mb-2 flex items-center gap-2 bg-gray-50 border rounded-lg px-3 py-2">
                   {pendingMedia.resourceType === 'image' ? (
@@ -356,22 +393,11 @@ export default function ClientMessages() {
                   <span className="text-sm text-gray-600 flex-1 truncate">
                     {pendingMedia.resourceType === 'image' ? 'Image ready to send' : 'Video ready to send'}
                   </span>
-                  <button
-                    onClick={() => setPendingMedia(null)}
-                    className="text-gray-400 hover:text-gray-600 text-lg leading-none"
-                  >
-                    ×
-                  </button>
+                  <button onClick={() => setPendingMedia(null)} className="text-gray-400 hover:text-gray-600 text-lg leading-none">×</button>
                 </div>
               )}
-
               <div className="flex gap-2 items-center">
-                {/* Media upload button */}
-                <MediaUploadButton
-                  onUploaded={handleMediaUploaded}
-                  disabled={!!pendingMedia}
-                />
-
+                <MediaUploadButton onUploaded={handleMediaUploaded} disabled={!!pendingMedia} />
                 <input
                   type="text"
                   value={newMessage}
