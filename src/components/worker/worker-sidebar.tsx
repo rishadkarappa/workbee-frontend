@@ -37,6 +37,11 @@ const items = [
     icon: Users,
   },    
   {
+    title: "Active Works",
+    route: "/worker/worker-dashboard/active-works",
+    icon: Users,
+  }, 
+  {
     title: "Notifications",
     route: "/worker/worker-dashboard/new-appliers",
     icon: Bell,
