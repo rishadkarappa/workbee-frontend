@@ -14,7 +14,7 @@ import Dashboard from "@/pages/user/UserDashboard";
 import DashboardHome from "@/components/user/dashboard/DashboardHome";
 import MyWorks from "@/components/user/dashboard/my-works/components/work-content";
 import WorkerMessages from "@/components/user/dashboard/messages/page";
-import LiveWorks from "@/components/user/dashboard/live-works/page";
+import ActiveWorks from "@/components/user/dashboard/live-works/page";
 
 const UserRoute = () => {
   return (
@@ -47,7 +47,7 @@ const UserRoute = () => {
       >
         <Route index element={<DashboardHome />} />
         <Route path="works" element={<MyWorks />} />
-        <Route path="live-works" element={<LiveWorks />} />
+        <Route path="active-works" element={<ActiveWorks />} />
         <Route path="messages" element={<WorkerMessages />} />
       </Route>
     </Routes>

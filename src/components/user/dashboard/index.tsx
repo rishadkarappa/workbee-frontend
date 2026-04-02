@@ -98,9 +98,9 @@ const sidebarNavItems = [
         href: '/user-dashboard/works',
     },
     {
-        title: 'Live Works',
+        title: 'Active Works',
         icon: <LucideWorkflow size={18} />,
-        href: '/user-dashboard/live-works',
+        href: '/user-dashboard/active-works',
     },
     {
         title: 'Messages',
