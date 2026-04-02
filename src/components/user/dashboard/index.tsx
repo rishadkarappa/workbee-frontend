@@ -1,5 +1,5 @@
 import { Separator } from "@/components/ui/separator"
-import { CalendarRange, Car, LucideLayoutDashboard, MessagesSquare, Notebook, User, WorkflowIcon } from "lucide-react"
+import { CalendarRange, Car, LucideLayoutDashboard, LucideWorkflow, MessagesSquare, Notebook, User, WorkflowIcon } from "lucide-react"
 import { Outlet, useLocation } from "react-router-dom"
 import SidebarNav from "./user-sidebar"
 import {
@@ -96,6 +96,11 @@ const sidebarNavItems = [
         title: 'My Works',
         icon: <WorkflowIcon size={18} />,
         href: '/user-dashboard/works',
+    },
+    {
+        title: 'Live Works',
+        icon: <LucideWorkflow size={18} />,
+        href: '/user-dashboard/live-works',
     },
     {
         title: 'Messages',
