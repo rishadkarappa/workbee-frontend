@@ -1,17 +1,4 @@
 
-
-
-
-// export default function ActiveWorks() {
-//   return (
-//     <div>
-//       <h1>LiveWorks</h1>
-//     </div>
-//   )
-// }
-
-
-// pages/user/LiveWorks.tsx  (replaces existing LiveWorks placeholder)
 import { WorkService } from "@/services/work-service";
 import { socketService } from "@/services/socket-service";
 import { AuthHelper } from "@/utils/auth-helper";

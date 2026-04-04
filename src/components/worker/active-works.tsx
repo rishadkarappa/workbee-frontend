@@ -1,13 +1,3 @@
-
-// export default function ActiveWorks() {
-//   return (
-//     <div>
-//       <h1>Active works details and edit option here</h1>
-//     </div>
-//   )
-// }
-
-// pages/worker/ActiveWorks.tsx
 import { WorkService } from "@/services/work-service";
 import { ChatService } from "@/services/chat-service";
 import { socketService } from "@/services/socket-service";
