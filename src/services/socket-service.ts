@@ -175,7 +175,7 @@ class SocketService {
     }
   }
 
-  // ─ Ask worker to confirm the deal
+  // ── Ask worker to confirm the deal ───────────────────────────────────────
   async askForConfirm(data: {
     chatId:     string;
     workId:     string;
@@ -193,7 +193,7 @@ class SocketService {
     }
   }
 
-  // ─ User responds to confirmation request
+  // ── User responds to confirmation request ────────────────────────────────
   // workerId is required so the socket server can push to worker's personal room
   async confirmResponse(data: {
     chatId:     string;
@@ -213,7 +213,7 @@ class SocketService {
     }
   }
 
-  // ─ Worker updates work progress
+  // ── Worker updates work progress ─────────────────────────────────────────
   async updateWorkProgress(data: {
     chatId:    string;
     workId:    string;
@@ -266,7 +266,7 @@ class SocketService {
     }
   }
 
-  // - Real-time progress listener 
+  // ── Real-time progress listener ───────────────────────────────────────────
   onWorkProgressChanged(callback: (data: { workId: string; progress: string }) => void) {
     this.progressCallbacks.add(callback);
     if (this.socket) {
