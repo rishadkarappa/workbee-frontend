@@ -8,6 +8,7 @@ import WorkerLogin from "@/pages/worker/WorkerLogin";
 import Works from "@/pages/worker/Works";
 import ClientMessages from "@/components/worker/messages";
 import ActiveWorks from "@/components/worker/active-works";
+import WorkerWallet from "@/components/worker/wallet";
 
 const WorkerRoutes = () => {
     return (
@@ -29,6 +30,7 @@ const WorkerRoutes = () => {
                 <Route path="works" element={<Works/>} />
                 <Route path="active-works" element={<ActiveWorks/>} />
                 <Route path="client-messages" element={<ClientMessages/>} />
+                <Route path="wallet" element={<WorkerWallet/>} />
             </Route>
         </Routes>
     )

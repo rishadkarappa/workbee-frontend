@@ -47,11 +47,6 @@ const items = [
     icon: Bell,
   },
   {
-    title: "Wallet",
-    route: "/worker/worker-dashboard/work",
-    icon: Briefcase, 
-  },
-  {
     title: "Feedbacks",
     route: "/worker/worker-dashboard/feedbacks",
     icon: MessageSquare, 
@@ -62,8 +57,8 @@ const items = [
     icon: ShieldAlert, 
   },
   {
-    title: "Payment",
-    route: "/worker/worker-dashboard/payment",
+    title: "Wallet",
+    route: "/worker/worker-dashboard/wallet",
     icon: CreditCard, 
   },
   {
