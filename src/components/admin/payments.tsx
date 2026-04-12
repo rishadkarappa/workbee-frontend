@@ -1,20 +1,3 @@
-
-// export default function Payments() {
-//     return (
-//         <div>
-//             <h1>Admin Side Payment component</h1>
-//             <h2>Total Revenue,
-//                 Platform Earnings,
-//                 Pending Payouts,
-//                 Refunded Amount Details,
-//                 Disputed Amount and Details</h2>
-//         </div>
-//     )
-// }
-
-
-// Admin/component/Payments.tsx
-
 import { useEffect, useState } from "react";
 import { IndianRupee, TrendingUp, Clock, RefreshCcw, Percent } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

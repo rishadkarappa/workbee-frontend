@@ -9,6 +9,7 @@ import { MediaUploadButton } from '@/components/chat/MediaUploadButton';
 import type { UploadedMedia } from '@/components/chat/MediaUploadButton';
 import { MediaMessage } from '@/components/chat/MediaMessage';
 import { SystemMessage, parseSystemMessage } from '@/components/chat/SystemMessage';
+import { PaymentService } from "@/services/payment-service"
 
 interface Message {
   id: string;
@@ -33,7 +34,23 @@ interface Chat {
   myUnreadCount?: number;
 }
 
+const loadRazorpayScript = (): Promise<boolean> => {
+  return new Promise((resolve) => {
+    if ((window as any).Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script    = document.createElement("script");
+    script.src      = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload   = () => resolve(true);
+    script.onerror  = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
+
 export default function ClientMessages() {
+  
   const location  = useLocation();
   const navigate  = useNavigate();
   const [messages,     setMessages]     = useState<Message[]>([]);
@@ -241,31 +258,72 @@ export default function ClientMessages() {
   };
 
   // ── Confirmation Handlers ─────────────────────────────────────────────────
+  // const handleAcceptConfirm = async (workId: string) => {
+  //   if (!selectedChat) return;
+
+  //   // Find the original confirm request message to extract workTitle and workerName
+  //   const confirmMsg = messages.find(msg => {
+  //     if (msg.type !== 'system') return false;
+  //     const p = parseSystemMessage(msg.content);
+  //     return p?.type === 'WORK_CONFIRM_REQUEST' && p.workId === workId;
+  //   });
+
+  //   const parsed = confirmMsg ? parseSystemMessage(confirmMsg.content) : null;
+  //   const title      = parsed?.type === 'WORK_CONFIRM_REQUEST' ? parsed.workTitle  : 'this work';
+  //   const workerName = parsed?.type === 'WORK_CONFIRM_REQUEST' ? parsed.workerName : 'Worker';
+
+  //   // workerId comes from the chat participants — this is the key fix
+  //   const workerId = selectedChat.participants.workerId;
+
+  //   try {
+  //     // 1. Update work status to 'assigned' in the backend
+  //     await WorkService.updateWork(workId, {
+  //       status:   'assigned',
+  //       workerId: workerId,   // Link the worker to this work
+  //     });
+
+  //     // 2. Emit socket event — workerId included so server can push to worker's room
+  //     await socketService.confirmResponse({
+  //       chatId:     selectedChat.id,
+  //       workId,
+  //       workTitle:  title,
+  //       accepted:   true,
+  //       userId:     userId!,
+  //       workerName,
+  //       workerId,
+  //     });
+
+  //     setRespondedConfirms(prev => new Set(prev).add(workId));
+  //   } catch (err) {
+  //     console.error('Accept confirm error:', err);
+  //     setSendError('Failed to accept confirmation. Please try again.');
+  //   }
+  // };
+
   const handleAcceptConfirm = async (workId: string) => {
-    if (!selectedChat) return;
-
-    // Find the original confirm request message to extract workTitle and workerName
-    const confirmMsg = messages.find(msg => {
-      if (msg.type !== 'system') return false;
-      const p = parseSystemMessage(msg.content);
-      return p?.type === 'WORK_CONFIRM_REQUEST' && p.workId === workId;
-    });
-
-    const parsed = confirmMsg ? parseSystemMessage(confirmMsg.content) : null;
-    const title      = parsed?.type === 'WORK_CONFIRM_REQUEST' ? parsed.workTitle  : 'this work';
-    const workerName = parsed?.type === 'WORK_CONFIRM_REQUEST' ? parsed.workerName : 'Worker';
-
-    // workerId comes from the chat participants — this is the key fix
-    const workerId = selectedChat.participants.workerId;
-
-    try {
-      // 1. Update work status to 'assigned' in the backend
-      await WorkService.updateWork(workId, {
-        status:   'assigned',
-        workerId: workerId,   // Link the worker to this work
-      });
-
-      // 2. Emit socket event — workerId included so server can push to worker's room
+  if (!selectedChat) return;
+ 
+  const confirmMsg = messages.find((msg) => {
+    if (msg.type !== "system") return false;
+    const p = parseSystemMessage(msg.content);
+    return p?.type === "WORK_CONFIRM_REQUEST" && p.workId === workId;
+  });
+ 
+  const parsed     = confirmMsg ? parseSystemMessage(confirmMsg.content) : null;
+  const title      = parsed?.type === "WORK_CONFIRM_REQUEST" ? parsed.workTitle  : "this work";
+  const workerName = parsed?.type === "WORK_CONFIRM_REQUEST" ? parsed.workerName : "Worker";
+  const workerId   = selectedChat.participants.workerId;
+ 
+  try {
+    // 1. Get work budget
+    const worksRes = await WorkService.getMyWorks();
+    const allWorks = worksRes.data.data?.works || [];
+    const work     = allWorks.find((w: any) => w.id === workId);
+    const amount   = work?.budget ? Number(work.budget) : 0;
+ 
+    // If no budget — free work, use old confirm flow
+    if (!amount || amount <= 0) {
+      await WorkService.updateWork(workId, { status: "assigned", workerId });
       await socketService.confirmResponse({
         chatId:     selectedChat.id,
         workId,
@@ -275,13 +333,97 @@ export default function ClientMessages() {
         workerName,
         workerId,
       });
-
-      setRespondedConfirms(prev => new Set(prev).add(workId));
-    } catch (err) {
-      console.error('Accept confirm error:', err);
-      setSendError('Failed to accept confirmation. Please try again.');
+      setRespondedConfirms((prev) => new Set(prev).add(workId));
+      return;
     }
-  };
+ 
+    // 2. Load Razorpay script
+    const loaded = await loadRazorpayScript();
+    if (!loaded) {
+      setSendError("Failed to load payment. Please check your internet connection.");
+      return;
+    }
+ 
+    // 3. Create Razorpay order on backend
+    const orderRes = await PaymentService.createOrder({
+      workId,
+      workerId,
+      workTitle: title,
+      amount,
+    });
+    const { orderId, amount: amountPaise, currency, keyId } = orderRes.data.data;
+ 
+    // 4. Open Razorpay popup
+    await new Promise<void>((resolve, reject) => {
+      const options = {
+        key:         keyId,
+        amount:      amountPaise,
+        currency,
+        name:        "WorkBee",
+        description: title,
+        order_id:    orderId,
+        prefill: {
+          // You can prefill user details here if available
+        },
+        theme: { color: "#000000" },
+ 
+        handler: async (response: {
+          razorpay_payment_id: string;
+          razorpay_order_id:   string;
+          razorpay_signature:  string;
+        }) => {
+          try {
+            // 5. Verify payment server-side
+            await PaymentService.verifyPayment({
+              razorpayOrderId:   response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+            });
+ 
+            // 6. Emit socket event — worker sees "Deal accepted"
+            await socketService.confirmResponse({
+              chatId:     selectedChat.id,
+              workId,
+              workTitle:  title,
+              accepted:   true,
+              userId:     userId!,
+              workerName,
+              workerId,
+            });
+ 
+            setRespondedConfirms((prev) => new Set(prev).add(workId));
+            resolve();
+          } catch (err) {
+            reject(err);
+          }
+        },
+ 
+        modal: {
+          ondismiss: () => {
+            reject(new Error("Payment cancelled"));
+          },
+        },
+      };
+ 
+      const rzp = new (window as any).Razorpay(options);
+ 
+      rzp.on("payment.failed", (response: any) => {
+        reject(new Error(response.error?.description || "Payment failed"));
+      });
+ 
+      rzp.open();
+    });
+ 
+  } catch (err: any) {
+    if (err.message === "Payment cancelled") {
+      // User closed the popup — not an error, just do nothing
+      return;
+    }
+    console.error("Razorpay payment error:", err);
+    setSendError("Payment failed. Please try again.");
+  }
+};
+ 
 
   const handleRejectConfirm = async (workId: string) => {
     if (!selectedChat) return;
@@ -325,6 +467,8 @@ export default function ClientMessages() {
 
   const canSend = !!pendingMedia || !!newMessage.trim();
 
+  
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -332,6 +476,8 @@ export default function ClientMessages() {
       </div>
     );
   }
+
+  
 
   return (
     <div className="flex w-full h-[calc(100vh-250px)] bg-gray-50">
