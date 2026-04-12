@@ -15,6 +15,7 @@ import DashboardHome from "@/components/user/dashboard/DashboardHome";
 import MyWorks from "@/components/user/dashboard/my-works/components/work-content";
 import WorkerMessages from "@/components/user/dashboard/messages/page";
 import ActiveWorks from "@/components/user/dashboard/live-works/page";
+import UserWallet from "@/components/user/dashboard/wallet/page";
 
 const UserRoute = () => {
   return (
@@ -49,6 +50,7 @@ const UserRoute = () => {
         <Route path="works" element={<MyWorks />} />
         <Route path="active-works" element={<ActiveWorks />} />
         <Route path="messages" element={<WorkerMessages />} />
+        <Route path="user-wallet" element={<UserWallet />} />
       </Route>
     </Routes>
   );
