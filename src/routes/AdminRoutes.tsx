@@ -8,6 +8,7 @@ import AdminLayout from "@/layout/AdminLayout";
 import Users from "@/pages/admin/UserManagement";
 import WorkerManagement from "@/pages/admin/WorkerManagement";
 import NewAppliersManagement from "@/pages/admin/NewAppliers";
+import Payments from "@/components/admin/payments";
 
 const AdminRoute = () => {
     return (
@@ -28,6 +29,7 @@ const AdminRoute = () => {
                 <Route path="users" element={<Users/>} />
                 <Route path="workers" element={<WorkerManagement/>} />
                 <Route path="new-appliers" element={<NewAppliersManagement/>} />
+                <Route path="payments" element={<Payments/>} />
             </Route>
         </Routes>
     )

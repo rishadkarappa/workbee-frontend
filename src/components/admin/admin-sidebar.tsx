@@ -66,8 +66,8 @@ const items = [
     icon: Wallet,
   },
   {
-    title: "Payment",
-    route: "/admin/dashboard/payment",
+    title: "Payments",
+    route: "/admin/dashboard/payments",
     icon: CreditCard, 
   },
   {
