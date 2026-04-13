@@ -279,7 +279,7 @@ export default function UserWallet() {
   }
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 w-full max-w-3xl mx-auto">
+      <div className="space-y-6 p-4 sm:p-6 w-full max-w-6xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
