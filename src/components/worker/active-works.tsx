@@ -13,6 +13,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
+import { notifyWorkCompleted } from "@/utils/work-completion-helper";
+
 import {
   Select,
   SelectContent,
@@ -50,9 +52,9 @@ interface Work {
 
 // Progress step config
 const PROGRESS_STEPS = [
-  { value: 'started',   label: 'Started',     Icon: Wrench,     color: 'bg-blue-500',  textColor: 'text-blue-700',  bg: 'bg-blue-50',  border: 'border-blue-200' },
-  { value: 'ongoing',   label: 'In Progress', Icon: TrendingUp, color: 'bg-amber-500', textColor: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200' },
-  { value: 'completed', label: 'Completed',   Icon: Flag,       color: 'bg-green-500', textColor: 'text-green-700', bg: 'bg-green-50', border: 'border-green-200' },
+  { value: 'started', label: 'Started', Icon: Wrench, color: 'bg-blue-500', textColor: 'text-blue-700', bg: 'bg-blue-50', border: 'border-blue-200' },
+  { value: 'ongoing', label: 'In Progress', Icon: TrendingUp, color: 'bg-amber-500', textColor: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200' },
+  { value: 'completed', label: 'Completed', Icon: Flag, color: 'bg-green-500', textColor: 'text-green-700', bg: 'bg-green-50', border: 'border-green-200' },
 ];
 
 function ProgressTracker({
@@ -71,21 +73,20 @@ function ProgressTracker({
       <Label className="text-sm font-medium text-gray-700">Work Progress</Label>
       <div className="flex items-center gap-2">
         {PROGRESS_STEPS.map((step, idx) => {
-          const done    = currentIdx >= idx;
-          const active  = currentIdx === idx;
+          const done = currentIdx >= idx;
+          const active = currentIdx === idx;
           const { Icon } = step;
           return (
             <div key={step.value} className="flex items-center flex-1">
               <button
                 disabled={disabled || idx > currentIdx + 1}
                 onClick={() => !disabled && onProgressChange(step.value)}
-                className={`flex-1 flex flex-col items-center gap-1 py-2 px-1 rounded-xl border-2 transition-all ${
-                  active
+                className={`flex-1 flex flex-col items-center gap-1 py-2 px-1 rounded-xl border-2 transition-all ${active
                     ? `${step.bg} ${step.border} ${step.textColor}`
                     : done
-                    ? 'bg-gray-100 border-gray-300 text-gray-600'
-                    : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
-                } ${disabled || idx > currentIdx + 1 ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
+                      ? 'bg-gray-100 border-gray-300 text-gray-600'
+                      : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
+                  } ${disabled || idx > currentIdx + 1 ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
               >
                 <Icon className="w-4 h-4" />
                 <span className="text-xs font-medium">{step.label}</span>
@@ -268,20 +269,22 @@ export default function ActiveWorks() {
   } | null>(null);
   const [progressSubmitting, setProgressSubmitting] = useState(false);
 
-  const user   = AuthHelper.getUser();
+  const user = AuthHelper.getUser();
   const userId = user?.id || user?._id || AuthHelper.getUserId();
-  const token  = AuthHelper.getAccessToken();
+  const token = AuthHelper.getAccessToken();
 
   const getStatusColor = (status?: string) => {
     switch (status) {
-      case 'completed':  return 'border-green-200 bg-green-50 text-green-700';
-      case 'active':     return 'border-blue-200 bg-blue-50 text-blue-700';
-      case 'assigned':   return 'border-purple-200 bg-purple-50 text-purple-700';
-      case 'pending':    return 'border-yellow-200 bg-yellow-50 text-yellow-700';
-      case 'cancelled':  return 'border-red-200 bg-red-50 text-red-700';
-      default:           return 'border-gray-200 bg-gray-50 text-gray-700';
+      case 'completed': return 'border-green-200 bg-green-50 text-green-700';
+      case 'active': return 'border-blue-200 bg-blue-50 text-blue-700';
+      case 'assigned': return 'border-purple-200 bg-purple-50 text-purple-700';
+      case 'pending': return 'border-yellow-200 bg-yellow-50 text-yellow-700';
+      case 'cancelled': return 'border-red-200 bg-red-50 text-red-700';
+      default: return 'border-gray-200 bg-gray-50 text-gray-700';
     }
   };
+
+
 
   const fetchAssignedWorks = useCallback(async () => {
     try {
@@ -333,7 +336,7 @@ export default function ActiveWorks() {
   const handleProgressUpdate = (work: Work, newProgress: string) => {
     // Don't allow going backwards
     const currentIdx = PROGRESS_STEPS.findIndex(s => s.value === work.progress);
-    const newIdx     = PROGRESS_STEPS.findIndex(s => s.value === newProgress);
+    const newIdx = PROGRESS_STEPS.findIndex(s => s.value === newProgress);
     if (newIdx < currentIdx) return;
 
     setProgressDialog({ work, newProgress });
@@ -352,6 +355,11 @@ export default function ActiveWorks() {
       }
       await WorkService.updateWork(work.id, updatePayload);
 
+      if (newProgress === 'completed') {
+        await notifyWorkCompleted(work.id);
+      }
+
+
       // 2. Find chat between this worker and the work owner
       const chatsRes = await ChatService.getMyChats();
       const allChats = chatsRes.data.data || [];
@@ -362,11 +370,11 @@ export default function ActiveWorks() {
       // 3. Emit socket progress event
       if (relatedChat) {
         await socketService.updateWorkProgress({
-          chatId:    relatedChat.id,
-          workId:    work.id,
+          chatId: relatedChat.id,
+          workId: work.id,
           workTitle: work.workTitle,
-          progress:  newProgress,
-          workerId:  userId!,
+          progress: newProgress,
+          workerId: userId!,
         });
       }
 
@@ -392,15 +400,15 @@ export default function ActiveWorks() {
   const handleChatWithUser = async (work: Work) => {
     try {
       const response = await ChatService.createChat({
-        userId:   work.userId,
+        userId: work.userId,
         workerId: userId!,
       });
       const chat = response.data.data;
       navigate('/worker/worker-dashboard/client-messages', {
         state: {
-          chatId:    chat.id,
-          userId:    work.userId,
-          workId:    work.id,
+          chatId: chat.id,
+          userId: work.userId,
+          workId: work.id,
           workTitle: work.workTitle,
         },
       });
