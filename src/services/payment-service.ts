@@ -3,10 +3,10 @@ import { api } from "./axios-instance";
 export const PaymentService = {
   // Create Razorpay order
   createOrder: (data: {
-    workId:    string;
-    workerId:  string;
+    workId: string;
+    workerId: string;
     workTitle: string;
-    amount:    number; // whole rupees
+    amount: number; // whole rupees
   }) => {
     return api.post("/payment/create-order", data);
   },
@@ -14,7 +14,7 @@ export const PaymentService = {
   // Verify payment after Razorpay popup succeeds.
   // Called client-side with the three values Razorpay returns in handler()
   verifyPayment: (data: {
-    razorpayOrderId:   string;
+    razorpayOrderId: string;
     razorpayPaymentId: string;
     razorpaySignature: string;
   }) => {
