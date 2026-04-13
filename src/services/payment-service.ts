@@ -2,18 +2,16 @@ import { api } from "./axios-instance";
 
 export const PaymentService = {
   // Create Razorpay order — called when user clicks Confirm on a deal
-  // Returns: { orderId, amount (paise), currency, keyId }
   createOrder: (data: {
     workId:    string;
     workerId:  string;
     workTitle: string;
-    amount:    number; // whole rupees
+    amount:    number;
   }) => {
     return api.post("/payment/create-order", data);
   },
 
   // Verify payment after Razorpay popup succeeds
-  // Called client-side with the three values Razorpay returns in handler()
   verifyPayment: (data: {
     razorpayOrderId:   string;
     razorpayPaymentId: string;
@@ -27,8 +25,13 @@ export const PaymentService = {
     return api.get("/payment/wallet");
   },
 
-  // Admin: get payment summary
+  // Admin: get payment summary (totals)
   getAdminSummary: () => {
     return api.get("/payment/admin/summary");
+  },
+
+  // Admin: get paginated list of all payment records with full details
+  getAdminPaymentsList: (page = 1, limit = 15) => {
+    return api.get(`/payment/admin/payments?page=${page}&limit=${limit}`);
   },
 };

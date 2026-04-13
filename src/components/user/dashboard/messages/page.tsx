@@ -26,7 +26,7 @@ interface Chat {
   id: string;
   participants: { userId: string; workerId: string };
   participantDetails?: {
-    user?:   { id: string; name: string; avatar?: string };
+    user?: { id: string; name: string; avatar?: string };
     worker?: { id: string; name: string; avatar?: string };
   };
   lastMessage?: string;
@@ -40,39 +40,39 @@ const loadRazorpayScript = (): Promise<boolean> => {
       resolve(true);
       return;
     }
-    const script    = document.createElement("script");
-    script.src      = "https://checkout.razorpay.com/v1/checkout.js";
-    script.onload   = () => resolve(true);
-    script.onerror  = () => resolve(false);
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
     document.body.appendChild(script);
   });
 };
 
 
 export default function ClientMessages() {
-  
-  const location  = useLocation();
-  const navigate  = useNavigate();
-  const [messages,     setMessages]     = useState<Message[]>([]);
-  const [newMessage,   setNewMessage]   = useState('');
-  const [isTyping,     setIsTyping]     = useState(false);
+
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
-  const [chats,        setChats]        = useState<Chat[]>([]);
-  const [loading,      setLoading]      = useState(true);
-  const [sendError,    setSendError]    = useState<string | null>(null);
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sendError, setSendError] = useState<string | null>(null);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const [pendingMedia, setPendingMedia] = useState<UploadedMedia | null>(null);
 
   // Track which workIds the user has already responded to
   const [respondedConfirms, setRespondedConfirms] = useState<Set<string>>(new Set());
 
-  const user   = AuthHelper.getUser();
-  const token  = AuthHelper.getAccessToken();
+  const user = AuthHelper.getUser();
+  const token = AuthHelper.getAccessToken();
   const userId = user?.id || user?._id || AuthHelper.getUserId();
   const { chatId: navChatId, workTitle, userName } = location.state || {};
 
-  const messagesEndRef   = useRef<HTMLDivElement>(null);
-  const selectedChatRef  = useRef<Chat | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const selectedChatRef = useRef<Chat | null>(null);
   const isInitialLoadRef = useRef(false);
 
   // ── Scroll helpers ────────────────────────────────────────────────────────
@@ -232,11 +232,11 @@ export default function ClientMessages() {
     try {
       if (pendingMedia) {
         await socketService.sendMessage({
-          chatId:        selectedChat.id,
-          content:       pendingMedia.resourceType === 'image' ? '📷 Image' : '🎥 Video',
-          type:          pendingMedia.resourceType,
-          recipientId:   getRecipientId(selectedChat),
-          mediaUrl:      pendingMedia.url,
+          chatId: selectedChat.id,
+          content: pendingMedia.resourceType === 'image' ? '📷 Image' : '🎥 Video',
+          type: pendingMedia.resourceType,
+          recipientId: getRecipientId(selectedChat),
+          mediaUrl: pendingMedia.url,
           mediaPublicId: pendingMedia.publicId,
         } as any);
         setPendingMedia(null);
@@ -245,9 +245,9 @@ export default function ClientMessages() {
       }
       if (!newMessage.trim()) return;
       await socketService.sendMessage({
-        chatId:      selectedChat.id,
-        content:     newMessage,
-        type:        'text',
+        chatId: selectedChat.id,
+        content: newMessage,
+        type: 'text',
         recipientId: getRecipientId(selectedChat),
       });
       setNewMessage('');
@@ -258,172 +258,131 @@ export default function ClientMessages() {
   };
 
   // ── Confirmation Handlers ─────────────────────────────────────────────────
-  // const handleAcceptConfirm = async (workId: string) => {
-  //   if (!selectedChat) return;
-
-  //   // Find the original confirm request message to extract workTitle and workerName
-  //   const confirmMsg = messages.find(msg => {
-  //     if (msg.type !== 'system') return false;
-  //     const p = parseSystemMessage(msg.content);
-  //     return p?.type === 'WORK_CONFIRM_REQUEST' && p.workId === workId;
-  //   });
-
-  //   const parsed = confirmMsg ? parseSystemMessage(confirmMsg.content) : null;
-  //   const title      = parsed?.type === 'WORK_CONFIRM_REQUEST' ? parsed.workTitle  : 'this work';
-  //   const workerName = parsed?.type === 'WORK_CONFIRM_REQUEST' ? parsed.workerName : 'Worker';
-
-  //   // workerId comes from the chat participants — this is the key fix
-  //   const workerId = selectedChat.participants.workerId;
-
-  //   try {
-  //     // 1. Update work status to 'assigned' in the backend
-  //     await WorkService.updateWork(workId, {
-  //       status:   'assigned',
-  //       workerId: workerId,   // Link the worker to this work
-  //     });
-
-  //     // 2. Emit socket event — workerId included so server can push to worker's room
-  //     await socketService.confirmResponse({
-  //       chatId:     selectedChat.id,
-  //       workId,
-  //       workTitle:  title,
-  //       accepted:   true,
-  //       userId:     userId!,
-  //       workerName,
-  //       workerId,
-  //     });
-
-  //     setRespondedConfirms(prev => new Set(prev).add(workId));
-  //   } catch (err) {
-  //     console.error('Accept confirm error:', err);
-  //     setSendError('Failed to accept confirmation. Please try again.');
-  //   }
-  // };
 
   const handleAcceptConfirm = async (workId: string) => {
-  if (!selectedChat) return;
- 
-  const confirmMsg = messages.find((msg) => {
-    if (msg.type !== "system") return false;
-    const p = parseSystemMessage(msg.content);
-    return p?.type === "WORK_CONFIRM_REQUEST" && p.workId === workId;
-  });
- 
-  const parsed     = confirmMsg ? parseSystemMessage(confirmMsg.content) : null;
-  const title      = parsed?.type === "WORK_CONFIRM_REQUEST" ? parsed.workTitle  : "this work";
-  const workerName = parsed?.type === "WORK_CONFIRM_REQUEST" ? parsed.workerName : "Worker";
-  const workerId   = selectedChat.participants.workerId;
- 
-  try {
-    // 1. Get work budget
-    const worksRes = await WorkService.getMyWorks();
-    const allWorks = worksRes.data.data?.works || [];
-    const work     = allWorks.find((w: any) => w.id === workId);
-    const amount   = work?.budget ? Number(work.budget) : 0;
- 
-    // If no budget — free work, use old confirm flow
-    if (!amount || amount <= 0) {
-      await WorkService.updateWork(workId, { status: "assigned", workerId });
-      await socketService.confirmResponse({
-        chatId:     selectedChat.id,
+    if (!selectedChat) return;
+
+    const confirmMsg = messages.find((msg) => {
+      if (msg.type !== "system") return false;
+      const p = parseSystemMessage(msg.content);
+      return p?.type === "WORK_CONFIRM_REQUEST" && p.workId === workId;
+    });
+
+    const parsed = confirmMsg ? parseSystemMessage(confirmMsg.content) : null;
+    const title = parsed?.type === "WORK_CONFIRM_REQUEST" ? parsed.workTitle : "this work";
+    const workerName = parsed?.type === "WORK_CONFIRM_REQUEST" ? parsed.workerName : "Worker";
+    const workerId = selectedChat.participants.workerId;
+
+    try {
+      // 1. Get work budget
+      const worksRes = await WorkService.getMyWorks();
+      const allWorks = worksRes.data.data?.works || [];
+      const work = allWorks.find((w: any) => w.id === workId);
+      const amount = work?.budget ? Number(work.budget) : 0;
+
+      // If no budget — free work, use old confirm flow
+      if (!amount || amount <= 0) {
+        await WorkService.updateWork(workId, { status: "assigned", workerId });
+        await socketService.confirmResponse({
+          chatId: selectedChat.id,
+          workId,
+          workTitle: title,
+          accepted: true,
+          userId: userId!,
+          workerName,
+          workerId,
+        });
+        setRespondedConfirms((prev) => new Set(prev).add(workId));
+        return;
+      }
+
+      // 2. Load Razorpay script
+      const loaded = await loadRazorpayScript();
+      if (!loaded) {
+        setSendError("Failed to load payment. Please check your internet connection.");
+        return;
+      }
+
+      // 3. Create Razorpay order on backend
+      const orderRes = await PaymentService.createOrder({
         workId,
-        workTitle:  title,
-        accepted:   true,
-        userId:     userId!,
-        workerName,
         workerId,
+        workTitle: title,
+        amount,
       });
-      setRespondedConfirms((prev) => new Set(prev).add(workId));
-      return;
-    }
- 
-    // 2. Load Razorpay script
-    const loaded = await loadRazorpayScript();
-    if (!loaded) {
-      setSendError("Failed to load payment. Please check your internet connection.");
-      return;
-    }
- 
-    // 3. Create Razorpay order on backend
-    const orderRes = await PaymentService.createOrder({
-      workId,
-      workerId,
-      workTitle: title,
-      amount,
-    });
-    const { orderId, amount: amountPaise, currency, keyId } = orderRes.data.data;
- 
-    // 4. Open Razorpay popup
-    await new Promise<void>((resolve, reject) => {
-      const options = {
-        key:         keyId,
-        amount:      amountPaise,
-        currency,
-        name:        "WorkBee",
-        description: title,
-        order_id:    orderId,
-        prefill: {
-          // You can prefill user details here if available
-        },
-        theme: { color: "#000000" },
- 
-        handler: async (response: {
-          razorpay_payment_id: string;
-          razorpay_order_id:   string;
-          razorpay_signature:  string;
-        }) => {
-          try {
-            // 5. Verify payment server-side
-            await PaymentService.verifyPayment({
-              razorpayOrderId:   response.razorpay_order_id,
-              razorpayPaymentId: response.razorpay_payment_id,
-              razorpaySignature: response.razorpay_signature,
-            });
- 
-            // 6. Emit socket event — worker sees "Deal accepted"
-            await socketService.confirmResponse({
-              chatId:     selectedChat.id,
-              workId,
-              workTitle:  title,
-              accepted:   true,
-              userId:     userId!,
-              workerName,
-              workerId,
-            });
- 
-            setRespondedConfirms((prev) => new Set(prev).add(workId));
-            resolve();
-          } catch (err) {
-            reject(err);
-          }
-        },
- 
-        modal: {
-          ondismiss: () => {
-            reject(new Error("Payment cancelled"));
+      const { orderId, amount: amountPaise, currency, keyId } = orderRes.data.data;
+
+      // 4. Open Razorpay popup
+      await new Promise<void>((resolve, reject) => {
+        const options = {
+          key: keyId,
+          amount: amountPaise,
+          currency,
+          name: "WorkBee",
+          description: title,
+          order_id: orderId,
+          prefill: {
+            // You can prefill user details here if available
           },
-        },
-      };
- 
-      const rzp = new (window as any).Razorpay(options);
- 
-      rzp.on("payment.failed", (response: any) => {
-        reject(new Error(response.error?.description || "Payment failed"));
+          theme: { color: "#000000" },
+
+          handler: async (response: {
+            razorpay_payment_id: string;
+            razorpay_order_id: string;
+            razorpay_signature: string;
+          }) => {
+            try {
+              // 5. Verify payment server-side
+              await PaymentService.verifyPayment({
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+              });
+
+              // 6. Emit socket event — worker sees "Deal accepted"
+              await socketService.confirmResponse({
+                chatId: selectedChat.id,
+                workId,
+                workTitle: title,
+                accepted: true,
+                userId: userId!,
+                workerName,
+                workerId,
+              });
+
+              setRespondedConfirms((prev) => new Set(prev).add(workId));
+              resolve();
+            } catch (err) {
+              reject(err);
+            }
+          },
+
+          modal: {
+            ondismiss: () => {
+              reject(new Error("Payment cancelled"));
+            },
+          },
+        };
+
+        const rzp = new (window as any).Razorpay(options);
+
+        rzp.on("payment.failed", (response: any) => {
+          reject(new Error(response.error?.description || "Payment failed"));
+        });
+
+        rzp.open();
       });
- 
-      rzp.open();
-    });
- 
-  } catch (err: any) {
-    if (err.message === "Payment cancelled") {
-      // User closed the popup — not an error, just do nothing
-      return;
+
+    } catch (err: any) {
+      if (err.message === "Payment cancelled") {
+        // User closed the popup — not an error, just do nothing
+        return;
+      }
+      console.error("Razorpay payment error:", err);
+      setSendError("Payment failed. Please try again.");
     }
-    console.error("Razorpay payment error:", err);
-    setSendError("Payment failed. Please try again.");
-  }
-};
- 
+  };
+
 
   const handleRejectConfirm = async (workId: string) => {
     if (!selectedChat) return;
@@ -435,17 +394,17 @@ export default function ClientMessages() {
     });
 
     const parsed = confirmMsg ? parseSystemMessage(confirmMsg.content) : null;
-    const title      = parsed?.type === 'WORK_CONFIRM_REQUEST' ? parsed.workTitle  : 'this work';
+    const title = parsed?.type === 'WORK_CONFIRM_REQUEST' ? parsed.workTitle : 'this work';
     const workerName = parsed?.type === 'WORK_CONFIRM_REQUEST' ? parsed.workerName : 'Worker';
-    const workerId   = selectedChat.participants.workerId;
+    const workerId = selectedChat.participants.workerId;
 
     try {
       await socketService.confirmResponse({
-        chatId:     selectedChat.id,
+        chatId: selectedChat.id,
         workId,
-        workTitle:  title,
-        accepted:   false,
-        userId:     userId!,
+        workTitle: title,
+        accepted: false,
+        userId: userId!,
         workerName,
         workerId,
       });
@@ -467,7 +426,7 @@ export default function ClientMessages() {
 
   const canSend = !!pendingMedia || !!newMessage.trim();
 
-  
+
 
   if (loading) {
     return (
@@ -477,7 +436,7 @@ export default function ClientMessages() {
     );
   }
 
-  
+
 
   return (
     <div className="flex w-full h-[calc(100vh-250px)] bg-gray-50">
@@ -488,9 +447,9 @@ export default function ClientMessages() {
             <div className="p-4 text-center text-gray-500">No conversations yet</div>
           ) : (
             chats.map(chat => {
-              const otherUser  = getOtherParticipant(chat);
+              const otherUser = getOtherParticipant(chat);
               const isSelected = selectedChat?.id === chat.id;
-              const unread     = unreadCounts[chat.id] || 0;
+              const unread = unreadCounts[chat.id] || 0;
               return (
                 <div
                   key={chat.id}
