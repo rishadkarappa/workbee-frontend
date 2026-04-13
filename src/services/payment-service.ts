@@ -1,5 +1,3 @@
-// src/services/payment-service.ts  (Razorpay version)
-
 import { api } from "./axios-instance";
 
 export const PaymentService = {
