@@ -10,11 +10,12 @@ import {
   Banknote,
   ChevronLeft,
   ChevronRight,
-  Search,
-  Filter,
+  ArrowUpRight,
+  Wallet,
+  BarChart3,
+  Users,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PaymentService } from "@/services/payment-service";
 
@@ -91,7 +92,7 @@ function StatusBadge({ status }: { status: string }) {
       return (
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">
           <CheckCircle2 className="w-3 h-3" />
-          Credited
+          Settled
         </span>
       );
     case "refunded":
@@ -117,18 +118,50 @@ function StatusBadge({ status }: { status: string }) {
   }
 }
 
+// ── Lifecycle stage pill ──────────────────────────────────────────────────────
+function StagePill({ payment }: { payment: PaymentRecord }) {
+  if (payment.status === "worker_credited") {
+    return (
+      <span className="text-xs text-green-600 font-medium">
+        ✓ Fully settled
+      </span>
+    );
+  }
+  if (payment.status === "paid" && payment.payoutScheduledAt) {
+    return (
+      <span className="text-xs text-amber-600 font-medium flex items-center gap-1">
+        <Clock className="w-3 h-3" />
+        Payout in queue
+      </span>
+    );
+  }
+  if (payment.status === "paid") {
+    return (
+      <span className="text-xs text-blue-600 font-medium">
+        Work in progress
+      </span>
+    );
+  }
+  if (payment.status === "refunded") {
+    return <span className="text-xs text-purple-600 font-medium">Refunded</span>;
+  }
+  return null;
+}
+
 function StatCard({
   title,
   value,
   subtitle,
   icon: Icon,
   accent = "gray",
+  trend,
 }: {
   title: string;
   value: string;
   subtitle: string;
   icon: React.ElementType;
   accent?: "gray" | "green" | "blue" | "yellow" | "red";
+  trend?: string;
 }) {
   const accentMap = {
     gray:   { bg: "bg-gray-900",   text: "text-white",       sub: "text-gray-400",  iconBg: "bg-gray-800"   },
@@ -149,9 +182,86 @@ function StatCard({
           </div>
         </div>
         <p className={`text-2xl font-bold ${c.text}`}>{value}</p>
-        <p className={`text-xs mt-1 ${c.sub}`}>{subtitle}</p>
+        <div className="flex items-center justify-between mt-1">
+          <p className={`text-xs ${c.sub}`}>{subtitle}</p>
+          {trend && (
+            <span className={`text-xs flex items-center gap-0.5 ${c.sub}`}>
+              <ArrowUpRight className="w-3 h-3" />
+              {trend}
+            </span>
+          )}
+        </div>
       </CardContent>
     </Card>
+  );
+}
+
+// ── Payment lifecycle timeline ───────────────────────────────────────────────
+function PaymentTimeline({ payment }: { payment: PaymentRecord }) {
+  const steps = [
+    {
+      label: "Payment initiated",
+      time: payment.createdAt,
+      done: true,
+    },
+    {
+      label: "Payment confirmed",
+      time: payment.status !== "pending" ? payment.updatedAt : undefined,
+      done: payment.status !== "pending" && payment.status !== "failed",
+    },
+    {
+      label: "Work completed",
+      time: payment.workCompletedAt,
+      done: !!payment.workCompletedAt,
+    },
+    {
+      label: "Payout scheduled",
+      time: payment.payoutScheduledAt,
+      done: !!payment.payoutScheduledAt,
+    },
+    {
+      label: "Worker credited",
+      time: payment.payoutCompletedAt,
+      done: payment.status === "worker_credited",
+    },
+  ];
+
+  return (
+    <div className="flex items-start gap-0 mt-3">
+      {steps.map((step, i) => (
+        <div key={i} className="flex-1 flex flex-col items-center">
+          <div className="flex items-center w-full">
+            {i > 0 && (
+              <div className={`flex-1 h-0.5 ${step.done ? "bg-green-400" : "bg-gray-200"}`} />
+            )}
+            <div
+              className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
+                step.done
+                  ? "bg-green-500 text-white"
+                  : "bg-gray-200 text-gray-400"
+              }`}
+            >
+              {step.done ? (
+                <CheckCircle2 className="w-3 h-3" />
+              ) : (
+                <div className="w-2 h-2 rounded-full bg-current" />
+              )}
+            </div>
+            {i < steps.length - 1 && (
+              <div className={`flex-1 h-0.5 ${steps[i + 1].done ? "bg-green-400" : "bg-gray-200"}`} />
+            )}
+          </div>
+          <p className="text-[10px] text-gray-500 mt-1 text-center leading-tight px-1">
+            {step.label}
+          </p>
+          {step.time && (
+            <p className="text-[9px] text-gray-400 text-center">
+              {formatDate(step.time)}
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -212,7 +322,22 @@ export default function Payments() {
       ? payments
       : payments.filter((p) => p.status === statusFilter);
 
-  const pendingCount = payments.filter((p) => p.status === "paid").length;
+  // Counts for filter pills
+  const counts = {
+    all: payments.length,
+    pending: payments.filter(p => p.status === "pending").length,
+    paid: payments.filter(p => p.status === "paid").length,
+    worker_credited: payments.filter(p => p.status === "worker_credited").length,
+    refunded: payments.filter(p => p.status === "refunded").length,
+    failed: payments.filter(p => p.status === "failed").length,
+  };
+
+  // Derived stats
+  const settledCount = payments.filter(p => p.status === "worker_credited").length;
+  const pendingPayoutCount = payments.filter(p => p.status === "paid").length;
+  const conversionRate = total > 0
+    ? Math.round((payments.filter(p => p.status !== "pending" && p.status !== "failed").length / payments.length) * 100)
+    : 0;
 
   if (loading) {
     return (
@@ -239,7 +364,7 @@ export default function Payments() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Payments</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Platform revenue and payout oversight
+            Platform revenue, payouts, and transaction oversight
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={fetchAll}>
@@ -248,10 +373,10 @@ export default function Payments() {
         </Button>
       </div>
 
-      {/* Summary Cards */}
+      {/* Primary Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="Total Revenue"
+          title="Gross Revenue"
           value={formatAmount(summary?.totalRevenue ?? 0)}
           subtitle="All completed payments"
           icon={TrendingUp}
@@ -260,24 +385,72 @@ export default function Payments() {
         <StatCard
           title="Platform Earnings"
           value={formatAmount(summary?.totalPlatformFees ?? 0)}
-          subtitle="1% fee collected"
+          subtitle="1% fee on each job"
           icon={Banknote}
           accent="green"
         />
         <StatCard
           title="Pending Payouts"
           value={formatAmount(summary?.pendingPayouts ?? 0)}
-          subtitle={`${pendingCount} worker payment${pendingCount !== 1 ? "s" : ""} pending`}
+          subtitle={`${pendingPayoutCount} worker payment${pendingPayoutCount !== 1 ? "s" : ""} queued`}
           icon={Clock}
           accent="yellow"
         />
         <StatCard
-          title="Refunded"
+          title="Total Refunded"
           value={formatAmount(summary?.refundedAmount ?? 0)}
-          subtitle="Total refunds issued"
+          subtitle="Dispute & cancellation refunds"
           icon={RefreshCw}
           accent="red"
         />
+      </div>
+
+      {/* Secondary stats row */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Card className="border shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Fully Settled</p>
+                <p className="text-xl font-bold text-green-600">{settledCount}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Worker credited & closed</p>
+              </div>
+              <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center">
+                <CheckCircle2 className="w-5 h-5 text-green-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Active Jobs</p>
+                <p className="text-xl font-bold text-blue-600">{pendingPayoutCount}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Payment made, work ongoing</p>
+              </div>
+              <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
+                <Users className="w-5 h-5 text-blue-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border shadow-sm">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Total Transactions</p>
+                <p className="text-xl font-bold">{total}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Across all statuses</p>
+              </div>
+              <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
+                <BarChart3 className="w-5 h-5 text-gray-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Payments Table */}
@@ -285,26 +458,29 @@ export default function Payments() {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
-              <CardTitle className="text-base font-semibold">
-                All Payments
-              </CardTitle>
+              <CardTitle className="text-base font-semibold">All Transactions</CardTitle>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {total} total payment{total !== 1 ? "s" : ""}
+                {total} total · click any row for full timeline
               </p>
             </div>
-            {/* Status filter */}
+            {/* Status filter pills */}
             <div className="flex items-center gap-1.5 flex-wrap">
-              {["all", "pending", "paid", "worker_credited", "refunded", "failed"].map((s) => (
+              {(["all", "pending", "paid", "worker_credited", "refunded", "failed"] as const).map((s) => (
                 <button
                   key={s}
                   onClick={() => setStatusFilter(s)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors capitalize ${
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                     statusFilter === s
                       ? "bg-gray-900 text-white"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   }`}
                 >
-                  {s === "worker_credited" ? "credited" : s}
+                  {s === "worker_credited" ? "settled" : s}
+                  {counts[s] > 0 && (
+                    <span className={`ml-1.5 ${statusFilter === s ? "text-gray-300" : "text-gray-400"}`}>
+                      {counts[s]}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -325,14 +501,14 @@ export default function Payments() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b bg-gray-50">
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      Payment
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide w-[180px]">
+                      Job / Payment
                     </th>
                     <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      Amount
+                      Total
                     </th>
                     <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      Platform Fee
+                      Fee (1%)
                     </th>
                     <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">
                       Worker Gets
@@ -341,10 +517,10 @@ export default function Payments() {
                       Status
                     </th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      Started
+                      Date
                     </th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                      Credited
+                      Stage
                     </th>
                   </tr>
                 </thead>
@@ -353,16 +529,16 @@ export default function Payments() {
                     <>
                       <tr
                         key={payment.id}
-                        className="hover:bg-gray-50 cursor-pointer transition-colors"
+                        className={`hover:bg-gray-50 cursor-pointer transition-colors ${
+                          expandedRow === payment.id ? "bg-gray-50" : ""
+                        }`}
                         onClick={() =>
-                          setExpandedRow(
-                            expandedRow === payment.id ? null : payment.id
-                          )
+                          setExpandedRow(expandedRow === payment.id ? null : payment.id)
                         }
                       >
                         <td className="px-4 py-3">
                           <p className="font-medium text-gray-900 truncate max-w-[160px]">
-                            Work #{payment.workId.slice(-6)}
+                            Job #{payment.workId.slice(-6).toUpperCase()}
                           </p>
                           <p className="text-xs text-gray-400 font-mono truncate max-w-[160px]">
                             {payment.id.slice(0, 8)}…
@@ -372,7 +548,7 @@ export default function Payments() {
                           {formatAmount(payment.amount)}
                         </td>
                         <td className="px-4 py-3 text-right text-green-600 font-medium">
-                          {formatAmount(payment.platformFee)}
+                          +{formatAmount(payment.platformFee)}
                         </td>
                         <td className="px-4 py-3 text-right text-gray-600">
                           {formatAmount(payment.workerPayout)}
@@ -383,63 +559,58 @@ export default function Payments() {
                         <td className="px-4 py-3 text-gray-500 whitespace-nowrap text-xs">
                           {formatDate(payment.createdAt)}
                         </td>
-                        <td className="px-4 py-3 text-gray-500 whitespace-nowrap text-xs">
-                          {payment.payoutCompletedAt
-                            ? formatDateTime(payment.payoutCompletedAt)
-                            : payment.status === "paid"
-                            ? (
-                              <span className="inline-flex items-center gap-1 text-amber-600">
-                                <Clock className="w-3 h-3" />
-                                Scheduled
-                              </span>
-                            )
-                            : "—"}
+                        <td className="px-4 py-3">
+                          <StagePill payment={payment} />
                         </td>
                       </tr>
 
-                      {/* Expanded row detail */}
+                      {/* ── Expanded detail row ── */}
                       {expandedRow === payment.id && (
-                        <tr key={`${payment.id}-detail`} className="bg-gray-50">
-                          <td colSpan={7} className="px-4 py-4">
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+                        <tr key={`${payment.id}-detail`} className="bg-gray-50/80">
+                          <td colSpan={7} className="px-4 py-5">
+                            {/* Timeline */}
+                            <PaymentTimeline payment={payment} />
+
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs mt-5 pt-4 border-t border-gray-200">
                               <div>
                                 <p className="font-medium text-gray-500 uppercase tracking-wide mb-1">
                                   Payment started
                                 </p>
-                                <p className="text-gray-800">
-                                  {formatDateTime(payment.createdAt)}
-                                </p>
+                                <p className="text-gray-800">{formatDateTime(payment.createdAt)}</p>
                               </div>
                               <div>
                                 <p className="font-medium text-gray-500 uppercase tracking-wide mb-1">
                                   Work completed
                                 </p>
-                                <p className="text-gray-800">
-                                  {formatDateTime(payment.workCompletedAt)}
-                                </p>
+                                <p className="text-gray-800">{formatDateTime(payment.workCompletedAt)}</p>
                               </div>
                               <div>
                                 <p className="font-medium text-gray-500 uppercase tracking-wide mb-1">
-                                  Payout scheduled
+                                  Payout queued
                                 </p>
-                                <p className="text-gray-800">
-                                  {formatDateTime(payment.payoutScheduledAt)}
-                                </p>
+                                <p className="text-gray-800">{formatDateTime(payment.payoutScheduledAt)}</p>
                               </div>
                               <div>
                                 <p className="font-medium text-gray-500 uppercase tracking-wide mb-1">
                                   Worker credited
                                 </p>
                                 <p className="text-gray-800">
-                                  {formatDateTime(payment.payoutCompletedAt)}
+                                  {payment.payoutCompletedAt
+                                    ? formatDateTime(payment.payoutCompletedAt)
+                                    : payment.status === "paid"
+                                    ? <span className="text-amber-600 flex items-center gap-1"><Clock className="w-3 h-3 inline" /> Within 1 hour of completion</span>
+                                    : "—"
+                                  }
                                 </p>
                               </div>
+
+                              {/* IDs */}
                               {payment.razorpayOrderId && (
                                 <div className="col-span-2">
                                   <p className="font-medium text-gray-500 uppercase tracking-wide mb-1">
                                     Razorpay Order ID
                                   </p>
-                                  <p className="text-gray-800 font-mono truncate">
+                                  <p className="text-gray-800 font-mono text-xs break-all">
                                     {payment.razorpayOrderId}
                                   </p>
                                 </div>
@@ -449,7 +620,7 @@ export default function Payments() {
                                   <p className="font-medium text-gray-500 uppercase tracking-wide mb-1">
                                     Razorpay Payment ID
                                   </p>
-                                  <p className="text-gray-800 font-mono truncate">
+                                  <p className="text-gray-800 font-mono text-xs break-all">
                                     {payment.razorpayPaymentId}
                                   </p>
                                 </div>
@@ -458,17 +629,36 @@ export default function Payments() {
                                 <p className="font-medium text-gray-500 uppercase tracking-wide mb-1">
                                   User ID
                                 </p>
-                                <p className="text-gray-800 font-mono truncate">
-                                  {payment.userId}
-                                </p>
+                                <p className="text-gray-800 font-mono truncate">{payment.userId}</p>
                               </div>
                               <div>
                                 <p className="font-medium text-gray-500 uppercase tracking-wide mb-1">
                                   Worker ID
                                 </p>
-                                <p className="text-gray-800 font-mono truncate">
-                                  {payment.workerId}
+                                <p className="text-gray-800 font-mono truncate">{payment.workerId}</p>
+                              </div>
+
+                              {/* Fee breakdown */}
+                              <div className="col-span-2 sm:col-span-4">
+                                <p className="font-medium text-gray-500 uppercase tracking-wide mb-2">
+                                  Fee Breakdown
                                 </p>
+                                <div className="flex items-center gap-3 flex-wrap">
+                                  <div className="flex items-center gap-2 bg-white border rounded-lg px-3 py-2">
+                                    <span className="text-gray-500">Client paid</span>
+                                    <span className="font-semibold text-gray-900">{formatAmount(payment.amount)}</span>
+                                  </div>
+                                  <span className="text-gray-400">→</span>
+                                  <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                                    <span className="text-green-700">Platform earns</span>
+                                    <span className="font-semibold text-green-700">{formatAmount(payment.platformFee)}</span>
+                                  </div>
+                                  <span className="text-gray-400">+</span>
+                                  <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                                    <span className="text-blue-700">Worker receives</span>
+                                    <span className="font-semibold text-blue-700">{formatAmount(payment.workerPayout)}</span>
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </td>
@@ -512,16 +702,30 @@ export default function Payments() {
         </CardContent>
       </Card>
 
-      {/* Platform fee info */}
+      {/* How it works */}
       <Card className="border border-dashed border-gray-200 bg-gray-50/50">
         <CardContent className="p-4">
-          <p className="text-sm text-gray-600 flex items-start gap-2">
-            <IndianRupee className="w-4 h-4 mt-0.5 flex-shrink-0 text-gray-400" />
-            WorkBee charges a <strong className="text-gray-900">1% platform fee</strong> on every
-            completed payment. The remaining <strong className="text-gray-900">99%</strong> is
-            credited to the worker's wallet one hour after work is marked complete.
-            Click any row to see full timeline details.
+          <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3">
+            How WorkBee payments work
           </p>
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs text-gray-600">
+            <div className="flex items-start gap-2">
+              <span className="w-5 h-5 rounded-full bg-gray-900 text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">1</span>
+              <p>User confirms a job and pays via Razorpay. Work status changes to <strong>assigned</strong>.</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="w-5 h-5 rounded-full bg-gray-900 text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">2</span>
+              <p>Worker completes the job and marks it <strong>completed</strong> in the live works page.</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="w-5 h-5 rounded-full bg-gray-900 text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">3</span>
+              <p>Payout is <strong>held for 1 hour</strong> for dispute resolution, then auto-released to worker wallet.</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="w-5 h-5 rounded-full bg-green-600 text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">✓</span>
+              <p>Worker receives <strong>99%</strong> of the job value. WorkBee keeps the <strong>1% platform fee</strong>.</p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

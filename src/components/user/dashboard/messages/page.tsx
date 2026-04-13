@@ -282,6 +282,7 @@ export default function ClientMessages() {
 
       // If no budget — free work, use old confirm flow
       if (!amount || amount <= 0) {
+        // ✅ FIX: Update work status to "assigned" for free work
         await WorkService.updateWork(workId, { status: "assigned", workerId });
         await socketService.confirmResponse({
           chatId: selectedChat.id,
@@ -321,9 +322,7 @@ export default function ClientMessages() {
           name: "WorkBee",
           description: title,
           order_id: orderId,
-          prefill: {
-            // You can prefill user details here if available
-          },
+          prefill: {},
           theme: { color: "#000000" },
 
           handler: async (response: {
@@ -338,6 +337,10 @@ export default function ClientMessages() {
                 razorpayPaymentId: response.razorpay_payment_id,
                 razorpaySignature: response.razorpay_signature,
               });
+
+              // ✅ FIX: Update work status to "assigned" with workerId after successful payment
+              // This is what makes the work appear in the live works page for the worker
+              await WorkService.updateWork(workId, { status: "assigned", workerId });
 
               // 6. Emit socket event — worker sees "Deal accepted"
               await socketService.confirmResponse({
