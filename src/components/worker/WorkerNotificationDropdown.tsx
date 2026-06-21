@@ -149,7 +149,7 @@ const WorkerNotificationDropdown = ({
 
     // Worker-side navigation: route to worker messages dashboard
     if (notification.type === "NEW_MESSAGE" && notification.data?.chatId) {
-      navigate("/worker/worker-dashboard/messages", {
+      navigate("/worker/worker-dashboard/client-messages", {
         state: {
           chatId: notification.data.chatId,
           userName: notification.data.senderName,
