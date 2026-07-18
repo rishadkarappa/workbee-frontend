@@ -38,7 +38,7 @@ class NotificationSocketService {
 
     this.token = token;
 
-    this.socket = io(import.meta.env.VITE_NOTIFICATION_URL || 'http://localhost:4004', {
+    this.socket = io(import.meta.env.VITE_NOTIFICATION_URL, {
       auth: { token },
       transports: ['websocket', 'polling'],
       reconnection: true,

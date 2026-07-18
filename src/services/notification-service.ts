@@ -1,5 +1,5 @@
 
-import { api } from "./axios-instance";
+import { api } from "./axios-instance/axios-instance";
 
 export interface Notification {
   id: string;

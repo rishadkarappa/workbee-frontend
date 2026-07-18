@@ -1,4 +1,4 @@
-import { api } from './axios-instance';
+import { api } from './axios-instance/axios-instance';
 
 export const ChatService = {
   createChat: (data: { userId: string; workerId: string }) => {
