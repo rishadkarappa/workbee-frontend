@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { socketService } from '@/services/socket-service';
 import { ChatService } from '@/services/chat-service';
 import { AuthHelper } from '@/utils/auth-helper';
-import { ArrowLeft, Send, User, HandshakeIcon } from 'lucide-react';
+import { ArrowLeft, Send, User, HandshakeIcon, TicketPercent } from 'lucide-react';
 import { MediaUploadButton } from '@/components/chat/MediaUploadButton';
 import type { UploadedMedia } from '@/components/chat/MediaUploadButton';
 import { MediaMessage } from '@/components/chat/MediaMessage';
@@ -24,7 +24,7 @@ interface Chat {
   id: string;
   participants: { userId: string; workerId: string };
   participantDetails?: {
-    user?:   { id: string; name: string; avatar?: string };
+    user?: { id: string; name: string; avatar?: string };
     worker?: { id: string; name: string; avatar?: string };
   };
   lastMessage?: string;
@@ -33,15 +33,15 @@ interface Chat {
 }
 
 export default function WorkerMessages() {
-  const location  = useLocation();
-  const navigate  = useNavigate();
-  const [messages,     setMessages]     = useState<Message[]>([]);
-  const [newMessage,   setNewMessage]   = useState('');
-  const [isTyping,     setIsTyping]     = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
-  const [chats,        setChats]        = useState<Chat[]>([]);
-  const [loading,      setLoading]      = useState(true);
-  const [sendError,    setSendError]    = useState<string | null>(null);
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sendError, setSendError] = useState<string | null>(null);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const [pendingMedia, setPendingMedia] = useState<UploadedMedia | null>(null);
   const [askConfirmLoading, setAskConfirmLoading] = useState(false);
@@ -49,12 +49,12 @@ export default function WorkerMessages() {
   // Track which workIds have already had a confirm request sent in this chat
   const [sentConfirmRequests, setSentConfirmRequests] = useState<Set<string>>(new Set());
 
-  const messagesEndRef  = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const selectedChatRef = useRef<Chat | null>(null);
   const isInitialLoadRef = useRef(false);
 
-  const user   = AuthHelper.getUser();
-  const token  = AuthHelper.getAccessToken();
+  const user = AuthHelper.getUser();
+  const token = AuthHelper.getAccessToken();
   const userId = user?.id || user?._id || AuthHelper.getUserId();
   const { chatId: navChatId, workTitle, workId: navWorkId, userId: navUserId } = location.state || {};
 
@@ -210,11 +210,11 @@ export default function WorkerMessages() {
     try {
       if (pendingMedia) {
         await socketService.sendMessage({
-          chatId:        selectedChat.id,
-          content:       pendingMedia.resourceType === 'image' ? '📷 Image' : '🎥 Video',
-          type:          pendingMedia.resourceType,
+          chatId: selectedChat.id,
+          content: pendingMedia.resourceType === 'image' ? '📷 Image' : '🎥 Video',
+          type: pendingMedia.resourceType,
           recipientId,
-          mediaUrl:      pendingMedia.url,
+          mediaUrl: pendingMedia.url,
           mediaPublicId: pendingMedia.publicId,
         } as any);
         setPendingMedia(null);
@@ -223,9 +223,9 @@ export default function WorkerMessages() {
       }
       if (!newMessage.trim()) return;
       await socketService.sendMessage({
-        chatId:      selectedChat.id,
-        content:     newMessage,
-        type:        'text',
+        chatId: selectedChat.id,
+        content: newMessage,
+        type: 'text',
         recipientId,
       });
       setNewMessage('');
@@ -248,12 +248,12 @@ export default function WorkerMessages() {
     setAskConfirmLoading(true);
     try {
       await socketService.askForConfirm({
-        chatId:     selectedChat.id,
-        workId:     navWorkId,
-        workTitle:  workTitle || 'this work',
-        workerId:   userId!,
+        chatId: selectedChat.id,
+        workId: navWorkId,
+        workTitle: workTitle || 'this work',
+        workerId: userId!,
         workerName: user?.name || 'Worker',
-        userId:     selectedChat.participants.userId,
+        userId: selectedChat.participants.userId,
       });
       setSentConfirmRequests(prev => new Set(prev).add(navWorkId));
     } catch {
@@ -262,6 +262,11 @@ export default function WorkerMessages() {
       setAskConfirmLoading(false);
     }
   };
+
+  // send bidd new PRICE
+  const handleAskNewPrice = () => {
+
+  }
 
   const handleTyping = (value: string) => {
     setNewMessage(value);
@@ -294,9 +299,9 @@ export default function WorkerMessages() {
             <div className="p-4 text-center text-gray-500">No conversations yet</div>
           ) : (
             chats.map(chat => {
-              const otherUser  = getOtherParticipant(chat);
+              const otherUser = getOtherParticipant(chat);
               const isSelected = selectedChat?.id === chat.id;
-              const unread     = unreadCounts[chat.id] || 0;
+              const unread = unreadCounts[chat.id] || 0;
               return (
                 <div
                   key={chat.id}
@@ -362,14 +367,29 @@ export default function WorkerMessages() {
                         onClick={handleAskForConfirm}
                         disabled={askConfirmLoading || alreadySentConfirm}
                         title={alreadySentConfirm ? 'Confirmation request already sent' : 'Ask client to confirm this deal'}
-                        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-                          alreadySentConfirm
+                        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${alreadySentConfirm
                             ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                             : 'bg-gray-900 hover:bg-gray-700 text-white'
-                        }`}
+                          }`}
                       >
                         <HandshakeIcon className="w-3.5 h-3.5" />
                         {askConfirmLoading ? 'Sending…' : alreadySentConfirm ? 'Sent' : 'Ask for Confirm'}
+                      </button>
+                    )}
+
+                    {/* Ask for New Price (bidding) — only shown when there's a work context */}
+                    {hasWorkContext && (
+                      <button
+                        onClick={handleAskNewPrice}
+                        disabled={askConfirmLoading || alreadySentConfirm}
+                        title={alreadySentConfirm ? 'Confirmation request already sent' : 'Ask client to confirm this deal'}
+                        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${alreadySentConfirm
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-gray-900 hover:bg-gray-700 text-white'
+                          }`}
+                      >
+                        <TicketPercent className="w-3.5 h-3.5" />
+                        {askConfirmLoading ? 'Sending…' : alreadySentConfirm ? 'Sent' : 'Ask Better Price'}
                       </button>
                     )}
                   </>
@@ -403,11 +423,10 @@ export default function WorkerMessages() {
                   // ── Regular message ──────────────────────────────────────
                   return (
                     <div key={msg.id} className={`flex ${isSent ? 'justify-end' : 'justify-start'} mb-4`}>
-                      <div className={`px-4 py-2.5 rounded-2xl max-w-[82%] sm:max-w-[75%] md:max-w-[68%] lg:max-w-[62%] break-words shadow-sm ${
-                        isSent
+                      <div className={`px-4 py-2.5 rounded-2xl max-w-[82%] sm:max-w-[75%] md:max-w-[68%] lg:max-w-[62%] break-words shadow-sm ${isSent
                           ? 'bg-black text-white rounded-br-none'
                           : 'bg-white border border-gray-200 text-gray-900 rounded-bl-none'
-                      }`}>
+                        }`}>
                         {!isSent && msg.senderDetails && (
                           <div className="text-xs text-gray-500 mb-1 font-medium">
                             {msg.senderDetails.name}
