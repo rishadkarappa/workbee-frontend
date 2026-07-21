@@ -897,8 +897,8 @@ export default function WorkerMessages() {
                         disabled={askConfirmLoading || alreadySentConfirm}
                         title={alreadySentConfirm ? 'Confirmation request already sent' : 'Ask client to confirm this deal'}
                         className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${alreadySentConfirm
-                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                            : 'bg-gray-900 hover:bg-gray-700 text-white'
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-gray-900 hover:bg-gray-700 text-white'
                           }`}
                       >
                         <HandshakeIcon className="w-3.5 h-3.5" />
@@ -913,8 +913,8 @@ export default function WorkerMessages() {
                         disabled={askNewPriceLoading || alreadySentNewPrice}
                         title={alreadySentConfirm ? 'Confirmation request already sent' : 'Ask client to confirm this deal'}
                         className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${alreadySentConfirm
-                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                            : 'bg-gray-900 hover:bg-gray-700 text-white'
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-gray-900 hover:bg-gray-700 text-white'
                           }`}
                       >
                         <TicketPercent className="w-3.5 h-3.5" />
@@ -922,7 +922,6 @@ export default function WorkerMessages() {
                       </button>
                     )}
 
-                    {AskNewPriceModalOpen && <AskBetterPriceModal setAskBetterPriceModalOpen={setAskNewPriceModalOpen}/>}
                   </>
                 );
               })()}
@@ -955,8 +954,8 @@ export default function WorkerMessages() {
                   return (
                     <div key={msg.id} className={`flex ${isSent ? 'justify-end' : 'justify-start'} mb-4`}>
                       <div className={`px-4 py-2.5 rounded-2xl max-w-[82%] sm:max-w-[75%] md:max-w-[68%] lg:max-w-[62%] break-words shadow-sm ${isSent
-                          ? 'bg-black text-white rounded-br-none'
-                          : 'bg-white border border-gray-200 text-gray-900 rounded-bl-none'
+                        ? 'bg-black text-white rounded-br-none'
+                        : 'bg-white border border-gray-200 text-gray-900 rounded-bl-none'
                         }`}>
                         {!isSent && msg.senderDetails && (
                           <div className="text-xs text-gray-500 mb-1 font-medium">
@@ -1044,6 +1043,14 @@ export default function WorkerMessages() {
           </div>
         )}
       </div>
+
+        {/* Bid Modal */}
+      <AskBetterPriceModal
+        open={AskNewPriceModalOpen}
+        setAskBetterPriceModalOpen={setAskNewPriceModalOpen}
+      />
+
     </div>
+
   );
 }
