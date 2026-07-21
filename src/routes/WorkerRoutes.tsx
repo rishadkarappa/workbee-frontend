@@ -6,7 +6,7 @@ import WorkerLayout from "@/layout/WorkerLayout";
 import WorkerDashboard from "@/pages/worker/WorkerDashboard";
 import WorkerLogin from "@/pages/worker/WorkerLogin";
 import Works from "@/pages/worker/Works";
-import ClientMessages from "@/components/worker/messages";
+import ClientMessages from "@/components/worker/messages/messages";
 import ActiveWorks from "@/components/worker/active-works";
 import WorkerWallet from "@/components/worker/wallet";
 
