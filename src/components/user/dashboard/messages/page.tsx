@@ -547,6 +547,7 @@ export default function ClientMessages() {
                       );
                     }
                   }
+                  
 
                   // ── Regular message ────────────────────────────────────
                   return (
@@ -563,6 +564,8 @@ export default function ClientMessages() {
                             onLoaded={scrollToBottomInstant}
                           />
                         ) : (
+                          // showing message in msg comp
+                          
                           <p>{msg.content}</p>
                         )}
                         <p className={`text-xs mt-1 ${isSent ? 'text-blue-100' : 'text-gray-500'}`}>
