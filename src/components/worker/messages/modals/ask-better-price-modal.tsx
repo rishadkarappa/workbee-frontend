@@ -9,12 +9,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-interface AskBetterPriceModalProps {
-    open: boolean;
-    setAskBetterPriceModalOpen: React.Dispatch<
-        React.SetStateAction<boolean>
-    >;
-}
+import type { AskBetterPriceModalProps } from "../types/modal.types";
 
 export default function AskBetterPriceModal({
     open,
