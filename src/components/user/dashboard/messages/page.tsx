@@ -259,31 +259,14 @@ export default function ClientMessages() {
   // Detect already-responded confirms from message history
   useEffect(() => {
     const responded = new Set<string>();
-    
     messages.forEach(msg => {
-      const isSent = msg.senderId === userId; 
       if (msg.type === 'system') {
-        const payload = parseSystemMessage(msg.content);
-        if (payload) {
-          const alreadyResponded =
-            payload.type === 'WORK_CONFIRM_REQUEST' ? respondedConfirms.has(payload.workId) : undefined;
-
-          return (
-            <SystemMessage
-              key={msg.id}
-              payload={payload}
-              isSender={isSent}
-              role="user"
-              responded={alreadyResponded}
-              onAccept={handleAcceptConfirm}
-              onReject={handleRejectConfirm}
-              isBidActionable={isBidCardActionable(messages, msg.id)}
-              onBidAccept={handleBidAccept}
-              onBidReject={handleBidReject}
-              onBidCounter={(p) => { setActiveBidPayload(p); setCounterOfferModalOpen(true); }}
-              onBidPay={handleBidPay}
-            />
-          );
+        const parsed = parseSystemMessage(msg.content);
+        if (
+          parsed &&
+          (parsed.type === 'WORK_CONFIRM_ACCEPTED' || parsed.type === 'WORK_CONFIRM_REJECTED')
+        ) {
+          responded.add(parsed.workId);
         }
       }
     });
@@ -397,7 +380,7 @@ export default function ClientMessages() {
 
       // If no budget — free work, use old confirm flow
       if (!amount || amount <= 0) {
-        // ✅ FIX: Update work status to "assigned" for free work
+        // Update work status to "assigned" for free work
         await WorkService.updateWork(workId, { status: "assigned", workerId });
         await socketService.confirmResponse({
           chatId: selectedChat.id,
@@ -453,7 +436,7 @@ export default function ClientMessages() {
                 razorpaySignature: response.razorpay_signature,
               });
 
-              // ✅ FIX: Update work status to "assigned" with workerId after successful payment
+              // Update work status to "assigned" with workerId after successful payment
               // This is what makes the work appear in the live works page for the worker
               await WorkService.updateWork(workId, { status: "assigned", workerId });
 
@@ -641,13 +624,12 @@ export default function ClientMessages() {
                   const isSent = msg.senderId === userId;
 
                   // ── System message ─────────────────────────────────────
+                 
                   if (msg.type === 'system') {
                     const payload = parseSystemMessage(msg.content);
                     if (payload) {
                       const alreadyResponded =
-                        payload.type === 'WORK_CONFIRM_REQUEST'
-                          ? respondedConfirms.has(payload.workId)
-                          : undefined;
+                        payload.type === 'WORK_CONFIRM_REQUEST' ? respondedConfirms.has(payload.workId) : undefined;
 
                       return (
                         <SystemMessage
@@ -658,6 +640,11 @@ export default function ClientMessages() {
                           responded={alreadyResponded}
                           onAccept={handleAcceptConfirm}
                           onReject={handleRejectConfirm}
+                          isBidActionable={isBidCardActionable(messages, msg.id)}
+                          onBidAccept={handleBidAccept}
+                          onBidReject={handleBidReject}
+                          onBidCounter={(p) => { setActiveBidPayload(p); setCounterOfferModalOpen(true); }}
+                          onBidPay={handleBidPay}
                         />
                       );
                     }

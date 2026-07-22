@@ -161,7 +161,7 @@ export default function WorkerMessages() {
     const sentIds = new Set<string>();
 
     messages.forEach(msg => {
-      const isSent = msg.senderId === userId; 
+      const isSent = msg.senderId === userId;
       if (msg.type === 'system') {
         const payload = parseSystemMessage(msg.content);
         if (payload) {
@@ -298,18 +298,19 @@ export default function WorkerMessages() {
 
   // send bidd new PRICE
   // derive "already offered" state from message history, same pattern as sentConfirmRequests
+  // Detect already-sent confirm requests from message history
   useEffect(() => {
     const sentIds = new Set<string>();
     messages.forEach(msg => {
       if (msg.type === 'system') {
         const parsed = parseSystemMessage(msg.content);
-        if (parsed?.type === 'WORK_BID_OFFER' && parsed.offeredBy === 'worker') {
+        if (parsed?.type === 'WORK_CONFIRM_REQUEST' && msg.senderId === userId) {
           sentIds.add(parsed.workId);
         }
       }
     });
-    if (sentIds.size > 0) setSentAskNewPriceRequests(sentIds);
-  }, [messages]);
+    if (sentIds.size > 0) setSentConfirmRequests(sentIds);
+  }, [messages, userId]);
 
   const handleTyping = (value: string) => {
     setNewMessage(value);
@@ -452,6 +453,7 @@ export default function WorkerMessages() {
                   const isSent = msg.senderId === userId;
 
                   // ── System message ───────────────────────────────────────
+
                   if (msg.type === 'system') {
                     const payload = parseSystemMessage(msg.content);
                     if (payload) {
@@ -461,6 +463,15 @@ export default function WorkerMessages() {
                           payload={payload}
                           isSender={isSent}
                           role="worker"
+                          isBidActionable={isBidCardActionable(messages, msg.id)}
+                          onBidAccept={(p) =>
+                            BidService.respondToBid({ bidId: p.bidId, respondedBy: 'worker', action: 'accept' })
+                              .catch(() => setSendError('Failed to accept offer. Please try again.'))
+                          }
+                          onBidReject={(p) =>
+                            BidService.respondToBid({ bidId: p.bidId, respondedBy: 'worker', action: 'reject' })
+                              .catch(() => setSendError('Failed to reject offer. Please try again.'))
+                          }
                         />
                       );
                     }
