@@ -8,8 +8,10 @@ import { ArrowLeft, Send, User } from 'lucide-react';
 import { MediaUploadButton } from '@/components/chat/MediaUploadButton';
 import type { UploadedMedia } from '@/components/chat/MediaUploadButton';
 import { MediaMessage } from '@/components/chat/MediaMessage';
-import { SystemMessage, parseSystemMessage } from '@/components/chat/SystemMessage';
+import { SystemMessage, isBidCardActionable, parseSystemMessage } from '@/components/chat/SystemMessage';
 import { PaymentService } from "@/services/payment-service"
+import { BidService } from '@/services/bid-service';
+import CounterOfferModal from './modals/counter-offer-modal';
 
 interface Message {
   id: string;
@@ -63,6 +65,10 @@ export default function ClientMessages() {
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const [pendingMedia, setPendingMedia] = useState<UploadedMedia | null>(null);
 
+  // offer bidd fun
+  const [counterOfferModalOpen, setCounterOfferModalOpen] = useState(false);
+  const [activeBidPayload, setActiveBidPayload] = useState<any>(null);
+
   // Track which workIds the user has already responded to
   const [respondedConfirms, setRespondedConfirms] = useState<Set<string>>(new Set());
 
@@ -74,6 +80,98 @@ export default function ClientMessages() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const selectedChatRef = useRef<Chat | null>(null);
   const isInitialLoadRef = useRef(false);
+
+  //bid
+  const processBidPayment = async (
+    workId: string,
+    workerId: string,
+    title: string,
+    amount: number,
+    onSuccess: () => Promise<void>
+  ) => {
+    const loaded = await loadRazorpayScript();
+    if (!loaded) {
+      setSendError('Failed to load payment. Please check your internet connection.');
+      return;
+    }
+
+    const orderRes = await PaymentService.createOrder({ workId, workerId, workTitle: title, amount });
+    const { orderId, amount: amountPaise, currency, keyId } = orderRes.data.data;
+
+    await new Promise<void>((resolve, reject) => {
+      const options = {
+        key: keyId,
+        amount: amountPaise,
+        currency,
+        name: 'WorkBee',
+        description: title,
+        order_id: orderId,
+        prefill: {},
+        theme: { color: '#000000' },
+        handler: async (response: {
+          razorpay_payment_id: string;
+          razorpay_order_id: string;
+          razorpay_signature: string;
+        }) => {
+          try {
+            await PaymentService.verifyPayment({
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+            });
+            await onSuccess();
+            resolve();
+          } catch (err) {
+            reject(err);
+          }
+        },
+        modal: { ondismiss: () => reject(new Error('Payment cancelled')) },
+      };
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on('payment.failed', (response: any) => {
+        reject(new Error(response.error?.description || 'Payment failed'));
+      });
+      rzp.open();
+    });
+  };
+
+  const handleBidAccept = async (payload: any) => {
+    try {
+      await BidService.respondToBid({ bidId: payload.bidId, respondedBy: 'user', action: 'accept' });
+    } catch {
+      setSendError('Failed to accept offer. Please try again.');
+    }
+  };
+
+  const handleBidReject = async (payload: any) => {
+    try {
+      await BidService.respondToBid({ bidId: payload.bidId, respondedBy: 'user', action: 'reject' });
+    } catch {
+      setSendError('Failed to reject offer. Please try again.');
+    }
+  };
+
+  const handleBidPay = async (payload: any) => {
+    if (!selectedChat) return;
+    try {
+      await processBidPayment(payload.workId, payload.workerId, payload.workTitle, payload.amount, async () => {
+        await WorkService.updateWork(payload.workId, { status: 'assigned', workerId: payload.workerId });
+        await BidService.notifyPaymentCompleted({
+          chatId: selectedChat.id,
+          bidId: payload.bidId,
+          workId: payload.workId,
+          workTitle: payload.workTitle,
+          userId: payload.userId,
+          workerId: payload.workerId,
+          workerName: payload.workerName,
+          amount: payload.amount,
+        });
+      });
+    } catch (err: any) {
+      if (err.message === 'Payment cancelled') return;
+      setSendError('Payment failed. Please try again.');
+    }
+  };
 
   // ── Scroll helpers ────────────────────────────────────────────────────────
   const scrollToBottomInstant = useCallback(() => {
@@ -161,14 +259,31 @@ export default function ClientMessages() {
   // Detect already-responded confirms from message history
   useEffect(() => {
     const responded = new Set<string>();
+    
     messages.forEach(msg => {
+      const isSent = msg.senderId === userId; 
       if (msg.type === 'system') {
-        const parsed = parseSystemMessage(msg.content);
-        if (
-          parsed &&
-          (parsed.type === 'WORK_CONFIRM_ACCEPTED' || parsed.type === 'WORK_CONFIRM_REJECTED')
-        ) {
-          responded.add(parsed.workId);
+        const payload = parseSystemMessage(msg.content);
+        if (payload) {
+          const alreadyResponded =
+            payload.type === 'WORK_CONFIRM_REQUEST' ? respondedConfirms.has(payload.workId) : undefined;
+
+          return (
+            <SystemMessage
+              key={msg.id}
+              payload={payload}
+              isSender={isSent}
+              role="user"
+              responded={alreadyResponded}
+              onAccept={handleAcceptConfirm}
+              onReject={handleRejectConfirm}
+              isBidActionable={isBidCardActionable(messages, msg.id)}
+              onBidAccept={handleBidAccept}
+              onBidReject={handleBidReject}
+              onBidCounter={(p) => { setActiveBidPayload(p); setCounterOfferModalOpen(true); }}
+              onBidPay={handleBidPay}
+            />
+          );
         }
       }
     });
@@ -547,7 +662,7 @@ export default function ClientMessages() {
                       );
                     }
                   }
-                  
+
 
                   // ── Regular message ────────────────────────────────────
                   return (
@@ -565,7 +680,7 @@ export default function ClientMessages() {
                           />
                         ) : (
                           // showing message in msg comp
-                          
+
                           <p>{msg.content}</p>
                         )}
                         <p className={`text-xs mt-1 ${isSent ? 'text-blue-100' : 'text-gray-500'}`}>
@@ -639,6 +754,20 @@ export default function ClientMessages() {
           </div>
         )}
       </div>
+      {activeBidPayload && (
+        <CounterOfferModal
+          open={counterOfferModalOpen}
+          setModalOpen={setCounterOfferModalOpen}
+          chatId={selectedChat?.id || ''}
+          workId={activeBidPayload.workId}
+          workTitle={activeBidPayload.workTitle}
+          userId={activeBidPayload.userId}
+          workerId={activeBidPayload.workerId}
+          workerName={activeBidPayload.workerName}
+          workerAskedPrice={activeBidPayload.amount}
+        />
+      )}
     </div>
+
   );
 }

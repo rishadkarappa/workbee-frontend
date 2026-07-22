@@ -1,63 +1,101 @@
+import { useState } from 'react';
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-    DialogClose,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { BidService } from '@/services/bid-service';
 
-import type { AskBetterPriceModalProps } from "../types/modal.types";
-import { BidService } from "@/services/bid-service";
+interface AskBetterPriceModalProps {
+  open: boolean;
+  setAskBetterPriceModalOpen: (open: boolean) => void;
+  chatId: string;
+  workId: string;
+  workTitle: string;
+  userId: string;
+  workerId: string;
+  workerName: string;
+  onSent?: () => void;
+}
 
 export default function AskBetterPriceModal({
-    open,
-    setAskBetterPriceModalOpen,
+  open,
+  setAskBetterPriceModalOpen,
+  chatId,
+  workId,
+  workTitle,
+  userId,
+  workerId,
+  workerName,
+  onSent,
 }: AskBetterPriceModalProps) {
+  const [amount, setAmount] = useState('');
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-
-    const handleSendBetterPrice = () => {
-        BidService.sendWorkerBetterrPrice(data){
-            
-        }
+  const handleSendBetterPrice = async () => {
+    const value = Number(amount);
+    if (!value || value <= 0) {
+      setError('Enter a valid amount');
+      return;
     }
+    setSending(true);
+    setError(null);
+    try {
+      await BidService.sendWorkerOffer({
+        chatId,
+        workId,
+        workTitle,
+        userId,
+        workerId,
+        workerName,
+        amount: value,
+      });
+      setAmount('');
+      setAskBetterPriceModalOpen(false);
+      onSent?.();
+    } catch (err) {
+      setError('Failed to send offer. Please try again.');
+    } finally {
+      setSending(false);
+    }
+  };
 
+  return (
+    <Dialog open={open} onOpenChange={setAskBetterPriceModalOpen}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Ask for a Better Price</DialogTitle>
+          <DialogDescription>Enter the price you'd like to offer to the client.</DialogDescription>
+        </DialogHeader>
 
-    return (
-        <Dialog
-            open={open}
-            onOpenChange={setAskBetterPriceModalOpen}
-        >
-            <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                    <DialogTitle>Ask for a Better Price</DialogTitle>
-                    <DialogDescription>
-                        Enter the price you'd like to offer to the client.
-                    </DialogDescription>
-                </DialogHeader>
+        <div className="space-y-4 py-2">
+          <Input
+            type="number"
+            placeholder="Enter your price"
+            min={1}
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+          />
+          {error && <p className="text-sm text-red-600">{error}</p>}
 
-                <div className="space-y-4 py-2">
-                    <Input
-                        type="number"
-                        placeholder="Enter your price"
-                        min={1}
-                    />
-
-                    <div className="flex justify-end gap-2">
-                        <DialogClose asChild>
-                            <Button variant="outline">
-                                Cancel
-                            </Button>
-                        </DialogClose>
-
-                        <Button onClick={handleSendBetterPrice}>
-                            Sent
-                        </Button>
-                    </div>
-                </div>
-            </DialogContent>
-        </Dialog>
-    );
+          <div className="flex justify-end gap-2">
+            <DialogClose asChild>
+              <Button variant="outline" disabled={sending}>
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button onClick={handleSendBetterPrice} disabled={sending}>
+              {sending ? 'Sending…' : 'Send'}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 }

@@ -11,7 +11,7 @@ class SocketService {
 
   private joinedChatIds: Set<string> = new Set();
 
-  private constructor() {}
+  private constructor() { }
 
   static getInstance(): SocketService {
     if (!SocketService.instance) {
@@ -128,6 +128,10 @@ class SocketService {
       this.socket!.off('work_progress_changed', cb);
       this.socket!.on('work_progress_changed', cb);
     });
+    this.errorCallbacks.forEach(cb => {
+      this.socket!.off('error', cb);
+      this.socket!.on('error', cb);
+    });
   }
 
   disconnect() {
@@ -177,12 +181,12 @@ class SocketService {
 
   // ── Ask worker to confirm the deal ───────────────────────────────────────
   async askForConfirm(data: {
-    chatId:     string;
-    workId:     string;
-    workTitle:  string;
-    workerId:   string;
+    chatId: string;
+    workId: string;
+    workTitle: string;
+    workerId: string;
     workerName: string;
-    userId:     string;
+    userId: string;
   }): Promise<void> {
     try {
       await this.ensureConnected();
@@ -196,13 +200,13 @@ class SocketService {
   // ── User responds to confirmation request ────────────────────────────────
   // workerId is required so the socket server can push to worker's personal room
   async confirmResponse(data: {
-    chatId:     string;
-    workId:     string;
-    workTitle:  string;
-    accepted:   boolean;
-    userId:     string;
+    chatId: string;
+    workId: string;
+    workTitle: string;
+    accepted: boolean;
+    userId: string;
     workerName: string;
-    workerId:   string;   // REQUIRED — identifies worker's personal room
+    workerId: string;   // REQUIRED — identifies worker's personal room
   }): Promise<void> {
     try {
       await this.ensureConnected();
@@ -215,17 +219,70 @@ class SocketService {
 
   // ── Worker updates work progress ─────────────────────────────────────────
   async updateWorkProgress(data: {
-    chatId:    string;
-    workId:    string;
+    chatId: string;
+    workId: string;
     workTitle: string;
-    progress:  string;
-    workerId:  string;
+    progress: string;
+    workerId: string;
   }): Promise<void> {
     try {
       await this.ensureConnected();
       this.socket!.emit('work_progress_update', data);
     } catch (err) {
       console.error('[Socket] updateWorkProgress failed:', err);
+      throw err;
+    }
+  }
+
+  // ── Bidding ───────────────────────────────────────────────────────────────
+  async sendBidOffer(data: {
+    chatId: string;
+    workId: string;
+    workTitle: string;
+    userId: string;
+    workerId: string;
+    workerName: string;
+    amount: number;
+    offeredBy: 'user' | 'worker';
+  }): Promise<void> {
+    try {
+      await this.ensureConnected();
+      this.socket!.emit('send_bid_offer', data);
+    } catch (err) {
+      console.error('[Socket] sendBidOffer failed:', err);
+      throw err;
+    }
+  }
+
+  async respondToBid(data: {
+    bidId: string;
+    respondedBy: 'user' | 'worker';
+    action: 'accept' | 'reject';
+  }): Promise<void> {
+    try {
+      await this.ensureConnected();
+      this.socket!.emit('respond_bid', data);
+    } catch (err) {
+      console.error('[Socket] respondToBid failed:', err);
+      throw err;
+    }
+  }
+
+  async notifyBidPaymentCompleted(data: {
+    chatId: string;
+    bidId: string;
+    workId: string;
+    workTitle: string;
+    userId: string;
+    workerId: string;
+    workerName: string;
+    amount: number;
+  }): Promise<void> {
+    try {
+      await this.ensureConnected();
+      this.socket!.emit('bid_payment_completed', data);
+    } catch (err) {
+      console.error('[Socket] notifyBidPaymentCompleted failed:', err);
       throw err;
     }
   }
@@ -285,6 +342,7 @@ class SocketService {
     }
   }
 
+
   sendTyping(chatId: string, isTyping: boolean) {
     if (!this.socket?.connected) return;
     this.socket.emit('typing', { chatId, isTyping });
@@ -292,6 +350,27 @@ class SocketService {
 
   isConnected(): boolean {
     return this.socket?.connected || false;
+  }
+
+  //new added
+  private errorCallbacks: Set<(data: { message: string }) => void> = new Set();
+
+  onSocketError(callback: (data: { message: string }) => void) {
+    this.errorCallbacks.add(callback);
+    if (this.socket) {
+      this.socket.off('error', callback);
+      this.socket.on('error', callback);
+    }
+  }
+
+  offSocketError(callback?: (data: { message: string }) => void) {
+    if (callback) {
+      this.errorCallbacks.delete(callback);
+      this.socket?.off('error', callback);
+    } else {
+      this.errorCallbacks.forEach(cb => this.socket?.off('error', cb));
+      this.errorCallbacks.clear();
+    }
   }
 }
 

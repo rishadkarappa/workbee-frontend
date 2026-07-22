@@ -7,11 +7,12 @@ import { ArrowLeft, Send, User, HandshakeIcon, TicketPercent } from 'lucide-reac
 import { MediaUploadButton } from '@/components/chat/MediaUploadButton';
 import type { UploadedMedia } from '@/components/chat/MediaUploadButton';
 import { MediaMessage } from '@/components/chat/MediaMessage';
-import { SystemMessage, parseSystemMessage } from '@/components/chat/SystemMessage';
+import { SystemMessage, parseSystemMessage, isBidCardActionable } from '@/components/chat/SystemMessage';
 import AskBetterPriceModal from './modals/ask-better-price-modal';
+import { BidService } from '@/services/bid-service';
 
 // types
-import type {Message, Chat} from './types/messages.types'
+import type { Message, Chat } from './types/messages.types'
 
 
 export default function WorkerMessages() {
@@ -53,6 +54,33 @@ export default function WorkerMessages() {
   const scrollToBottomSmooth = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
+
+  // Track the current bid state per workId from message history
+  useEffect(() => {
+    const sentIds = new Set<string>();
+    const workIdToLatestType: Record<string, string> = {};
+
+    messages.forEach(msg => {
+      if (msg.type === 'system') {
+        const parsed = parseSystemMessage(msg.content);
+        if (parsed && 'workId' in parsed && [
+          'WORK_BID_OFFER', 'WORK_BID_COUNTER', 'WORK_BID_ACCEPTED', 'WORK_BID_REJECTED', 'WORK_BID_PAID'
+        ].includes(parsed.type)) {
+          workIdToLatestType[(parsed as any).workId] = parsed.type;
+        }
+      }
+    });
+
+    Object.entries(workIdToLatestType).forEach(([workId, latestType]) => {
+      // Only block the button while a negotiation is actively open — 
+      // rejected negotiations free up the button to start a new one.
+      if (latestType === 'WORK_BID_OFFER' || latestType === 'WORK_BID_COUNTER' || latestType === 'WORK_BID_ACCEPTED') {
+        sentIds.add(workId);
+      }
+    });
+
+    setSentAskNewPriceRequests(sentIds);
+  }, [messages]);
 
   useEffect(() => {
     if (messages.length === 0) return;
@@ -131,11 +159,29 @@ export default function WorkerMessages() {
   // Detect already-sent confirm requests from message history
   useEffect(() => {
     const sentIds = new Set<string>();
+
     messages.forEach(msg => {
+      const isSent = msg.senderId === userId; 
       if (msg.type === 'system') {
-        const parsed = parseSystemMessage(msg.content);
-        if (parsed?.type === 'WORK_CONFIRM_REQUEST' && msg.senderId === userId) {
-          sentIds.add(parsed.workId);
+        const payload = parseSystemMessage(msg.content);
+        if (payload) {
+          return (
+            <SystemMessage
+              key={msg.id}
+              payload={payload}
+              isSender={isSent}
+              role="worker"
+              isBidActionable={isBidCardActionable(messages, msg.id)}
+              onBidAccept={(p) =>
+                BidService.respondToBid({ bidId: p.bidId, respondedBy: 'worker', action: 'accept' })
+                  .catch(() => setSendError('Failed to accept offer. Please try again.'))
+              }
+              onBidReject={(p) =>
+                BidService.respondToBid({ bidId: p.bidId, respondedBy: 'worker', action: 'reject' })
+                  .catch(() => setSendError('Failed to reject offer. Please try again.'))
+              }
+            />
+          );
         }
       }
     });
@@ -251,9 +297,19 @@ export default function WorkerMessages() {
   };
 
   // send bidd new PRICE
-  const handleAskNewPrice = () => {
-
-  }
+  // derive "already offered" state from message history, same pattern as sentConfirmRequests
+  useEffect(() => {
+    const sentIds = new Set<string>();
+    messages.forEach(msg => {
+      if (msg.type === 'system') {
+        const parsed = parseSystemMessage(msg.content);
+        if (parsed?.type === 'WORK_BID_OFFER' && parsed.offeredBy === 'worker') {
+          sentIds.add(parsed.workId);
+        }
+      }
+    });
+    if (sentIds.size > 0) setSentAskNewPriceRequests(sentIds);
+  }, [messages]);
 
   const handleTyping = (value: string) => {
     setNewMessage(value);
@@ -504,10 +560,17 @@ export default function WorkerMessages() {
         )}
       </div>
 
-        {/* Bid Modal */}
+      {/* Bid Modal */}
       <AskBetterPriceModal
         open={AskNewPriceModalOpen}
         setAskBetterPriceModalOpen={setAskNewPriceModalOpen}
+        chatId={selectedChat?.id || ''}
+        workId={navWorkId || ''}
+        workTitle={workTitle || ''}
+        userId={selectedChat?.participants.userId || ''}
+        workerId={userId!}
+        workerName={user?.name || 'Worker'}
+        onSent={() => setSentAskNewPriceRequests(prev => new Set(prev).add(navWorkId))}
       />
 
     </div>
