@@ -281,7 +281,7 @@ export function SystemMessage({
   return null;
 }
 
-// ── Parse helper (✅ FIX: now accepts bid types too) ───────────────────────
+// ── Parse helper (now accepts bid types too) ───────────────────────
 export function parseSystemMessage(content: string): SystemMessagePayload | null {
   try {
     const parsed = JSON.parse(content);
