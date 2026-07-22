@@ -2,8 +2,13 @@
 
 
 export interface AskBetterPriceModalProps {
-    open: boolean;
-    setAskBetterPriceModalOpen: React.Dispatch<
-        React.SetStateAction<boolean>
-    >;
+  open: boolean;
+  setAskBetterPriceModalOpen: (open: boolean) => void;
+  chatId: string;
+  workId: string;
+  workTitle: string;
+  userId: string;
+  workerId: string;
+  workerName: string;
+  onSent?: () => void;
 }

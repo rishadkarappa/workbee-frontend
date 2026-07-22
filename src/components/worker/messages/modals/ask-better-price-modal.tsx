@@ -11,17 +11,9 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { BidService } from '@/services/bid-service';
 
-interface AskBetterPriceModalProps {
-  open: boolean;
-  setAskBetterPriceModalOpen: (open: boolean) => void;
-  chatId: string;
-  workId: string;
-  workTitle: string;
-  userId: string;
-  workerId: string;
-  workerName: string;
-  onSent?: () => void;
-}
+// props
+import type { AskBetterPriceModalProps } from '../types/modal.types';
+
 
 export default function AskBetterPriceModal({
   open,
