@@ -12,13 +12,13 @@ import { Button } from "@/components/ui/button";
 import type { AskBetterPriceModalProps } from "../types/modal.types";
 import { BidService } from "@/services/bid-service";
 
-export default function AskBetterPriceModal({
+export default function CounterOfferModal({
     open,
     setAskBetterPriceModalOpen,
 }: AskBetterPriceModalProps) {
 
 
-    const handleSendBetterPrice = () => {
+    const handleSendCounterOffer = () => {
         BidService.sendWorkerBetterrPrice(data){
             
         }
@@ -32,16 +32,22 @@ export default function AskBetterPriceModal({
         >
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle>Ask for a Better Price</DialogTitle>
+                    <DialogTitle>Sent Counter Better Price</DialogTitle>
                     <DialogDescription>
-                        Enter the price you'd like to offer to the client.
+                        Enter the price you'd like to offer to the Worker.
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-4 py-2">
                     <Input
                         type="number"
-                        placeholder="Enter your price"
+                        placeholder="HIS PRICE"
+                        min={1}
+                    />
+
+                    <Input
+                        type="number"
+                        placeholder="Enter your counter offer"
                         min={1}
                     />
 
@@ -52,7 +58,7 @@ export default function AskBetterPriceModal({
                             </Button>
                         </DialogClose>
 
-                        <Button onClick={handleSendBetterPrice}>
+                        <Button onClick={handleSendCounterOffer}>
                             Sent
                         </Button>
                     </div>
