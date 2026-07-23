@@ -10,5 +10,6 @@ export interface AskBetterPriceModalProps {
   userId: string;
   workerId: string;
   workerName: string;
+  currentAmount:number
   onSent?: () => void;
 }

@@ -257,7 +257,8 @@ const WorkDetailsModal = ({
           userId: work.userId,
           workId: work.id,
           workTitle: work.workTitle,
-          userName: work.userName || 'Client'
+          userName: work.userName || 'Client',
+          currentAmount : work.budget
         }
       });
 

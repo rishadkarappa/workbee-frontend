@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { BidService } from '@/services/bid-service';
 
-// props
+// types
 import type { AskBetterPriceModalProps } from '../types/modal.types';
 
 
@@ -24,11 +24,15 @@ export default function AskBetterPriceModal({
   userId,
   workerId,
   workerName,
+  currentAmount,
   onSent,
 }: AskBetterPriceModalProps) {
   const [amount, setAmount] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+    console.log("curramounttttttttt", currentAmount);
+
 
   const handleSendBetterPrice = async () => {
     const value = Number(amount);
@@ -64,6 +68,7 @@ export default function AskBetterPriceModal({
         <DialogHeader>
           <DialogTitle>Ask for a Better Price</DialogTitle>
           <DialogDescription>Enter the price you'd like to offer to the client.</DialogDescription>
+          <DialogDescription>Current Amount : ₹ {currentAmount}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2">

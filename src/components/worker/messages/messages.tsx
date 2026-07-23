@@ -44,7 +44,7 @@ export default function WorkerMessages() {
   const user = AuthHelper.getUser();
   const token = AuthHelper.getAccessToken();
   const userId = user?.id || user?._id || AuthHelper.getUserId();
-  const { chatId: navChatId, workTitle, workId: navWorkId, userId: navUserId } = location.state || {};
+  const { chatId: navChatId, workTitle, workId: navWorkId, userId: navUserId , currentAmount} = location.state || {};
 
   // ── Scroll helpers ────────────────────────────────────────────────────────
   const scrollToBottomInstant = useCallback(() => {
@@ -571,6 +571,7 @@ export default function WorkerMessages() {
         )}
       </div>
 
+
       {/* Bid Modal */}
       <AskBetterPriceModal
         open={AskNewPriceModalOpen}
@@ -581,8 +582,10 @@ export default function WorkerMessages() {
         userId={selectedChat?.participants.userId || ''}
         workerId={userId!}
         workerName={user?.name || 'Worker'}
+        currentAmount={Number(currentAmount)}
         onSent={() => setSentAskNewPriceRequests(prev => new Set(prev).add(navWorkId))}
       />
+
 
     </div>
 
