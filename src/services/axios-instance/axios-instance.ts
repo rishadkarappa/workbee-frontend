@@ -1,6 +1,7 @@
 import { AuthHelper } from "@/utils/auth-helper";
-import axios from "axios";
+import axios, { isAxiosError } from "axios";
 import { notificationSocketService } from "@/services/notification-socket-service";
+import type { ApiErrorResponse } from "@/types/api";
 
 const baseURL = import.meta.env.VITE_GATEWAY_URL;
 
@@ -11,21 +12,26 @@ export const api = axios.create({
   },
 });
 
-let isRefreshing = false;
-let failedQueue: any[] = [];
+interface QueuedRequest {
+  resolve: (token: string) => void
+  reject: (error: unknown) => void
+}
 
-const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach(prom => {
-    if (error) prom.reject(error);
-    else prom.resolve(token);
-  });
-  failedQueue = [];
-};
+let isRefreshing = false
+let failedQueue: QueuedRequest[] = []
+
+const processQueue = (error: unknown, token: string | null = null) => {
+  failedQueue.forEach(({ resolve, reject }) => {
+    if (error) reject(error)
+    else resolve(token as string)
+  })
+  failedQueue = []
+}
 
 // ─── Shared logout helper ────────────────────────────────────────────────────
 const forceLogout = (reason: "blocked" | "expired") => {
   notificationSocketService.disconnect();
-  
+
   const userRole = AuthHelper.getUserRole();
   AuthHelper.clearAuth();
 
@@ -34,8 +40,8 @@ const forceLogout = (reason: "blocked" | "expired") => {
     setTimeout(() => {
       const loginPath =
         userRole === "admin" ? "/admin" :
-        userRole === "worker" ? "/worker/worker-login" :
-        "/login";
+          userRole === "worker" ? "/worker/worker-login" :
+            "/login";
 
       // Pass a flag so the login page can show "Your account has been blocked"
       window.location.href = `${loginPath}?blocked=true`;
@@ -43,8 +49,8 @@ const forceLogout = (reason: "blocked" | "expired") => {
   } else {
     const loginPath =
       userRole === "admin" ? "/admin" :
-      userRole === "worker" ? "/worker/worker-login" :
-      "/login";
+        userRole === "worker" ? "/worker/worker-login" :
+          "/login";
     window.location.href = loginPath;
   }
 };
@@ -135,18 +141,16 @@ api.interceptors.response.use(
 
         return api(originalRequest);
 
-      } catch (refreshError: any) {
-        console.error("Token refresh failed:", refreshError);
-        processQueue(refreshError, null);
+      } catch (refreshError: unknown) {
+        console.error("Token refresh failed:", refreshError)
+        processQueue(refreshError, null)
 
-        // Check if refresh itself failed due to block
-        const refreshBlocked =
-          refreshError.response?.data?.code === "ACCOUNT_BLOCKED" ||
-          refreshError.response?.data?.error?.toLowerCase().includes("blocked");
+        const refreshBlocked = isAxiosError<ApiErrorResponse>(refreshError) &&
+          (refreshError.response?.data?.code === "ACCOUNT_BLOCKED" ||
+            refreshError.response?.data?.error?.toLowerCase().includes("blocked"))
 
-        forceLogout(refreshBlocked ? "blocked" : "expired");
-
-        return Promise.reject(refreshError);
+        forceLogout(refreshBlocked ? "blocked" : "expired")
+        return Promise.reject(refreshError)
       } finally {
         isRefreshing = false;
       }

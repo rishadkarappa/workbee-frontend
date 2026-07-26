@@ -1,3 +1,4 @@
+import type { ApiResponse, AuthTokens } from "@/types/api";
 import { api } from "./axios-instance/axios-instance";
 
 export const AuthService = {
@@ -12,6 +13,7 @@ export const AuthService = {
     // verify otp
     verifyOtp: (data: { userId: string | null; otp: string }) => {
         return api.post("/auth/verifyOtp", data);
+        // return api.post<ApiResponse<AuthTokens>>("/auth/verifyOtp", data);
     },
 
     // resent otp

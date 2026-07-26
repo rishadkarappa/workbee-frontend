@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/input-otp"
 import { AuthHelper } from "@/utils/auth-helper"
 import { AuthService } from "@/services/auth-service"
+import { getErrorMessage } from "@/utils/error-helper"
 
 const VerifyOtp = () => {
   const [otp, setOtp] = useState("")
@@ -75,9 +76,9 @@ const VerifyOtp = () => {
       } else {
         alert(res.data.message || 'Failed to resend OTP')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error)
-      alert(error.response?.data?.message || 'Failed to resend OTP')
+      alert(getErrorMessage(error))
     } finally {
       setIsResending(false)
     }
@@ -113,9 +114,9 @@ const VerifyOtp = () => {
       } else {
         alert(res.data.message || 'OTP verification failed')
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error)
-      alert(error.response?.data?.message || 'OTP verification failed')
+      alert(getErrorMessage(error))
     } finally {
       setIsVerifying(false)
     }
