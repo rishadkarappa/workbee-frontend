@@ -323,7 +323,7 @@ export default function WorkersManagementComponent() {
                 setIsModalOpen(false)
                 getAllWorkers() // Refresh current page
             }
-        } catch (error: any) {
+        } catch (error) {
             console.error("Error blocking/unblocking worker:", error)
             alert("Error occurred while updating worker status")
         }

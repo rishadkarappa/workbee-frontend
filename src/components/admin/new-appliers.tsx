@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { Eye, X, Search, BookmarkIcon } from "lucide-react"
 import { WorkService } from "@/services/work-service"
 import { Toggle } from "../ui/toggle"
+import { getErrorMessage } from "@/utils/error-helper"
 
 // Types
 interface Applier {
@@ -139,9 +140,9 @@ const Modal = ({
         onClose()
         onRefresh()
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error approving worker:', error)
-      alert('❌ ' + (error.response?.data?.message || 'Error approving worker'))
+      alert('❌ ' + (getErrorMessage(error) || 'Error approving worker'))
     } finally {
       setIsSubmitting(false)
     }
@@ -171,9 +172,9 @@ const Modal = ({
         onClose()
         onRefresh()
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error rejecting worker:', error)
-      alert('❌ ' + (error.response?.data?.message || 'Error rejecting worker'))
+      alert('❌ ' + (getErrorMessage || 'Error rejecting worker'))
     } finally {
       setIsSubmitting(false)
     }

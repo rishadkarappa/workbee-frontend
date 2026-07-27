@@ -2,6 +2,7 @@
 import { useRef, useState } from 'react';
 import { Paperclip, X, Loader2 } from 'lucide-react';
 import { ChatService } from '@/services/chat-service';
+import { getErrorMessage } from '@/utils/error-helper';
 
 export interface UploadedMedia {
   url:          string;
@@ -52,8 +53,8 @@ export function MediaUploadButton({ onUploaded, disabled }: MediaUploadButtonPro
         publicId:     data.publicId,
         resourceType: data.resourceType,
       });
-    } catch (err: any) {
-      setError(err?.response?.data?.message || 'Upload failed. Please try again.');
+    } catch (err) {
+      setError(getErrorMessage(err) || 'Upload failed. Please try again.');
     } finally {
       setProgress(null);
       // Reset input so same file can be re-selected

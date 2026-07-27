@@ -18,6 +18,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PaymentService } from "@/services/payment-service";
+import { getErrorMessage } from "@/utils/error-helper";
 
 interface AdminSummary {
   totalRevenue: number;
@@ -282,8 +283,8 @@ export default function Payments() {
     try {
       const res = await PaymentService.getAdminSummary();
       setSummary(res.data.data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to load summary");
+    } catch (err) {
+      setError(getErrorMessage(err) || "Failed to load summary");
     }
   };
 
@@ -295,7 +296,7 @@ export default function Payments() {
       setPayments(data.payments || []);
       setTotal(data.total || 0);
       setTotalPages(data.totalPages || 1);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to load payments:", err);
     } finally {
       setTableLoading(false);

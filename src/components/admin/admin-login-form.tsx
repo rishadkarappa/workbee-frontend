@@ -18,6 +18,7 @@ import { useNavigate } from "react-router-dom"
 import { AuthService } from "@/services/auth-service"
 import { Eye, EyeOff } from "lucide-react"
 import { AuthHelper } from "@/utils/auth-helper"
+import { getErrorMessage } from "@/utils/error-helper"
 
 export function LoginForm({
   className,
@@ -56,9 +57,9 @@ export function LoginForm({
       } else {
         alert(res.data.message || 'Login failed');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Admin login error:', err);
-      alert(err.response?.data?.message || 'Login failed');
+      alert(getErrorMessage(err) || 'Login failed');
     } finally {
       setIsLoading(false);
     }

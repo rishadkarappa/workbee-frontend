@@ -62,6 +62,7 @@ const SelectItem = ({
 };
 import { AuthService } from "@/services/auth-service";
 import { useDebounce } from "@/hooks/useDebounce";
+import { getErrorMessage } from "@/utils/error-helper";
 
 // Define User type
 interface User {
@@ -172,8 +173,8 @@ const Users = () => {
       setUsers(res.data.data.users);
       setTotalUsers(res.data.data.total);
       setPageCount(res.data.data.totalPages);
-    } catch (error: any) {
-      console.log("Error while fetching users:", error.message);
+    } catch (error) {
+      console.log("Error while fetching users:", getErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
@@ -212,7 +213,7 @@ const Users = () => {
         fetchUsers();
       }
       
-    } catch (error: any) {
+    } catch (error) {
       alert("Error occurred while blocking user");
     }
   };
