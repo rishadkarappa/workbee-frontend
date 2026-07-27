@@ -21,6 +21,7 @@ import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthService } from "@/services/auth-service"
 import { AuthHelper } from "@/utils/auth-helper"
 import { useBlockedMessage } from "@/hooks/useBlockedMessage"
+import { getErrorMessage } from "@/utils/error-helper"
 
 export function LoginForm({
     className,
@@ -63,8 +64,8 @@ export function LoginForm({
             } else {
                 alert(res.data.message || "Login failed");
             }
-        } catch (err: any) {
-            alert(err.response?.data?.message || "Something went wrong");
+        } catch (err) {
+            alert(getErrorMessage(err) || "Something went wrong");
         } finally {
             setIsLoading(false);
         }
@@ -97,8 +98,8 @@ export function LoginForm({
             } else {
                 alert(res.data.message || "Google Auth Failed");
             }
-        } catch (err: any) {
-            alert(err.response?.data?.message || "Google Login Failed");
+        } catch (err) {
+            alert(getErrorMessage(err) || "Google Login Failed");
         }
     };
 

@@ -339,7 +339,7 @@ export function isBidCardActionable(messages: { id: string; content: string; typ
 
   for (let i = targetIndex + 1; i < messages.length; i++) {
     const p = parseSystemMessage(messages[i].content);
-    if (p && 'workId' in p && (p as any).workId === workId) {
+    if (p && 'workId' in p && p.workId === workId) {
       if (['WORK_BID_OFFER', 'WORK_BID_COUNTER', 'WORK_BID_ACCEPTED', 'WORK_BID_REJECTED', 'WORK_BID_PAID'].includes(p.type)) {
         return false; // a newer bid event exists — this card is resolved/stale
       }

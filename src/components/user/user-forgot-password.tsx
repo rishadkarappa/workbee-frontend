@@ -17,6 +17,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import BackButton from "../common/back-button"
 import { AuthService } from "@/services/auth-service"
+import { getErrorMessage } from "@/utils/error-helper"
 
 export function UserForgotPassword({
     className,
@@ -41,8 +42,8 @@ export function UserForgotPassword({
                 alert('we sent a reset link into your email')
                 navigate('/login')
             }
-        } catch (err:any) {
-            alert(err.response.data.message|| "Something went wrong. Please try again.")
+        } catch (err) {
+            alert(getErrorMessage(err)|| "Something went wrong. Please try again.")
         } finally {
             setIsLoading(false)
         }

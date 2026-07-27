@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { ChatService } from "@/services/chat-service";
+import { getErrorMessage } from "@/utils/error-helper";
 
 interface Work {
   id: string;
@@ -225,9 +226,9 @@ export default function LiveWorks() {
       } else {
         setError('Failed to load live works');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching live works:', err);
-      setError(err.response?.data?.message || 'Failed to load works');
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }

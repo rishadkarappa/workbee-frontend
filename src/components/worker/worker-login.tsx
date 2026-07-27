@@ -20,6 +20,7 @@ import BackButton from "../common/back-button"
 import { AuthService } from "@/services/auth-service"
 import { AuthHelper } from "@/utils/auth-helper"
 import { useBlockedMessage } from "@/hooks/useBlockedMessage"
+import { getErrorMessage } from "@/utils/error-helper"
 
 export function WorkerLoginForm({
     className,
@@ -61,9 +62,9 @@ export function WorkerLoginForm({
             } else {
                 alert(result.data.message || "Login failed");
             }
-        } catch (err: any) {
+        } catch (err) {
             console.error('Worker login error:', err);
-            alert(err.response?.data?.message || 'Login failed');
+            alert(getErrorMessage(err));
         } finally {
             setIsLoading(false);
         }

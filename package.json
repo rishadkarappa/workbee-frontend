@@ -34,6 +34,7 @@
     "@tabler/icons-react": "^3.35.0",
     "@tailwindcss/vite": "^4.1.13",
     "@tanstack/react-table": "^8.21.3",
+    "@workbee/common": "file:../common",
     "axios": "^1.11.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

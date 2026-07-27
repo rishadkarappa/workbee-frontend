@@ -20,6 +20,7 @@ import BackButton from "../common/back-button"
 import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google"
 import { AuthService } from "@/services/auth-service"
 import { AuthHelper } from "@/utils/auth-helper"
+import { getErrorMessage } from "@/utils/error-helper"
 
 export function RegisterForm({
     className,
@@ -60,9 +61,9 @@ export function RegisterForm({
             } else {
                 alert(res.data.message || "Registration failed");
             }
-        } catch (err: any) {
+        } catch (err) {
             console.error(err);
-            alert(err.response?.data?.message || "Registration failed");
+            alert(getErrorMessage(err) || "Registration failed");
         } finally {
             setIsLoading(false);
         }
@@ -95,8 +96,8 @@ export function RegisterForm({
             } else {
                 alert(res.data.message || "Google Auth Failed");
             }
-        } catch (err: any) {
-            alert(err.response?.data?.message || "Google Login Failed");
+        } catch (err) {
+            alert(getErrorMessage(err) || "Google Login Failed");
         }
     };
 

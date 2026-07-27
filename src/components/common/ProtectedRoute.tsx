@@ -1,10 +1,11 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { AuthHelper } from "@/utils/auth-helper";
 import { useEffect, useState } from "react";
+import { UserRole } from "@workbee/common";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  allowedRoles: ("user" | "admin" | "worker")[];
+  allowedRoles: UserRole[];
 }
 
 export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
@@ -27,9 +28,9 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
 
       // Not logged in - redirect to login
       if (!isLoggedIn) {
-        if (allowedRoles.includes("admin")) {
+        if (allowedRoles.includes(UserRole.ADMIN)) {
           setRedirectPath("/admin");
-        } else if (allowedRoles.includes("worker")) {
+        } else if (allowedRoles.includes(UserRole.WORKER)) {
           setRedirectPath("/worker/worker-login");
         } else {
           setRedirectPath("/login");
@@ -40,7 +41,7 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
       }
 
       // Logged in - check role
-      if (userRole && allowedRoles.includes(userRole as any)) {
+      if (userRole && allowedRoles.includes(userRole as UserRole)) {
         setIsAuthorized(true);
       } else {
         // Wrong role - redirect to their dashboard

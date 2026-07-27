@@ -30,6 +30,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { getErrorMessage } from "@/utils/error-helper";
 
 interface Work {
   id: string;
@@ -302,9 +303,9 @@ export default function ActiveWorks() {
       } else {
         setError('Failed to load assigned works');
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error fetching assigned works:', err);
-      setError(err.response?.data?.message || 'Failed to load works');
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -388,9 +389,9 @@ export default function ActiveWorks() {
       );
 
       setProgressDialog(null);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Progress update error:', err);
-      alert(err.response?.data?.message || 'Failed to update progress');
+      alert(getErrorMessage(err));
     } finally {
       setProgressSubmitting(false);
     }

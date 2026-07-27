@@ -22,6 +22,7 @@ import { useNavigate } from "react-router-dom"
 import TaskBookStepper, { Step } from "./task-book-stepper"
 import { WorkService } from "@/services/work-service"
 import AddressAutocomplete from "./AddressAutocomplete"
+import { getErrorMessage } from "@/utils/error-helper"
 
 export function PostWorkForm({ className, ...props }: React.ComponentProps<"div">) {
   const [form, setForm] = useState({
@@ -40,7 +41,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
     budget: "",
 
     location: "", // Display address from map
-    
+
     latitude: "", // Hidden field
     longitude: "", // Hidden field
 
@@ -103,7 +104,6 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
         return
       }
 
-      // ✅ ADD THIS VALIDATION
       if (!form.latitude || !form.longitude) {
         alert("Please select location from map")
         return
@@ -114,13 +114,20 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
       // Add all form fields except latitude, longitude, and location
       Object.entries(form).forEach(([key, value]) => {
         if (key === 'latitude' || key === 'longitude' || key === 'location') {
-          // Skip these - we'll handle them separately
           return
         }
-        if (value !== null && value !== "") {
-          formData.append(key, value as any)
+        if (value === null || value === "") {
+          return
+        }
+        if (value instanceof File) {
+          formData.append(key, value)
+        } else if (typeof value === 'boolean') {
+          formData.append(key, value.toString())
+        } else {
+          formData.append(key, value)
         }
       })
+
 
       formData.append('latitude', form.latitude)
       formData.append('longitude', form.longitude)
@@ -133,10 +140,10 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
         alert("Task successfully submitted! We'll connect you with workers soon.")
         navigate("/")
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Full error object:", error)
-      console.error("Error response:", error.response?.data)
-      alert(`Error submitting task: ${error.response?.data?.message || error.message}`)
+      console.error("Error response:", getErrorMessage(error))
+      alert(`Error submitting task: ${getErrorMessage(error)}`)
     } finally {
       setIsLoading(false)
     }
@@ -328,6 +335,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
           </Step>
 
           {/* ---------- STEP 3 ---------- */}
+
           <Step>
             <FieldGroup>
               <Field>

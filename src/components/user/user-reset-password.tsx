@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import BackButton from "../common/back-button";
 import { AuthService } from "@/services/auth-service";
+import { getErrorMessage } from "@/utils/error-helper";
 
 export function UserResetPassword() {
   const { token } = useParams();
@@ -39,8 +40,8 @@ export function UserResetPassword() {
         alert("Password reset successfully!");
         navigate("/login");
       }
-    } catch (err: any) {
-      alert(err.response?.data?.message || "Error resetting password");
+    } catch (err) {
+      alert(getErrorMessage(err));
     } finally {
       setLoading(false);
     }

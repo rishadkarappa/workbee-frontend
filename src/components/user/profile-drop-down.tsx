@@ -19,10 +19,10 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
-
+import type { IUser } from "@workbee/common";
 
 interface ProfileDropDownMenuProps {
-    user: any;
+    user: IUser;
     onLogout: () => void;
 }
 
@@ -35,9 +35,9 @@ const ProfileDropDownMenu = ({ user, onLogout }: ProfileDropDownMenuProps) => {
             : names[0][0].toUpperCase();
     };
 
-    const userName = user?.name || user?.displayName || "User";
+    const userName = user?.name || "User";
     const userEmail = user?.email || "user@example.com";
-    const userAvatar = user?.picture || user?.avatar || "";
+    const profilePic = user?.profileImage || "";
 
     const navigate = useNavigate()
 
@@ -46,7 +46,7 @@ const ProfileDropDownMenu = ({ user, onLogout }: ProfileDropDownMenuProps) => {
             <DropdownMenuTrigger asChild>
                 <button className="p-2 rounded-full border hover:bg-gray-100 transition">
                     <Avatar className="h-5 w-5">
-                        <AvatarImage alt={userName} src={userAvatar} />
+                        <AvatarImage alt={userName} src={profilePic} />
                         <AvatarFallback className="text-xs">{getInitials(userName)}</AvatarFallback>
                     </Avatar>
                 </button>
@@ -55,7 +55,7 @@ const ProfileDropDownMenu = ({ user, onLogout }: ProfileDropDownMenuProps) => {
                 <DropdownMenuLabel className="font-normal">
                     <div className="flex items-center gap-3 pb-2">
                         <Avatar className="h-10 w-10">
-                            <AvatarImage alt={userName} src={userAvatar} />
+                            <AvatarImage alt={userName} src={profilePic} />
                             <AvatarFallback>{getInitials(userName)}</AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col space-y-1">

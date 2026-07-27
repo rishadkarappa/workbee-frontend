@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { PaymentService } from "@/services/payment-service";
+import { getErrorMessage } from "@/utils/error-helper";
 
 interface WalletData {
   id: string;
@@ -237,8 +238,8 @@ export default function UserWallet() {
       const res = await PaymentService.getMyWallet();
       setWallet(res.data.data.wallet);
       setTransactions(res.data.data.transactions || []);
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to load wallet");
+    } catch (err) {
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }

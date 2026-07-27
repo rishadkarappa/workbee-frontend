@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { WorkService } from "@/services/work-service"
+import { getErrorMessage } from "@/utils/error-helper"
 
 export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"div">) {
   const [form, setForm] = useState({
@@ -103,12 +104,10 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
       } else {
         alert(result.data.message || "Application failed");
       }
-    } catch (error: any) {
-      console.error('Application Error:', error);
-      console.error('Error Response:', error.response?.data);
+    } catch (error) {
+      console.error(getErrorMessage(error));
 
-      const errorMessage = error.response?.data?.message ||
-        error.response?.data?.error ||
+      const errorMessage = getErrorMessage(error) ||
         "Error while applying to become a worker. Please try again.";
       alert(errorMessage);
     } finally {

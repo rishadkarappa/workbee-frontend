@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getErrorMessage } from "@/utils/error-helper";
 
 interface Work {
     id: string;
@@ -93,9 +94,9 @@ function EditModal({ work, isOpen, onClose, onUpdate }: EditModalProps) {
             } else {
                 alert(response.data.message || "Failed to update work");
             }
-        } catch (error: any) {
+        } catch (error) {
             console.error("Error updating work:", error);
-            alert(error.response?.data?.message || "Failed to update work. Please try again.");
+            alert(getErrorMessage(error));
         } finally {
             setIsSubmitting(false);
         }
@@ -376,9 +377,9 @@ export default function WorkContent() {
             } else {
                 setError('Error while fetching works data');
             }
-        } catch (error: any) {
+        } catch (error) {
             console.error('Error fetching works:', error);
-            setError(error.response?.data?.message || error.message || 'Error fetching works data');
+            setError(getErrorMessage(error));
         } finally {
             setLoading(false);
         }
@@ -419,9 +420,9 @@ export default function WorkContent() {
             } else {
                 alert("Error while deleting work");
             }
-        } catch (error: any) {
+        } catch (error) {
             console.error("Delete error:", error);
-            alert(error.response?.data?.message || "Error while deleting work");
+            alert(getErrorMessage(error));
         }
     };
 
