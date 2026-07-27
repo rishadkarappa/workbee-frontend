@@ -1,3 +1,5 @@
+import type { IUser } from "@workbee/common";
+
 const ACCESS_TOKEN = "accessToken";
 const REFRESH_TOKEN = "refreshToken";
 const USER = "user";
@@ -5,11 +7,11 @@ const USER_ID = "userId";
 
 export const AuthHelper = {
   // Save tokens, user, and userId
-  setAuth(accessToken: string, refreshToken: string, user: any) {
+  setAuth(accessToken: string, refreshToken: string, user: IUser) {
     localStorage.setItem(ACCESS_TOKEN, accessToken);
     localStorage.setItem(REFRESH_TOKEN, refreshToken);
     localStorage.setItem(USER, JSON.stringify(user));
-    localStorage.setItem(USER_ID, user._id || user.id);
+    localStorage.setItem(USER_ID, user.id);
   },
 
   // Access Token methods
@@ -36,7 +38,7 @@ export const AuthHelper = {
     return stored ? JSON.parse(stored) : null;
   },
 
-  setUser(user: any) {
+  setUser(user: IUser) {
     localStorage.setItem(USER, JSON.stringify(user));
   },
 
