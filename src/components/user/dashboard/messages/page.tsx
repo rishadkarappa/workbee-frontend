@@ -12,15 +12,18 @@ import { SystemMessage, isBidCardActionable, parseSystemMessage } from '@/compon
 import { PaymentService } from "@/services/payment-service"
 import { BidService } from '@/services/bid-service';
 import CounterOfferModal from './modals/counter-offer-modal';
+import { getErrorMessage } from '@/utils/error-helper';
 
 interface Message {
   id: string;
+  chatId: string;
   content: string;
   senderId: string;
   senderRole: string;
   senderDetails?: { name: string; avatar?: string };
   type: 'text' | 'image' | 'video' | 'file' | 'system';
   mediaUrl?: string;
+  mediaPublicId?: string;
   createdAt: string;
 }
 
@@ -36,9 +39,26 @@ interface Chat {
   myUnreadCount?: number;
 }
 
+interface BidPayload {
+  bidId: string;
+  workId: string;
+  workTitle: string;
+  userId: string;
+  workerId: string;
+  workerName: string;
+  amount: number;
+}
+
+interface Work {
+  id: string;
+  budget?: string | number;
+  status: string;
+  workerId?: string;
+}
+
 const loadRazorpayScript = (): Promise<boolean> => {
   return new Promise((resolve) => {
-    if ((window as any).Razorpay) {
+    if (window.Razorpay) {
       resolve(true);
       return;
     }
@@ -65,11 +85,9 @@ export default function ClientMessages() {
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const [pendingMedia, setPendingMedia] = useState<UploadedMedia | null>(null);
 
-  // offer bidd fun
   const [counterOfferModalOpen, setCounterOfferModalOpen] = useState(false);
-  const [activeBidPayload, setActiveBidPayload] = useState<any>(null);
+  const [activeBidPayload, setActiveBidPayload] = useState<BidPayload | null>(null);
 
-  // Track which workIds the user has already responded to
   const [respondedConfirms, setRespondedConfirms] = useState<Set<string>>(new Set());
 
   const user = AuthHelper.getUser();
@@ -81,7 +99,6 @@ export default function ClientMessages() {
   const selectedChatRef = useRef<Chat | null>(null);
   const isInitialLoadRef = useRef(false);
 
-  //bid
   const processBidPayment = async (
     workId: string,
     workerId: string,
@@ -99,7 +116,7 @@ export default function ClientMessages() {
     const { orderId, amount: amountPaise, currency, keyId } = orderRes.data.data;
 
     await new Promise<void>((resolve, reject) => {
-      const options = {
+      const options: RazorpayOptions = {
         key: keyId,
         amount: amountPaise,
         currency,
@@ -108,11 +125,7 @@ export default function ClientMessages() {
         order_id: orderId,
         prefill: {},
         theme: { color: '#000000' },
-        handler: async (response: {
-          razorpay_payment_id: string;
-          razorpay_order_id: string;
-          razorpay_signature: string;
-        }) => {
+        handler: async (response) => {
           try {
             await PaymentService.verifyPayment({
               razorpayOrderId: response.razorpay_order_id,
@@ -127,15 +140,21 @@ export default function ClientMessages() {
         },
         modal: { ondismiss: () => reject(new Error('Payment cancelled')) },
       };
-      const rzp = new (window as any).Razorpay(options);
-      rzp.on('payment.failed', (response: any) => {
+
+      if (!window.Razorpay) {
+        reject(new Error('Razorpay not loaded'));
+        return;
+      }
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', (response) => {
         reject(new Error(response.error?.description || 'Payment failed'));
       });
       rzp.open();
     });
   };
 
-  const handleBidAccept = async (payload: any) => {
+  const handleBidAccept = async (payload: BidPayload) => {
     try {
       await BidService.respondToBid({ bidId: payload.bidId, respondedBy: 'user', action: 'accept' });
     } catch {
@@ -143,7 +162,7 @@ export default function ClientMessages() {
     }
   };
 
-  const handleBidReject = async (payload: any) => {
+  const handleBidReject = async (payload: BidPayload) => {
     try {
       await BidService.respondToBid({ bidId: payload.bidId, respondedBy: 'user', action: 'reject' });
     } catch {
@@ -151,7 +170,7 @@ export default function ClientMessages() {
     }
   };
 
-  const handleBidPay = async (payload: any) => {
+  const handleBidPay = async (payload: BidPayload) => {
     if (!selectedChat) return;
     try {
       await processBidPayment(payload.workId, payload.workerId, payload.workTitle, payload.amount, async () => {
@@ -167,13 +186,12 @@ export default function ClientMessages() {
           amount: payload.amount,
         });
       });
-    } catch (err: any) {
-      if (err.message === 'Payment cancelled') return;
+    } catch (err) {
+      if (getErrorMessage(err) === 'Payment cancelled') return;
       setSendError('Payment failed. Please try again.');
     }
   };
 
-  // ── Scroll helpers ────────────────────────────────────────────────────────
   const scrollToBottomInstant = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'instant' as ScrollBehavior });
   }, []);
@@ -202,7 +220,7 @@ export default function ClientMessages() {
     }
 
     const handleNewMessage = (message: Message) => {
-      const incomingChatId = (message as any).chatId;
+      const incomingChatId = message.chatId;
       if (incomingChatId === selectedChatRef.current?.id) {
         setMessages(prev => {
           if (prev.some(m => m.id === message.id)) return prev;
@@ -256,7 +274,6 @@ export default function ClientMessages() {
     };
   }, [selectedChat?.id]);
 
-  // Detect already-responded confirms from message history
   useEffect(() => {
     const responded = new Set<string>();
     messages.forEach(msg => {
@@ -336,7 +353,7 @@ export default function ClientMessages() {
           recipientId: getRecipientId(selectedChat),
           mediaUrl: pendingMedia.url,
           mediaPublicId: pendingMedia.publicId,
-        } as any);
+        });
         setPendingMedia(null);
         socketService.sendTyping(selectedChat.id, false);
         return;
@@ -355,8 +372,6 @@ export default function ClientMessages() {
     }
   };
 
-  // ── Confirmation Handlers ─────────────────────────────────────────────────
-
   const handleAcceptConfirm = async (workId: string) => {
     if (!selectedChat) return;
 
@@ -372,15 +387,12 @@ export default function ClientMessages() {
     const workerId = selectedChat.participants.workerId;
 
     try {
-      // 1. Get work budget
       const worksRes = await WorkService.getMyWorks();
-      const allWorks = worksRes.data.data?.works || [];
-      const work = allWorks.find((w: any) => w.id === workId);
+      const allWorks: Work[] = worksRes.data.data?.works || [];
+      const work = allWorks.find((w) => w.id === workId);
       const amount = work?.budget ? Number(work.budget) : 0;
 
-      // If no budget — free work, use old confirm flow
       if (!amount || amount <= 0) {
-        // Update work status to "assigned" for free work
         await WorkService.updateWork(workId, { status: "assigned", workerId });
         await socketService.confirmResponse({
           chatId: selectedChat.id,
@@ -395,14 +407,12 @@ export default function ClientMessages() {
         return;
       }
 
-      // 2. Load Razorpay script
       const loaded = await loadRazorpayScript();
       if (!loaded) {
         setSendError("Failed to load payment. Please check your internet connection.");
         return;
       }
 
-      // 3. Create Razorpay order on backend
       const orderRes = await PaymentService.createOrder({
         workId,
         workerId,
@@ -411,9 +421,8 @@ export default function ClientMessages() {
       });
       const { orderId, amount: amountPaise, currency, keyId } = orderRes.data.data;
 
-      // 4. Open Razorpay popup
       await new Promise<void>((resolve, reject) => {
-        const options = {
+        const options: RazorpayOptions = {
           key: keyId,
           amount: amountPaise,
           currency,
@@ -423,24 +432,16 @@ export default function ClientMessages() {
           prefill: {},
           theme: { color: "#000000" },
 
-          handler: async (response: {
-            razorpay_payment_id: string;
-            razorpay_order_id: string;
-            razorpay_signature: string;
-          }) => {
+          handler: async (response) => {
             try {
-              // 5. Verify payment server-side
               await PaymentService.verifyPayment({
                 razorpayOrderId: response.razorpay_order_id,
                 razorpayPaymentId: response.razorpay_payment_id,
                 razorpaySignature: response.razorpay_signature,
               });
 
-              // Update work status to "assigned" with workerId after successful payment
-              // This is what makes the work appear in the live works page for the worker
               await WorkService.updateWork(workId, { status: "assigned", workerId });
 
-              // 6. Emit socket event — worker sees "Deal accepted"
               await socketService.confirmResponse({
                 chatId: selectedChat.id,
                 workId,
@@ -465,18 +466,22 @@ export default function ClientMessages() {
           },
         };
 
-        const rzp = new (window as any).Razorpay(options);
+        if (!window.Razorpay) {
+          reject(new Error('Razorpay not loaded'));
+          return;
+        }
 
-        rzp.on("payment.failed", (response: any) => {
+        const rzp = new window.Razorpay(options);
+
+        rzp.on("payment.failed", (response) => {
           reject(new Error(response.error?.description || "Payment failed"));
         });
 
         rzp.open();
       });
 
-    } catch (err: any) {
-      if (err.message === "Payment cancelled") {
-        // User closed the popup — not an error, just do nothing
+    } catch (err) {
+      if (getErrorMessage(err) === "Payment cancelled") {
         return;
       }
       console.error("Razorpay payment error:", err);
@@ -526,8 +531,6 @@ export default function ClientMessages() {
     user?.role === 'worker' ? chat.participantDetails?.user : chat.participantDetails?.worker;
 
   const canSend = !!pendingMedia || !!newMessage.trim();
-
-
 
   if (loading) {
     return (
@@ -758,3 +761,5 @@ export default function ClientMessages() {
 
   );
 }
+
+
