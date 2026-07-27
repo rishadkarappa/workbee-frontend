@@ -1,4 +1,4 @@
-import { CheckCircle, XCircle, Clock, Wrench, TrendingUp, Flag, ExternalLink, IndianRupee, TicketPercent } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Wrench, TrendingUp, Flag, ExternalLink, IndianRupee, TicketPercent, type LucideIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export type SystemMessagePayload =
@@ -10,6 +10,40 @@ export type SystemMessagePayload =
   | { type: 'WORK_BID_ACCEPTED' | 'WORK_BID_REJECTED'; bidId: string; workId: string; workTitle: string; userId: string; workerId: string; workerName: string; amount: number; respondedBy: 'user' | 'worker' }
   | { type: 'WORK_BID_PAID'; bidId: string; workId: string; workTitle: string; userId: string; workerId: string; workerName: string; amount: number };
 
+export type BidMessagePayload =
+  | {
+    type: "WORK_BID_OFFER" | "WORK_BID_COUNTER";
+    bidId: string;
+    workId: string;
+    workTitle: string;
+    userId: string;
+    workerId: string;
+    workerName: string;
+    amount: number;
+    offeredBy: "user" | "worker";
+  }
+  | {
+    type: "WORK_BID_ACCEPTED" | "WORK_BID_REJECTED";
+    bidId: string;
+    workId: string;
+    workTitle: string;
+    userId: string;
+    workerId: string;
+    workerName: string;
+    amount: number;
+    respondedBy: "user" | "worker";
+  }
+  | {
+    type: "WORK_BID_PAID";
+    bidId: string;
+    workId: string;
+    workTitle: string;
+    userId: string;
+    workerId: string;
+    workerName: string;
+    amount: number;
+  };
+
 interface SystemMessageProps {
   payload: SystemMessagePayload;
   isSender: boolean;
@@ -19,15 +53,14 @@ interface SystemMessageProps {
   responded?: boolean;
 
   // Bidding
-  onBidAccept?: (payload: any) => void;
-  onBidReject?: (payload: any) => void;
-  onBidCounter?: (payload: any) => void;
-  onBidPay?: (payload: any) => void;
-  /** false = this offer/counter/accept card is stale (a newer event exists for this workId) */
+  onBidAccept?: (payload: BidMessagePayload) => void;
+  onBidReject?: (payload: BidMessagePayload) => void;
+  onBidCounter?: (payload: BidMessagePayload) => void;
+  onBidPay?: (payload: BidMessagePayload) => void;
   isBidActionable?: boolean;
 }
 
-const progressConfig: Record<string, { label: string; color: string; Icon: any; step: number }> = {
+const progressConfig: Record<string, { label: string; color: string; Icon: LucideIcon; step: number }> = {
   started: { label: 'Work Started', color: 'text-blue-600', Icon: Wrench, step: 1 },
   ongoing: { label: 'Work In Progress', color: 'text-amber-600', Icon: TrendingUp, step: 2 },
   completed: { label: 'Work Completed', color: 'text-green-600', Icon: Flag, step: 3 },
@@ -168,7 +201,7 @@ export function SystemMessage({
 
     return (
       <div className="my-2 flex justify-center">
-        
+
         <div className="bg-white border-2 border-gray-300 rounded-2xl shadow-sm p-4 max-w-sm w-full">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-8 h-8 rounded-full bg-gray-900 flex items-center justify-center">
@@ -302,7 +335,7 @@ export function isBidCardActionable(messages: { id: string; content: string; typ
   if (targetIndex === -1) return true;
   const targetPayload = parseSystemMessage(messages[targetIndex].content);
   if (!targetPayload || !('workId' in targetPayload)) return true;
-  const workId = (targetPayload as any).workId;
+  const workId = targetPayload.workId;
 
   for (let i = targetIndex + 1; i < messages.length; i++) {
     const p = parseSystemMessage(messages[i].content);

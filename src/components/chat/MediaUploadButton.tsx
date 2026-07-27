@@ -5,14 +5,14 @@ import { ChatService } from '@/services/chat-service';
 import { getErrorMessage } from '@/utils/error-helper';
 
 export interface UploadedMedia {
-  url:          string;
-  publicId:     string;
+  url: string;
+  publicId: string;
   resourceType: 'image' | 'video';
 }
 
 interface MediaUploadButtonProps {
   onUploaded: (media: UploadedMedia) => void;
-  disabled?:  boolean;
+  disabled?: boolean;
 }
 
 const ALLOWED_TYPES = [
@@ -21,9 +21,9 @@ const ALLOWED_TYPES = [
 ];
 
 export function MediaUploadButton({ onUploaded, disabled }: MediaUploadButtonProps) {
-  const inputRef  = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [progress, setProgress] = useState<number | null>(null);
-  const [error, setError]       = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -49,8 +49,8 @@ export function MediaUploadButton({ onUploaded, disabled }: MediaUploadButtonPro
       const data = response.data.data;
 
       onUploaded({
-        url:          data.url,
-        publicId:     data.publicId,
+        url: data.url,
+        publicId: data.publicId,
         resourceType: data.resourceType,
       });
     } catch (err) {
