@@ -7,9 +7,10 @@ import ProfileDropDownMenu from "./profile-drop-down";
 import NotificationDropdown from "./NotificationDropdown";
 import { AuthHelper } from "@/utils/auth-helper";
 import { notificationSocketService } from "@/services/notification-socket-service";
+import { UserRole, type IUser } from "@workbee/common";
 
 const Navbar = () => {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<IUser | null>(null);
   const navigate = useNavigate();
   //  Track whether we've already initiated the connection attempt this mount
   const socketConnectedRef = useRef(false);
@@ -23,7 +24,7 @@ const Navbar = () => {
         setUser(storedUser);
 
         if (!AuthHelper.getUserId()) {
-          AuthHelper.setUserId(storedUser._id || storedUser.id);
+          AuthHelper.setUserId(storedUser.id);
         }
 
         //  Only connect once per mount cycle
@@ -45,7 +46,7 @@ const Navbar = () => {
 
           setUser(loggedUser);
           AuthHelper.setUser(loggedUser);
-          AuthHelper.setUserId(loggedUser._id || loggedUser.id);
+          AuthHelper.setUserId(loggedUser.id);
 
           //  Only connect once per mount cycle
           if (!socketConnectedRef.current) {
@@ -107,7 +108,7 @@ const Navbar = () => {
           <li>
             <button
               onClick={() => {
-                if (user?.role?.includes("worker")) {
+                if (user?.role?.includes(UserRole.WORKER)) {
                   handleNavigation("/worker/worker-dashboard");
                 } else {
                   handleNavigation("/worker/apply-worker");
@@ -115,7 +116,7 @@ const Navbar = () => {
               }}
               className="hover:text-black hover:font-semibold transition"
             >
-              {user?.role?.includes("worker")
+              {user?.role?.includes(UserRole.WORKER)
                 ? "Worker Dashboard"
                 : "Apply to become a worker"}
             </button>
