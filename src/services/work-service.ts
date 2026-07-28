@@ -1,4 +1,19 @@
+import type { ApplyForWorkerDto } from "@/components/worker/worker-apply";
 import { api } from "./axios-instance/axios-instance";
+
+interface UpdateWorkDto {
+    workTitle?: string;
+    workCategory?: string;
+    workType?: string;
+    description?: string;
+    startDate?: string;
+    endDate?: string;
+    budget?: number;
+    status?: string;
+    workerId?: string;
+    manualAddress?: string;
+    landmark?: string;
+}
 
 export const WorkService = {
 
@@ -56,7 +71,7 @@ export const WorkService = {
         })
     },
 
-    applyForWorker: (workerData: any) => {
+    applyForWorker: (workerData: ApplyForWorkerDto) => {
         return api.post("/work/apply-worker", workerData)
     },
 
@@ -69,7 +84,7 @@ export const WorkService = {
         return api.get('/work/get-my-works');
     },
 
-    updateWork: (workId: string, workData: any) => {
+    updateWork: (workId: string, workData: UpdateWorkDto) => {
         return api.put(`/work/update-work/${workId}`, workData);
     },
 

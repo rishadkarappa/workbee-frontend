@@ -1,11 +1,15 @@
 import { io, Socket } from 'socket.io-client';
+import type { Message } from '@/components/worker/messages/types/messages.types';
+
+export type IncomingSocketMessage = Message & { chatId: string };
 
 class SocketService {
   private static instance: SocketService;
   private socket: Socket | null = null;
   private token: string | null = null;
 
-  private messageCallbacks: Set<(message: any) => void> = new Set();
+  private messageCallbacks: Set<(message: IncomingSocketMessage) => void> = new Set();
+
   private typingCallbacks: Set<(data: { userId: string; isTyping: boolean }) => void> = new Set();
   private progressCallbacks: Set<(data: { workId: string; progress: string }) => void> = new Set();
 
@@ -65,7 +69,7 @@ class SocketService {
       }
     });
 
-    this.socket.on('error', (error: any) => {
+    this.socket.on('error', (error:Error) => {
       console.error('[Socket] error:', error.message);
     });
 
@@ -287,7 +291,7 @@ class SocketService {
     }
   }
 
-  onNewMessage(callback: (message: any) => void) {
+  onNewMessage(callback: (message: IncomingSocketMessage) => void) {
     this.messageCallbacks.add(callback);
     if (this.socket) {
       this.socket.off('new_message', callback);
@@ -295,7 +299,7 @@ class SocketService {
     }
   }
 
-  offNewMessage(callback?: (message: any) => void) {
+  offNewMessage(callback?: (message: IncomingSocketMessage) => void) {
     if (callback) {
       this.messageCallbacks.delete(callback);
       this.socket?.off('new_message', callback);

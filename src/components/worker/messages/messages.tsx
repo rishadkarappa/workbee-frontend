@@ -66,7 +66,7 @@ export default function WorkerMessages() {
         if (parsed && 'workId' in parsed && [
           'WORK_BID_OFFER', 'WORK_BID_COUNTER', 'WORK_BID_ACCEPTED', 'WORK_BID_REJECTED', 'WORK_BID_PAID'
         ].includes(parsed.type)) {
-          workIdToLatestType[(parsed as any).workId] = parsed.type;
+          workIdToLatestType[parsed.workId] = parsed.type;
         }
       }
     });
@@ -101,8 +101,9 @@ export default function WorkerMessages() {
       socketService.connect(token);
     }
 
-    const handleNewMessage = (message: Message) => {
-      const incomingChatId = (message as any).chatId;
+    type IncomingChatMessage = Message & { chatId: string };
+    const handleNewMessage = (message: IncomingChatMessage) => {
+      const incomingChatId = message.chatId;
       if (incomingChatId === selectedChatRef.current?.id) {
         setMessages(prev => {
           if (prev.some(m => m.id === message.id)) return prev;
@@ -249,7 +250,7 @@ export default function WorkerMessages() {
           recipientId,
           mediaUrl: pendingMedia.url,
           mediaPublicId: pendingMedia.publicId,
-        } as any);
+        });
         setPendingMedia(null);
         socketService.sendTyping(selectedChat.id, false);
         return;

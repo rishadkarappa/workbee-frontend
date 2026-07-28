@@ -31,6 +31,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { getErrorMessage } from "@/utils/error-helper";
+import type { Chat } from "./messages/types/messages.types";
 
 interface Work {
   id: string;
@@ -49,6 +50,11 @@ interface Work {
   progress?: string;  // 'started' | 'ongoing' | 'completed'
   createdAt?: Date;
   updatedAt?: Date;
+}
+
+interface UpdateWorkPayload {
+  progress: string;
+  status?: string;
 }
 
 // Progress step config
@@ -83,10 +89,10 @@ function ProgressTracker({
                 disabled={disabled || idx > currentIdx + 1}
                 onClick={() => !disabled && onProgressChange(step.value)}
                 className={`flex-1 flex flex-col items-center gap-1 py-2 px-1 rounded-xl border-2 transition-all ${active
-                    ? `${step.bg} ${step.border} ${step.textColor}`
-                    : done
-                      ? 'bg-gray-100 border-gray-300 text-gray-600'
-                      : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
+                  ? `${step.bg} ${step.border} ${step.textColor}`
+                  : done
+                    ? 'bg-gray-100 border-gray-300 text-gray-600'
+                    : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
                   } ${disabled || idx > currentIdx + 1 ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
               >
                 <Icon className="w-4 h-4" />
@@ -271,7 +277,7 @@ export default function ActiveWorks() {
   const [progressSubmitting, setProgressSubmitting] = useState(false);
 
   const user = AuthHelper.getUser();
-  const userId = user?.id || user?._id || AuthHelper.getUserId();
+  const userId = user?.id || AuthHelper.getUserId();
   const token = AuthHelper.getAccessToken();
 
   const getStatusColor = (status?: string) => {
@@ -350,7 +356,7 @@ export default function ActiveWorks() {
     setProgressSubmitting(true);
     try {
       // 1. Update work status/progress in DB
-      const updatePayload: any = { progress: newProgress };
+      const updatePayload: UpdateWorkPayload = { progress: newProgress };
       if (newProgress === 'completed') {
         updatePayload.status = 'completed';
       }
@@ -363,9 +369,9 @@ export default function ActiveWorks() {
 
       // 2. Find chat between this worker and the work owner
       const chatsRes = await ChatService.getMyChats();
-      const allChats = chatsRes.data.data || [];
+      const allChats: Chat[] = chatsRes.data.data || [];
       const relatedChat = allChats.find(
-        (c: any) => c.participants.userId === work.userId
+        (c) => c.participants.userId === work.userId
       );
 
       // 3. Emit socket progress event

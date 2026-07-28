@@ -13,6 +13,24 @@ import { useNavigate } from "react-router-dom"
 import { WorkService } from "@/services/work-service"
 import { getErrorMessage } from "@/utils/error-helper"
 
+export interface WorkerConfirmationsDto {
+  reliable: boolean;
+  experienced: boolean;
+  honest: boolean;
+  termsAccepted: boolean;
+}
+
+export interface ApplyForWorkerDto {
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  location: string;
+  workType: string;
+  preferredWorks: string[];
+  confirmations: WorkerConfirmationsDto;
+}
+
 export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"div">) {
   const [form, setForm] = useState({
     name: "",
@@ -33,6 +51,7 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
   const [currentStep, setCurrentStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -77,7 +96,7 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
         return;
       }
 
-      const workerData = {
+      const workerData: ApplyForWorkerDto = {
         name: form.name,
         email: form.email,
         phone: form.phone,
@@ -87,13 +106,11 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
         preferredWorks: [form.preferredWork],
         confirmations: {
           reliable: form.confirmations.reliable,
+          experienced: form.confirmations.experienced,
           honest: form.confirmations.honest,
           termsAccepted: form.confirmations.termsAccepted,
         }
       };
-
-      console.log("Submitting worker application:", workerData);
-
       const result = await WorkService.applyForWorker(workerData);
 
       console.log("Application result:", result);

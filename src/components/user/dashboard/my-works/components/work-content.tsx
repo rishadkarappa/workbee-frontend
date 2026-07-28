@@ -49,6 +49,20 @@ interface Work {
     updatedAt?: Date;
 }
 
+export interface UpdateWorkDto {
+    workTitle?: string;
+    workCategory?: string;
+    workType?: string;
+    description?: string;
+    startDate?: string;
+    endDate?: string;
+    budget?: number;
+    status?: string;
+    workerId?: string;
+    manualAddress?: string;
+    landmark?: string;
+}
+
 interface EditModalProps {
     work: Work;
     isOpen: boolean;

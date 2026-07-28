@@ -51,6 +51,16 @@ interface Location {
   coordinates: [number, number]
 }
 
+interface WorkFilters {
+  search: string
+  status: string
+  page: number
+  limit: number
+  latitude?: number
+  longitude?: number
+  maxDistance?: number
+}
+
 interface Work {
   id?: string
   userId: string
@@ -579,7 +589,7 @@ export default function WorkerWorksTable() {
       setLoading(true)
 
       // Prepare filters
-      const filters: any = {
+      const filters: WorkFilters = {
         search: debouncedSearchTerm,
         status: statusFilter,
         page: currentPage,
