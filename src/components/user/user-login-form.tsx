@@ -17,7 +17,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Eye, EyeOff } from "lucide-react"
 import BackButton from "../common/back-button"
-import { GoogleLogin, GoogleOAuthProvider } from '@react-oauth/google';
+import { GoogleLogin, GoogleOAuthProvider, type CredentialResponse } from '@react-oauth/google';
 import { AuthService } from "@/services/auth-service"
 import { AuthHelper } from "@/utils/auth-helper"
 import { useBlockedMessage } from "@/hooks/useBlockedMessage"
@@ -72,11 +72,16 @@ export function LoginForm({
     };
 
     // Google auth
-    const handleGoogleAuthLogin = async (credentialResponse: any) => {
+    const handleGoogleAuthLogin = async (credentialResponse: CredentialResponse) => {
+        if (!credentialResponse.credential) {
+            alert("Google login failed no credential returned");
+            return;
+        }
         try {
             const res = await AuthService.googleAuthLogin({
                 credential: credentialResponse.credential
             });
+
 
             if (res.data.success) {
                 const { accessToken, refreshToken, user } = res.data.data;

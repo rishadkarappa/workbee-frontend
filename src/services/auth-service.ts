@@ -51,7 +51,7 @@ export const AuthService = {
 
 
     // google Auth
-    googleAuthLogin: (data: { credential: string }) => {
+    googleAuthLogin: (data: { credential: string}) => {
         return api.post("/auth/google-login", data)
     },
 
