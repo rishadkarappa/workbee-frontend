@@ -43,7 +43,7 @@ export default function WorkerMessages() {
 
   const user = AuthHelper.getUser();
   const token = AuthHelper.getAccessToken();
-  const userId = user?.id || user?._id || AuthHelper.getUserId();
+  const userId = user?.id || AuthHelper.getUserId();
   const { chatId: navChatId, workTitle, workId: navWorkId, userId: navUserId , currentAmount} = location.state || {};
 
   // ── Scroll helpers ────────────────────────────────────────────────────────

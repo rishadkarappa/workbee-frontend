@@ -236,7 +236,7 @@ const Modal = ({
                 <div className="px-6 py-4 border-t bg-gray-50 flex justify-end">
                     <Button
                         variant="outline"
-                        onClick={() => onBlockUnblock(applier._id || applier.id || "")}
+                        onClick={() => onBlockUnblock(applier.id || "")}
                         className={
                             applier.isBlocked
                                 ? "hover:bg-green-50 hover:text-green-700 hover:border-green-300"
@@ -434,7 +434,7 @@ export default function WorkersManagementComponent() {
                                     </tr>
                                 ) : workers.length > 0 ? (
                                     workers.map((worker) => (
-                                        <tr key={worker._id} className="hover:bg-gray-50 transition-colors">
+                                        <tr key={worker.id} className="hover:bg-gray-50 transition-colors">
                                             <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">
                                                 {worker.name}
                                             </td>

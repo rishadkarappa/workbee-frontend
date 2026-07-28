@@ -92,7 +92,7 @@ export default function ClientMessages() {
 
   const user = AuthHelper.getUser();
   const token = AuthHelper.getAccessToken();
-  const userId = user?.id || user?._id || AuthHelper.getUserId();
+  const userId = user?.id|| AuthHelper.getUserId();
   const { chatId: navChatId, workTitle, userName } = location.state || {};
 
   const messagesEndRef = useRef<HTMLDivElement>(null);

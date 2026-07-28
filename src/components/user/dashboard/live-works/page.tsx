@@ -196,7 +196,7 @@ export default function LiveWorks() {
   const [error, setError] = useState<string | null>(null);
 
   const user   = AuthHelper.getUser();
-  const userId = user?.id || user?._id || AuthHelper.getUserId();
+  const userId = user?.id || AuthHelper.getUserId();
   const token  = AuthHelper.getAccessToken();
 
   const getStatusColor = (status?: string) => {

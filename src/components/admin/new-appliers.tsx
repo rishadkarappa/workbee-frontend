@@ -132,7 +132,7 @@ const Modal = ({
     try {
       setIsSubmitting(true)
       const res = await WorkService.approveWorkerApplication({
-        workerId: applier.id || applier._id,
+        workerId: applier.id,
         status: "approved"
       })
       if (res.data.success) {
@@ -161,7 +161,7 @@ const Modal = ({
     try {
       setIsSubmitting(true)
       const res = await WorkService.approveWorkerApplication({
-        workerId: applier.id || applier._id,
+        workerId: applier.id,
         status: "rejected",
         rejectionReason: rejectionReason.trim()
       })
@@ -523,7 +523,7 @@ export default function NewAppliers() {
                   </tr>
                 ) : appliers.length > 0 ? (
                   appliers.map((applier) => (
-                    <tr key={applier.id || applier._id} className="hover:bg-gray-50 transition-colors">
+                    <tr key={applier.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">
                         {applier.name}
                       </td>
