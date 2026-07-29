@@ -215,6 +215,7 @@ const Users = () => {
       
     } catch (error) {
       alert("Error occurred while blocking user");
+      console.log(error)
     }
   };
 

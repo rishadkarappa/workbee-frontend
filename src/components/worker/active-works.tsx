@@ -5,8 +5,8 @@ import { AuthHelper } from "@/utils/auth-helper";
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Edit, Calendar, MapPin, Briefcase, IndianRupeeIcon,
-  Wrench, TrendingUp, Flag, MessageSquare, ChevronDown
+  Calendar, MapPin, Briefcase, IndianRupeeIcon,
+  Wrench, TrendingUp, Flag, MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,13 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { notifyWorkCompleted } from "@/utils/work-completion-helper";
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import {
   Dialog,
   DialogContent,

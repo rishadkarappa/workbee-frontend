@@ -72,8 +72,6 @@ export default function TaskBookStepper({
     }
   };
 
-  const navigate = useNavigate()
-
   const handleNext = () => {
     if (!isLastStep) {
       setDirection(1);

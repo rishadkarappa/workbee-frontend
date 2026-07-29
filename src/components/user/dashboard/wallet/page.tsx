@@ -4,18 +4,14 @@ import {
   ArrowUpCircle,
   ArrowDownCircle,
   Clock,
-  IndianRupee,
   CheckCircle2,
   XCircle,
   RefreshCw,
-  TrendingUp,
   CreditCard,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { PaymentService } from "@/services/payment-service";
 import { getErrorMessage } from "@/utils/error-helper";

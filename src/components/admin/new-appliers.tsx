@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react"
-import { Eye, X, Search, BookmarkIcon } from "lucide-react"
+import { Eye, X, Search } from "lucide-react"
 import { WorkService } from "@/services/work-service"
-import { Toggle } from "../ui/toggle"
 import { getErrorMessage } from "@/utils/error-helper"
 
 // Types

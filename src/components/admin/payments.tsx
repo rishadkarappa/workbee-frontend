@@ -11,7 +11,6 @@ import {
   ChevronLeft,
   ChevronRight,
   ArrowUpRight,
-  Wallet,
   BarChart3,
   Users,
 } from "lucide-react";
@@ -336,9 +335,6 @@ export default function Payments() {
   // Derived stats
   const settledCount = payments.filter(p => p.status === "worker_credited").length;
   const pendingPayoutCount = payments.filter(p => p.status === "paid").length;
-  const conversionRate = total > 0
-    ? Math.round((payments.filter(p => p.status !== "pending" && p.status !== "failed").length / payments.length) * 100)
-    : 0;
 
   if (loading) {
     return (
