@@ -19,7 +19,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
-import type { IUser } from "@workbee/common";
+import type { IUser } from "workbee-common";
 
 interface ProfileDropDownMenuProps {
     user: IUser;

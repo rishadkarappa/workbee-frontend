@@ -7,7 +7,7 @@ import ProfileDropDownMenu from "./profile-drop-down";
 import NotificationDropdown from "./NotificationDropdown";
 import { AuthHelper } from "@/utils/auth-helper";
 import { notificationSocketService } from "@/services/notification-socket-service";
-import { UserRole, type IUser } from "@workbee/common";
+import { UserRole, type IUser } from "workbee-common";
 
 const Navbar = () => {
   const [user, setUser] = useState<IUser | null>(null);

@@ -1,7 +1,7 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { AuthHelper } from "@/utils/auth-helper";
 import { useEffect, useState } from "react";
-import { UserRole } from "@workbee/common";
+import { UserRole } from "workbee-common";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;

@@ -1,4 +1,4 @@
-import type { IUser } from "@workbee/common";
+import type { IUser } from "workbee-common";
 
 const ACCESS_TOKEN = "accessToken";
 const REFRESH_TOKEN = "refreshToken";
