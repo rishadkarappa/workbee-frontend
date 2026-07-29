@@ -48,7 +48,6 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
       termsAccepted: false,
     },
   })
-  const [currentStep, setCurrentStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
 
@@ -137,7 +136,7 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
       <CardContent>
         <Stepper
           initialStep={1}
-          onStepChange={(step) => setCurrentStep(step)}
+          onStepChange={() => {}}
           onSubmit={handleSubmit}
           isSubmitting={isLoading}
           backButtonText="Previous"

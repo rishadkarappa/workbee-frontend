@@ -30,6 +30,10 @@ interface RazorpayInstance {
   on: (event: 'payment.failed', handler: (response: RazorpayPaymentFailedResponse) => void) => void;
 }
 
-interface Window {
-  Razorpay?: new (options: RazorpayOptions) => RazorpayInstance;
+export {};
+
+declare global {
+  interface Window {
+    Razorpay?: new (options: RazorpayOptions) => RazorpayInstance;
+  }
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Eye, X, Search } from "lucide-react"
 import { WorkService } from "@/services/work-service"
 import { getErrorMessage } from "@/utils/error-helper"
@@ -18,8 +18,8 @@ interface Applier {
     honest: boolean
     termsAccepted: boolean
   }
-  rejectionReason:string
-  rejectedAt:Date
+  rejectionReason: string
+  rejectedAt: Date
   status: string
   createdAt?: Date
 }
@@ -273,9 +273,8 @@ const Modal = ({
                 {Object.entries(applier.confirmations).map(([key, value]) => (
                   <div key={key} className="flex items-center gap-2">
                     <div
-                      className={`w-5 h-5 rounded flex items-center justify-center ${
-                        value ? "bg-black" : "bg-gray-300"
-                      }`}
+                      className={`w-5 h-5 rounded flex items-center justify-center ${value ? "bg-black" : "bg-gray-300"
+                        }`}
                     >
                       {value && (
                         <svg
@@ -308,16 +307,16 @@ const Modal = ({
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={approveWorker}
                 disabled={isSubmitting || applier.status === "approved"}
                 className="bg-green-50 hover:bg-green-100 text-green-700 border-green-300"
               >
                 {applier.status === "approved" ? "✓ Approved" : "Approve"}
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={handleRejectClick}
                 disabled={isSubmitting}
                 className="bg-red-50 hover:bg-red-100 text-red-700 border-red-300"
@@ -343,7 +342,7 @@ const Modal = ({
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Reason for Rejection <span className="text-black-500">*</span>
@@ -369,7 +368,7 @@ const Modal = ({
                 Cancel
               </Button>
               <Button
-               variant="outline"
+                variant="outline"
                 onClick={handleRejectSubmit}
                 disabled={isSubmitting || !rejectionReason.trim()}
                 className="bg-red-50 hover:bg-red-100 text-red-700 border-red-300"
@@ -412,33 +411,33 @@ export default function NewAppliers() {
   }, [debouncedSearch])
 
   // Fetch appliers with server-side pagination and search
-  const getNewAppliers = async () => {
+  const getNewAppliers = useCallback(async () => {
     try {
-      setLoading(true)
+      setLoading(true);
+
       const response = await WorkService.getAppliers(
         currentPage,
         itemsPerPage,
         debouncedSearch
-      )
+      );
 
       if (response.data.success) {
-        const data = response.data.data
-        setAppliers(data.workers || [])
-        setTotalAppliers(data.total || 0)
-        setTotalPages(data.totalPages || 0)
+        const data = response.data.data;
+        setAppliers(data.workers || []);
+        setTotalAppliers(data.total || 0);
+        setTotalPages(data.totalPages || 0);
       }
     } catch (error) {
-      console.error("Error fetching new appliers:", error)
-      alert("Error while fetching new appliers")
+      console.error("Error fetching new appliers:", error);
+      alert("Error while fetching new appliers");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
-
-  // Fetch appliers when page or debounced search changes
+  }, [currentPage, itemsPerPage, debouncedSearch]);
   useEffect(() => {
-    getNewAppliers()
-  }, [currentPage, debouncedSearch])
+    getNewAppliers();
+  }, [getNewAppliers]);
+
 
   const handleViewDetails = (applier: Applier) => {
     setSelectedApplier(applier)
@@ -532,10 +531,9 @@ export default function NewAppliers() {
                         <span
                           className={`
                             inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
-                            ${
-                              applier.status === "approved"
-                                ? "bg-green-100/80 text-green-700 border border-green-200"
-                                : applier.status === "rejected"
+                            ${applier.status === "approved"
+                              ? "bg-green-100/80 text-green-700 border border-green-200"
+                              : applier.status === "rejected"
                                 ? "bg-red-100/80 text-red-700 border border-red-200"
                                 : "bg-yellow-100/80 text-yellow-700 border border-yellow-200"
                             }
@@ -544,10 +542,9 @@ export default function NewAppliers() {
                           <span
                             className={`
                               w-1.5 h-1.5 rounded-full
-                              ${
-                                applier.status === "approved"
-                                  ? "bg-green-500"
-                                  : applier.status === "rejected"
+                              ${applier.status === "approved"
+                                ? "bg-green-500"
+                                : applier.status === "rejected"
                                   ? "bg-red-500"
                                   : "bg-yellow-500"
                               }
@@ -556,8 +553,8 @@ export default function NewAppliers() {
                           {applier.status === "approved"
                             ? "Approved"
                             : applier.status === "rejected"
-                            ? "Rejected"
-                            : "Pending"}
+                              ? "Rejected"
+                              : "Pending"}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-center">

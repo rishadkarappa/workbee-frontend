@@ -88,7 +88,6 @@ interface UserDataTableToolbarProps {
 
 // Toolbar
 function UserDataTableToolbar({
-  table,
   searchValue,
   onSearchChange,
   statusFilter,
