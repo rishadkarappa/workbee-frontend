@@ -14,12 +14,8 @@ import {
 import {
   Home,
   Users,
-  UserCheck,
-  UserPlus,
-  Briefcase,
   MessageSquare,
   ShieldAlert,
-  Wallet,
   CreditCard,
   Bell,
 } from "lucide-react";

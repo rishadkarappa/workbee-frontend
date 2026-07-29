@@ -6,7 +6,6 @@ import {
   IndianRupee,
   ArrowDownCircle,
   CheckCircle2,
-  AlertCircle,
   RefreshCw,
   Banknote,
   ChevronDown,
@@ -62,7 +61,7 @@ const formatAmount = (amount: number) =>
   }).format(amount);
 
 // Map transaction type to human-readable label + icon + color
-function txMeta(type: string, status: string) {
+function txMeta(type: string) {
   switch (type) {
     case "hold":
       return {
@@ -114,7 +113,7 @@ function txMeta(type: string, status: string) {
 
 function WorkerTransactionRow({ tx }: { tx: Transaction }) {
   const [expanded, setExpanded] = useState(false);
-  const meta = txMeta(tx.type, tx.status);
+  const meta = txMeta(tx.type);
 
   // Don't show platform_fee rows to worker — they're internal audit records
   if (tx.type === "platform_fee") return null;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { Eye, X, Search, MapPin, Calendar, Clock, Filter, IndianRupee, LocateIcon } from "lucide-react"
+import { Eye, X, Search, MapPin, Calendar, Clock, Filter, IndianRupee } from "lucide-react"
 import { WorkService } from "@/services/work-service"
 import { useDebounce } from "@/hooks/useDebounce"
 import axios from "axios"
