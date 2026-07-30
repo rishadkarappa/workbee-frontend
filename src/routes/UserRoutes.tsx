@@ -16,6 +16,7 @@ import MyWorks from "@/components/user/dashboard/my-works/components/work-conten
 import WorkerMessages from "@/components/user/dashboard/messages/page";
 import ActiveWorks from "@/components/user/dashboard/live-works/page";
 import UserWallet from "@/components/user/dashboard/wallet/page";
+import { UserRole } from "workbee-common";
 
 const UserRoute = () => {
   return (
@@ -32,7 +33,7 @@ const UserRoute = () => {
       <Route 
         path="task-booking" 
         element={
-          <ProtectedRoute allowedRoles={["user"]}>
+          <ProtectedRoute allowedRoles={[UserRole.USER]}>
             <TaskBookForm />
           </ProtectedRoute>
         } 
@@ -41,7 +42,7 @@ const UserRoute = () => {
       <Route 
         path="/user-dashboard" 
         element={
-          <ProtectedRoute allowedRoles={["user"]}>
+          <ProtectedRoute allowedRoles={[UserRole.USER]}>
             <Dashboard />
           </ProtectedRoute>
         }

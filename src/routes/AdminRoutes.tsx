@@ -9,18 +9,19 @@ import Users from "@/pages/admin/UserManagement";
 import WorkerManagement from "@/pages/admin/WorkerManagement";
 import NewAppliersManagement from "@/pages/admin/NewAppliers";
 import Payments from "@/components/admin/payments";
+import { UserRole } from "workbee-common";
 
 const AdminRoute = () => {
     return (
         <Routes>
-            {/* ✅ Public Route - No protection */}
+            {/* Public Route - No protection */}
             <Route path="/" element={<AdminLogin />} />
             
-            {/* ✅ Protected Routes - Admin Only */}
+            {/* Protected Routes - Admin Only */}
             <Route 
               path="dashboard" 
               element={
-                <ProtectedRoute allowedRoles={["admin"]}>
+                <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
                   <AdminLayout/>
                 </ProtectedRoute>
               } 

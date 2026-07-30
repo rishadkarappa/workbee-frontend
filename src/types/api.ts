@@ -1,3 +1,5 @@
+import type { UserRole } from "workbee-common"
+
 export interface ApiResponse<T = undefined> {
   success: boolean
   message?: string
@@ -11,7 +13,7 @@ export interface AuthTokens {
     id: string
     name: string
     email: string
-    role: "user" | "worker" | "admin" // add common
+    role: UserRole
   }
 }
 

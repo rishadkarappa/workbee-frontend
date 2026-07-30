@@ -9,6 +9,7 @@ import Works from "@/pages/worker/Works";
 import ClientMessages from "@/components/worker/messages/messages";
 import ActiveWorks from "@/components/worker/active-works";
 import WorkerWallet from "@/components/worker/wallet";
+import { UserRole } from "workbee-common";
 
 const WorkerRoutes = () => {
     return (
@@ -21,7 +22,7 @@ const WorkerRoutes = () => {
             <Route 
                 path="worker-dashboard" 
                 element={
-                    <ProtectedRoute allowedRoles={["worker"]}>
+                    <ProtectedRoute allowedRoles={[UserRole.WORKER]}>
                         <WorkerLayout/>
                     </ProtectedRoute>
                 }
