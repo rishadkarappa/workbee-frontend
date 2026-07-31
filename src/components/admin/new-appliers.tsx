@@ -5,8 +5,7 @@ import { getErrorMessage } from "@/utils/error-helper"
 
 // Types
 interface Applier {
-  _id?: string
-  id?: string
+  id: string
   name: string
   email: string
   phone: string
@@ -135,13 +134,13 @@ const Modal = ({
         status: "approved"
       })
       if (res.data.success) {
-        alert('✅ Worker approved successfully! Approval email sent.')
+        alert('Done: Worker approved successfully! Approval email sent.')
         onClose()
         onRefresh()
       }
     } catch (error) {
       console.error('Error approving worker:', error)
-      alert('❌ ' + (getErrorMessage(error) || 'Error approving worker'))
+      alert('Error:' + (getErrorMessage(error) || 'Error approving worker'))
     } finally {
       setIsSubmitting(false)
     }
@@ -165,7 +164,7 @@ const Modal = ({
         rejectionReason: rejectionReason.trim()
       })
       if (res.data.success) {
-        alert('✅ Worker application rejected. Notification email sent.')
+        alert('Worker application rejected. Notification email sent.')
         setShowRejectModal(false)
         setRejectionReason("")
         onClose()
@@ -173,7 +172,7 @@ const Modal = ({
       }
     } catch (error) {
       console.error('Error rejecting worker:', error)
-      alert('❌ ' + (getErrorMessage || 'Error rejecting worker'))
+      alert('Error ' + (getErrorMessage || 'Error rejecting worker'))
     } finally {
       setIsSubmitting(false)
     }

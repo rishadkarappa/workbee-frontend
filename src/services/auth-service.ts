@@ -64,12 +64,7 @@ export const AuthService = {
     // get users
     getUsers: (page: number, limit: number, search: string, status?: string) => {
         return api.get("/auth/admin/get-users", {
-            params: {
-                page,
-                limit,
-                search,
-                status: status && status !== 'all' ? status : undefined
-            }
+            params: { page, limit, search, status: status && status !== 'all' ? status : undefined }
         });
     },
 
