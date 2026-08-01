@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { socketService } from '@/services/socket-service';
+import { socketService } from '@/services/chat-socket-service';
 import { ChatService } from '@/services/chat-service';
 import { AuthHelper } from '@/utils/auth-helper';
 import { ArrowLeft, Send, User, HandshakeIcon, TicketPercent } from 'lucide-react';

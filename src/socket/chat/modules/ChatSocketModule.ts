@@ -1,12 +1,12 @@
 import { Socket } from 'socket.io-client';
-import { SocketConnection } from '../connection/socket-connection';
+import { ChatSocketConnection } from '../connection/ChatSocketConnection';
 import type { IncomingSocketMessage, SendMessageData } from '../types/SocketType';
 
 export class ChatSocketModule {
-    private connection: SocketConnection;
+    private connection: ChatSocketConnection;
     private messageCallbacks: Set<(message: IncomingSocketMessage) => void> = new Set();
 
-    constructor(connection: SocketConnection) {
+    constructor(connection: ChatSocketConnection) {
         this.connection = connection;
         this.connection.registerAttacher((socket) => this.reattach(socket));
     }

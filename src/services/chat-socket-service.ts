@@ -1,11 +1,11 @@
-import { SocketConnection } from '@/socket/connection/socket-connection';
-import { ChatSocketModule } from '@/socket/modules/ChatSocketModule';
-import type { IncomingSocketMessage } from '@/socket/types/SocketType';
-import type { SendMessageData } from '@/socket/types/SocketType';
-import { WorkSocketModule } from '@/socket/modules/WorkSocketModule';
-import { BidSocketModule } from '@/socket/modules/BidSocketModule';
-import { TypingSocketModule } from '@/socket/modules/TypingSocketModule';
-import { ErrorSocketModule } from '@/socket/modules/ErrorSocketModule';
+import { ChatSocketConnection } from '@/socket/chat/connection/ChatSocketConnection';
+import { ChatSocketModule } from '@/socket/chat/modules/ChatSocketModule';
+import type { IncomingSocketMessage } from '@/socket/chat/types/SocketType';
+import type { SendMessageData } from '@/socket/chat/types/SocketType';
+import { WorkSocketModule } from '@/socket/chat/modules/WorkSocketModule';
+import { BidSocketModule } from '@/socket/chat/modules/BidSocketModule';
+import { TypingSocketModule } from '@/socket/chat/modules/TypingSocketModule';
+import { ErrorSocketModule } from '@/socket/chat/modules/ErrorSocketModule';
 
 
 export type { IncomingSocketMessage };
@@ -13,7 +13,7 @@ export type { IncomingSocketMessage };
 class SocketService {
   private static instance: SocketService;
 
-  private connection = new SocketConnection();
+  private connection = new ChatSocketConnection();
   private chat = new ChatSocketModule(this.connection);
   private work = new WorkSocketModule(this.connection);
   private bid = new BidSocketModule(this.connection);

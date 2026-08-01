@@ -1,11 +1,11 @@
 import { Socket } from 'socket.io-client';
-import { SocketConnection } from '../connection/socket-connection';
+import { ChatSocketConnection } from '../connection/ChatSocketConnection';
 
 export class ErrorSocketModule {
   private errorCallbacks: Set<(data: { message: string }) => void> = new Set();
 
-  private connection: SocketConnection;
-    constructor(connection: SocketConnection) {
+  private connection: ChatSocketConnection;
+    constructor(connection: ChatSocketConnection) {
         this.connection = connection;
         this.connection.registerAttacher((socket) => this.reattach(socket))
     }

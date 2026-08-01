@@ -1,6 +1,6 @@
 
 import { WorkService } from "@/services/work-service";
-import { socketService } from "@/services/socket-service";
+import { socketService } from "@/services/chat-socket-service";
 import { AuthHelper } from "@/utils/auth-helper";
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";

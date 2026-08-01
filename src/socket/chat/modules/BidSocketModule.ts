@@ -1,8 +1,8 @@
-import { SocketConnection } from "../connection/socket-connection";
+import { ChatSocketConnection } from "../connection/ChatSocketConnection";
 
 export class BidSocketModule {
-    private connection: SocketConnection;
-    constructor(connection: SocketConnection) {
+    private connection: ChatSocketConnection;
+    constructor(connection: ChatSocketConnection) {
         this.connection = connection;
     }
 

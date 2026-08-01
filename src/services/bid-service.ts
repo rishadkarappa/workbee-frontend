@@ -1,4 +1,4 @@
-import { socketService } from './socket-service';
+import { socketService } from './chat-socket-service';
 
 export const BidService = {
   sendWorkerOffer: (data: {

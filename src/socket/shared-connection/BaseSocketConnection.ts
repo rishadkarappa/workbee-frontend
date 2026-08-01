@@ -2,13 +2,14 @@ import { io, Socket } from 'socket.io-client';
 
 type Attacher = (socket: Socket) => void;
 
-export class SocketConnection {
-  private socket: Socket | null = null;
-  private token: string | null = null;
-  private joinedChatIds: Set<string> = new Set();
+export abstract class BaseSocketConnection {
+  protected socket: Socket | null = null;
+  protected token: string | null = null;
   private attachers: Attacher[] = [];
 
-  /** Modules call this once so their listeners get rebound whenever a new socket instance is created. */
+  protected abstract getUrl(): string;
+  protected abstract onSocketCreated(socket: Socket): void;
+
   registerAttacher(attacher: Attacher): void {
     this.attachers.push(attacher);
     if (this.socket) attacher(this.socket);
@@ -22,21 +23,6 @@ export class SocketConnection {
     return this.socket?.connected ?? false;
   }
 
-  joinChat(chatId: string): void {
-    this.joinedChatIds.add(chatId);
-    if (!this.socket?.connected) {
-      console.warn('[Socket] not connected — chat room queued, will rejoin on reconnect');
-      return;
-    }
-    this.socket.emit('join_chat', chatId);
-  }
-
-  leaveChat(chatId: string): void {
-    this.joinedChatIds.delete(chatId);
-    if (!this.socket?.connected) return;
-    this.socket.emit('leave_chat', chatId);
-  }
-
   connect(token: string): void {
     if (this.socket?.connected && this.token === token) return;
 
@@ -48,7 +34,7 @@ export class SocketConnection {
 
     this.token = token;
 
-    this.socket = io(import.meta.env.VITE_COMMUNICATION_URL, {
+    this.socket = io(this.getUrl(), {
       auth: { token },
       transports: ['websocket', 'polling'],
       reconnection: true,
@@ -60,7 +46,6 @@ export class SocketConnection {
 
     this.socket.on('connect', () => {
       console.log('[Socket] connected:', this.socket?.id);
-      this.joinedChatIds.forEach(chatId => this.socket!.emit('join_chat', chatId));
     });
 
     this.socket.on('connect_error', (error) => {
@@ -82,6 +67,7 @@ export class SocketConnection {
       console.error('[Socket] error:', error.message);
     });
 
+    this.onSocketCreated(this.socket);
     this.attachers.forEach(attach => attach(this.socket!));
   }
 
@@ -124,10 +110,9 @@ export class SocketConnection {
       this.socket = null;
     }
     this.token = null;
-    this.joinedChatIds.clear();
   }
 
-  private getLatestToken(): string | null {
+  protected getLatestToken(): string | null {
     try {
       return localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken') || null;
     } catch {
