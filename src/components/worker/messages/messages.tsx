@@ -29,7 +29,7 @@ export default function WorkerMessages() {
   const [pendingMedia, setPendingMedia] = useState<UploadedMedia | null>(null);
   const [askConfirmLoading, setAskConfirmLoading] = useState(false);
   // ask better price bidding
-  const [askNewPriceLoading, setAskNewPriceLoading] = useState(false);
+  const [askNewPriceLoading, ] = useState(false);
   const [AskNewPriceModalOpen, setAskNewPriceModalOpen] = useState(false);
   // Track which workIds have already had a ask new price request sent in this chat
   const [sentAskNewPriceRequests, setSentAskNewPriceRequests] = useState<Set<string>>(new Set());
@@ -44,7 +44,7 @@ export default function WorkerMessages() {
   const user = AuthHelper.getUser();
   const token = AuthHelper.getAccessToken();
   const userId = user?.id || AuthHelper.getUserId();
-  const { chatId: navChatId, workTitle, workId: navWorkId, userId: navUserId , currentAmount} = location.state || {};
+  const { chatId: navChatId, workTitle, workId: navWorkId, currentAmount} = location.state || {};
 
   // ── Scroll helpers ────────────────────────────────────────────────────────
   const scrollToBottomInstant = useCallback(() => {
