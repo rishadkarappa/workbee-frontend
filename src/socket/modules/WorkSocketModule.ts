@@ -1,5 +1,5 @@
 import { Socket } from 'socket.io-client';
-import { SocketConnection } from '../connection/SocketConnection';
+import { SocketConnection } from '../connection/socket-connection';
 
 export class WorkSocketModule {
   private progressCallbacks: Set<(data: { workId: string; progress: string }) => void> = new Set();
@@ -7,6 +7,7 @@ export class WorkSocketModule {
   private connection: SocketConnection;
     constructor(connection: SocketConnection) {
         this.connection = connection;
+        this.connection.registerAttacher((socket) => this.reattach(socket))
     }
   private reattach(socket: Socket): void {
     this.progressCallbacks.forEach(cb => {

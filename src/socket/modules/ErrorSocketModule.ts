@@ -1,5 +1,5 @@
 import { Socket } from 'socket.io-client';
-import { SocketConnection } from '../connection/SocketConnection';
+import { SocketConnection } from '../connection/socket-connection';
 
 export class ErrorSocketModule {
   private errorCallbacks: Set<(data: { message: string }) => void> = new Set();
@@ -7,6 +7,7 @@ export class ErrorSocketModule {
   private connection: SocketConnection;
     constructor(connection: SocketConnection) {
         this.connection = connection;
+        this.connection.registerAttacher((socket) => this.reattach(socket))
     }
 
   private reattach(socket: Socket): void {

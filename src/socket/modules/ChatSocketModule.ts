@@ -1,17 +1,6 @@
 import { Socket } from 'socket.io-client';
-import type { Message } from '@/components/worker/messages/types/messages.types';
-import { SocketConnection } from '../connection/SocketConnection';
-
-export type IncomingSocketMessage = Message & { chatId: string };
-
-export interface SendMessageData {
-    chatId: string;
-    content: string;
-    type?: string;
-    recipientId?: string;
-    mediaUrl?: string;
-    mediaPublicId?: string;
-}
+import { SocketConnection } from '../connection/socket-connection';
+import type { IncomingSocketMessage, SendMessageData } from '../types/SocketType';
 
 export class ChatSocketModule {
     private connection: SocketConnection;

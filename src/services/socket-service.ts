@@ -1,10 +1,11 @@
-import { SocketConnection } from './socket/connection/SocketConnection';
-import { ChatSocketModule } from './socket/modules/ChatSocketModule';
-import type { SendMessageData, IncomingSocketMessage } from './socket/modules/ChatSocketModule';
-import { WorkSocketModule } from './socket/modules/WorkSocketModule';
-import { BidSocketModule } from './socket/modules/BidSocketModule';;
-import { TypingSocketModule } from './socket/modules/TypingSocketModule';;
-import { ErrorSocketModule } from './socket/modules/ErrorSocketModule';;
+import { SocketConnection } from '@/socket/connection/socket-connection';
+import { ChatSocketModule } from '@/socket/modules/ChatSocketModule';
+import type { IncomingSocketMessage } from '@/socket/types/SocketType';
+import type { SendMessageData } from '@/socket/types/SocketType';
+import { WorkSocketModule } from '@/socket/modules/WorkSocketModule';
+import { BidSocketModule } from '@/socket/modules/BidSocketModule';
+import { TypingSocketModule } from '@/socket/modules/TypingSocketModule';
+import { ErrorSocketModule } from '@/socket/modules/ErrorSocketModule';
 
 
 export type { IncomingSocketMessage };

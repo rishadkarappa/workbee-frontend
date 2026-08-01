@@ -1,4 +1,4 @@
-import { SocketConnection } from "../connection/SocketConnection";
+import { SocketConnection } from "../connection/socket-connection";
 
 export class BidSocketModule {
     private connection: SocketConnection;
