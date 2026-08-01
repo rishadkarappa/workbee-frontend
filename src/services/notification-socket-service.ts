@@ -23,15 +23,9 @@ class NotificationSocketService {
       console.log('Notification socket already connected');
       return;
     }
-
-    // Always tear down the old socket fully before creating a new one.
-    // Without this, calling connect() a second time (React StrictMode, re-renders,
-    // token refresh) skips the `if (socket?.connected)` guard but the OLD socket
-    // still has its `new_notification` listener registered. The new socket adds
-    // a second listener → every event fires twice → count doubles.
     
     if (this.socket) {
-      this.socket.removeAllListeners(); // remove new_notification + all others
+      this.socket.removeAllListeners();
       this.socket.disconnect();
       this.socket = null;
     }
