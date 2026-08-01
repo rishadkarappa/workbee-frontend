@@ -1,381 +1,63 @@
-import { io, Socket } from 'socket.io-client';
-import type { Message } from '@/components/worker/messages/types/messages.types';
+import { SocketConnection } from './socket/connection/SocketConnection';
+import { ChatSocketModule } from './socket/modules/ChatSocketModule';
+import type { SendMessageData, IncomingSocketMessage } from './socket/modules/ChatSocketModule';
+import { WorkSocketModule } from './socket/modules/WorkSocketModule';
+import { BidSocketModule } from './socket/modules/BidSocketModule';;
+import { TypingSocketModule } from './socket/modules/TypingSocketModule';;
+import { ErrorSocketModule } from './socket/modules/ErrorSocketModule';;
 
-export type IncomingSocketMessage = Message & { chatId: string };
+
+export type { IncomingSocketMessage };
 
 class SocketService {
   private static instance: SocketService;
-  private socket: Socket | null = null;
-  private token: string | null = null;
 
-  private messageCallbacks: Set<(message: IncomingSocketMessage) => void> = new Set();
+  private connection = new SocketConnection();
+  private chat = new ChatSocketModule(this.connection);
+  private work = new WorkSocketModule(this.connection);
+  private bid = new BidSocketModule(this.connection);
+  private typingModule = new TypingSocketModule(this.connection);
+  private errors = new ErrorSocketModule(this.connection);
 
-  private typingCallbacks: Set<(data: { userId: string; isTyping: boolean }) => void> = new Set();
-  private progressCallbacks: Set<(data: { workId: string; progress: string }) => void> = new Set();
-
-  private joinedChatIds: Set<string> = new Set();
-
-  private constructor() { }
+  private constructor() {}
 
   static getInstance(): SocketService {
-    if (!SocketService.instance) {
-      SocketService.instance = new SocketService();
-    }
+    if (!SocketService.instance) SocketService.instance = new SocketService();
     return SocketService.instance;
   }
 
-  connect(token: string) {
-    if (this.socket?.connected && this.token === token) {
-      return;
-    }
-
-    if (this.socket) {
-      this.socket.removeAllListeners();
-      this.socket.disconnect();
-      this.socket = null;
-    }
-
-    this.token = token;
-
-    this.socket = io(import.meta.env.VITE_COMMUNICATION_URL, {
-      auth: { token },
-      transports: ['websocket', 'polling'],
-      reconnection: true,
-      reconnectionAttempts: Infinity,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      timeout: 20000,
-    });
-
-    this.socket.on('connect', () => {
-      console.log('[Socket] connected:', this.socket?.id);
-      this.joinedChatIds.forEach(chatId => {
-        this.socket!.emit('join_chat', chatId);
-      });
-    });
-
-    this.socket.on('connect_error', (error) => {
-      console.error('[Socket] connection error:', error.message);
-    });
-
-    this.socket.on('disconnect', (reason) => {
-      console.log('[Socket] disconnected:', reason);
-      if (reason === 'io server disconnect' || reason === 'transport error') {
-        const latestToken = this._getLatestToken();
-        if (latestToken && latestToken !== this.token) {
-          console.log('[Socket] reconnecting with refreshed token');
-          setTimeout(() => this.connect(latestToken), 1000);
-        }
-      }
-    });
-
-    this.socket.on('error', (error:Error) => {
-      console.error('[Socket] error:', error.message);
-    });
-
-    this._reattachCallbacks();
+  connect(token: string): void { this.connection.connect(token); }
+  disconnect(): void {
+    this.connection.disconnect();
+    this.chat.clear();
+    this.work.clear();
+    this.typingModule.clear();
+    this.errors.clear();
   }
+  isConnected(): boolean { return this.connection.isConnected(); }
 
-  ensureConnected(): Promise<void> {
-    if (this.socket?.connected) return Promise.resolve();
+  joinChat = (chatId: string) => this.chat.joinChat(chatId);
+  leaveChat = (chatId: string) => this.chat.leaveChat(chatId);
+  sendMessage = (data: SendMessageData) => this.chat.sendMessage(data);
+  onNewMessage = (cb: Parameters<ChatSocketModule['onNewMessage']>[0]) => this.chat.onNewMessage(cb);
+  offNewMessage = (cb?: Parameters<ChatSocketModule['offNewMessage']>[0]) => this.chat.offNewMessage(cb);
 
-    return new Promise((resolve, reject) => {
-      const latestToken = this._getLatestToken() || this.token;
-      if (!latestToken) {
-        return reject(new Error('No token available to reconnect'));
-      }
+  askForConfirm = (data: Parameters<WorkSocketModule['askForConfirm']>[0]) => this.work.askForConfirm(data);
+  confirmResponse = (data: Parameters<WorkSocketModule['confirmResponse']>[0]) => this.work.confirmResponse(data);
+  updateWorkProgress = (data: Parameters<WorkSocketModule['updateWorkProgress']>[0]) => this.work.updateWorkProgress(data);
+  onWorkProgressChanged = (cb: Parameters<WorkSocketModule['onWorkProgressChanged']>[0]) => this.work.onWorkProgressChanged(cb);
+  offWorkProgressChanged = (cb?: Parameters<WorkSocketModule['offWorkProgressChanged']>[0]) => this.work.offWorkProgressChanged(cb);
 
-      this.connect(latestToken);
+  sendBidOffer = (data: Parameters<BidSocketModule['sendBidOffer']>[0]) => this.bid.sendBidOffer(data);
+  respondToBid = (data: Parameters<BidSocketModule['respondToBid']>[0]) => this.bid.respondToBid(data);
+  notifyBidPaymentCompleted = (data: Parameters<BidSocketModule['notifyBidPaymentCompleted']>[0]) => this.bid.notifyBidPaymentCompleted(data);
 
-      const timeout = setTimeout(() => {
-        reject(new Error('Socket reconnect timed out'));
-      }, 10000);
+  sendTyping = (chatId: string, isTyping: boolean) => this.typingModule.sendTyping(chatId, isTyping);
+  onUserTyping = (cb: Parameters<TypingSocketModule['onUserTyping']>[0]) => this.typingModule.onUserTyping(cb);
+  offUserTyping = (cb?: Parameters<TypingSocketModule['offUserTyping']>[0]) => this.typingModule.offUserTyping(cb);
 
-      const onConnect = () => {
-        clearTimeout(timeout);
-        this.socket?.off('connect_error', onError);
-        resolve();
-      };
-
-      const onError = (err: Error) => {
-        console.warn('[Socket] reconnect attempt error:', err.message);
-      };
-
-      this.socket!.once('connect', onConnect);
-      this.socket!.on('connect_error', onError);
-    });
-  }
-
-  private _getLatestToken(): string | null {
-    try {
-      return (
-        localStorage.getItem('accessToken') ||
-        sessionStorage.getItem('accessToken') ||
-        null
-      );
-    } catch {
-      return null;
-    }
-  }
-
-  private _reattachCallbacks() {
-    if (!this.socket) return;
-    this.messageCallbacks.forEach(cb => {
-      this.socket!.off('new_message', cb);
-      this.socket!.on('new_message', cb);
-    });
-    this.typingCallbacks.forEach(cb => {
-      this.socket!.off('user_typing', cb);
-      this.socket!.on('user_typing', cb);
-    });
-    this.progressCallbacks.forEach(cb => {
-      this.socket!.off('work_progress_changed', cb);
-      this.socket!.on('work_progress_changed', cb);
-    });
-    this.errorCallbacks.forEach(cb => {
-      this.socket!.off('error', cb);
-      this.socket!.on('error', cb);
-    });
-  }
-
-  disconnect() {
-    if (this.socket) {
-      this.socket.removeAllListeners();
-      this.socket.disconnect();
-      this.socket = null;
-    }
-    this.token = null;
-    this.messageCallbacks.clear();
-    this.typingCallbacks.clear();
-    this.progressCallbacks.clear();
-    this.joinedChatIds.clear();
-  }
-
-  joinChat(chatId: string) {
-    this.joinedChatIds.add(chatId);
-    if (!this.socket?.connected) {
-      console.warn('[Socket] not connected — chat room queued, will rejoin on reconnect');
-      return;
-    }
-    this.socket.emit('join_chat', chatId);
-  }
-
-  leaveChat(chatId: string) {
-    this.joinedChatIds.delete(chatId);
-    if (!this.socket?.connected) return;
-    this.socket.emit('leave_chat', chatId);
-  }
-
-  async sendMessage(data: {
-    chatId: string;
-    content: string;
-    type?: string;
-    recipientId?: string;
-    mediaUrl?: string;
-    mediaPublicId?: string;
-  }): Promise<void> {
-    try {
-      await this.ensureConnected();
-      this.socket!.emit('send_message', data);
-    } catch (err) {
-      console.error('[Socket] sendMessage failed — could not reconnect:', err);
-      throw err;
-    }
-  }
-
-  // ── Ask worker to confirm the deal ───────────────────────────────────────
-  async askForConfirm(data: {
-    chatId: string;
-    workId: string;
-    workTitle: string;
-    workerId: string;
-    workerName: string;
-    userId: string;
-  }): Promise<void> {
-    try {
-      await this.ensureConnected();
-      this.socket!.emit('ask_for_confirm', data);
-    } catch (err) {
-      console.error('[Socket] askForConfirm failed:', err);
-      throw err;
-    }
-  }
-
-  // ── User responds to confirmation request ────────────────────────────────
-  // workerId is required so the socket server can push to worker's personal room
-  async confirmResponse(data: {
-    chatId: string;
-    workId: string;
-    workTitle: string;
-    accepted: boolean;
-    userId: string;
-    workerName: string;
-    workerId: string;   // REQUIRED — identifies worker's personal room
-  }): Promise<void> {
-    try {
-      await this.ensureConnected();
-      this.socket!.emit('confirm_response', data);
-    } catch (err) {
-      console.error('[Socket] confirmResponse failed:', err);
-      throw err;
-    }
-  }
-
-  // ── Worker updates work progress ─────────────────────────────────────────
-  async updateWorkProgress(data: {
-    chatId: string;
-    workId: string;
-    workTitle: string;
-    progress: string;
-    workerId: string;
-  }): Promise<void> {
-    try {
-      await this.ensureConnected();
-      this.socket!.emit('work_progress_update', data);
-    } catch (err) {
-      console.error('[Socket] updateWorkProgress failed:', err);
-      throw err;
-    }
-  }
-
-  // ── Bidding ───────────────────────────────────────────────────────────────
-  async sendBidOffer(data: {
-    chatId: string;
-    workId: string;
-    workTitle: string;
-    userId: string;
-    workerId: string;
-    workerName: string;
-    amount: number;
-    offeredBy: 'user' | 'worker';
-  }): Promise<void> {
-    try {
-      await this.ensureConnected();
-      this.socket!.emit('send_bid_offer', data);
-    } catch (err) {
-      console.error('[Socket] sendBidOffer failed:', err);
-      throw err;
-    }
-  }
-
-  async respondToBid(data: {
-    bidId: string;
-    respondedBy: 'user' | 'worker';
-    action: 'accept' | 'reject';
-  }): Promise<void> {
-    try {
-      await this.ensureConnected();
-      this.socket!.emit('respond_bid', data);
-    } catch (err) {
-      console.error('[Socket] respondToBid failed:', err);
-      throw err;
-    }
-  }
-
-  async notifyBidPaymentCompleted(data: {
-    chatId: string;
-    bidId: string;
-    workId: string;
-    workTitle: string;
-    userId: string;
-    workerId: string;
-    workerName: string;
-    amount: number;
-  }): Promise<void> {
-    try {
-      await this.ensureConnected();
-      this.socket!.emit('bid_payment_completed', data);
-    } catch (err) {
-      console.error('[Socket] notifyBidPaymentCompleted failed:', err);
-      throw err;
-    }
-  }
-
-  onNewMessage(callback: (message: IncomingSocketMessage) => void) {
-    this.messageCallbacks.add(callback);
-    if (this.socket) {
-      this.socket.off('new_message', callback);
-      this.socket.on('new_message', callback);
-    }
-  }
-
-  offNewMessage(callback?: (message: IncomingSocketMessage) => void) {
-    if (callback) {
-      this.messageCallbacks.delete(callback);
-      this.socket?.off('new_message', callback);
-    } else {
-      this.messageCallbacks.forEach(cb => this.socket?.off('new_message', cb));
-      this.messageCallbacks.clear();
-    }
-  }
-
-  onUserTyping(callback: (data: { userId: string; isTyping: boolean }) => void) {
-    this.typingCallbacks.add(callback);
-    if (this.socket) {
-      this.socket.off('user_typing', callback);
-      this.socket.on('user_typing', callback);
-    }
-  }
-
-  offUserTyping(callback?: (data: { userId: string; isTyping: boolean }) => void) {
-    if (callback) {
-      this.typingCallbacks.delete(callback);
-      this.socket?.off('user_typing', callback);
-    } else {
-      this.typingCallbacks.forEach(cb => this.socket?.off('user_typing', cb));
-      this.typingCallbacks.clear();
-    }
-  }
-
-  // ── Real-time progress listener ───────────────────────────────────────────
-  onWorkProgressChanged(callback: (data: { workId: string; progress: string }) => void) {
-    this.progressCallbacks.add(callback);
-    if (this.socket) {
-      this.socket.off('work_progress_changed', callback);
-      this.socket.on('work_progress_changed', callback);
-    }
-  }
-
-  offWorkProgressChanged(callback?: (data: { workId: string; progress: string }) => void) {
-    if (callback) {
-      this.progressCallbacks.delete(callback);
-      this.socket?.off('work_progress_changed', callback);
-    } else {
-      this.progressCallbacks.forEach(cb => this.socket?.off('work_progress_changed', cb));
-      this.progressCallbacks.clear();
-    }
-  }
-
-
-  sendTyping(chatId: string, isTyping: boolean) {
-    if (!this.socket?.connected) return;
-    this.socket.emit('typing', { chatId, isTyping });
-  }
-
-  isConnected(): boolean {
-    return this.socket?.connected || false;
-  }
-
-  //new added
-  private errorCallbacks: Set<(data: { message: string }) => void> = new Set();
-
-  onSocketError(callback: (data: { message: string }) => void) {
-    this.errorCallbacks.add(callback);
-    if (this.socket) {
-      this.socket.off('error', callback);
-      this.socket.on('error', callback);
-    }
-  }
-
-  offSocketError(callback?: (data: { message: string }) => void) {
-    if (callback) {
-      this.errorCallbacks.delete(callback);
-      this.socket?.off('error', callback);
-    } else {
-      this.errorCallbacks.forEach(cb => this.socket?.off('error', cb));
-      this.errorCallbacks.clear();
-    }
-  }
+  onSocketError = (cb: Parameters<ErrorSocketModule['onSocketError']>[0]) => this.errors.onSocketError(cb);
+  offSocketError = (cb?: Parameters<ErrorSocketModule['offSocketError']>[0]) => this.errors.offSocketError(cb);
 }
 
 export const socketService = SocketService.getInstance();
