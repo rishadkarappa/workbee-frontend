@@ -2,13 +2,9 @@ import { api } from "./axios-instance/axios-instance";
 
 export const PaymentService = {
   // Create Razorpay order
-  createOrder: (data: {
-    workId: string;
-    workerId: string;
-    workTitle: string;
-    amount: number; // whole rupees
-  }) => {
-    return api.post("/payment/create-order", data);
+  createOrder: (data: {workId: string;workerId: string;workTitle: string;amount: number;}) => {
+    // return api.post("/payment/create-order", data);
+    return api.post("/payment/create-orders", data);
   },
 
   // Verify payment after Razorpay popup succeeds.
