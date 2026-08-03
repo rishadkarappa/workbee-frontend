@@ -156,7 +156,7 @@ export default function WorkerMessages() {
     return () => {
       socketService.leaveChat(selectedChat.id);
     };
-  }, [selectedChat?.id]);
+  }, [selectedChat]);
 
   // Detect already-sent confirm requests from message history
   useEffect(() => {
