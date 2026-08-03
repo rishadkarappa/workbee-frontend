@@ -273,7 +273,7 @@ export default function ClientMessages() {
     return () => {
       socketService.leaveChat(selectedChat.id);
     };
-  }, [selectedChat?.id]);
+  }, [selectedChat]);
 
   useEffect(() => {
     const responded = new Set<string>();
