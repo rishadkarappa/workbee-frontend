@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { PhoneInput } from "@/components/ui/phone-input"
 import { isValidPhoneNumber } from "react-phone-number-input"
+import { Eye, EyeOff } from "lucide-react"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { WorkService } from "@/services/work-service"
@@ -58,6 +59,8 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
   })
   const [errors, setErrors] = useState<FormErrors>({})
   const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const navigate = useNavigate()
 
 
@@ -195,7 +198,6 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
                     placeholder="Enter your full name"
                     aria-invalid={!!errors.name}
                     className={errors.name ? "border-red-500 focus-visible:ring-red-500" : ""}
-                    required
                   />
                   {errors.name && (
                     <p className="text-xs text-red-500 mt-1">{errors.name}</p>
@@ -213,7 +215,6 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
                     placeholder="Enter your email"
                     aria-invalid={!!errors.email}
                     className={errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}
-                    required
                   />
                   {errors.email && (
                     <p className="text-xs text-red-500 mt-1">{errors.email}</p>
@@ -245,27 +246,43 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
               <FieldGroup>
                 <Field>
                   <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <Input
-                    id="password"
-                    type="password"
-                    name="password"
-                    value={form.password}
-                    onChange={handleChange}
-                    placeholder="************"
-                    required
-                  />
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      value={form.password}
+                      onChange={handleChange}
+                      placeholder="Enter your password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="confirmPassword">Confirm Password</FieldLabel>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    name="confirmPassword"
-                    value={form.confirmPassword}
-                    onChange={handleChange}
-                    placeholder="************"
-                    required
-                  />
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      name="confirmPassword"
+                      value={form.confirmPassword}
+                      onChange={handleChange}
+                      placeholder="Confirm your password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
                 </Field>
               </FieldGroup>
             </form>
@@ -283,7 +300,6 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
                     value={form.location}
                     onChange={handleChange}
                     placeholder="City / State / Country"
-                    required
                   />
                 </Field>
                 <Field>
@@ -294,7 +310,6 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
                     value={form.workType}
                     onChange={handleChange}
                     placeholder="E.g., Electrician, Plumber, etc."
-                    required
                   />
                 </Field>
 
@@ -306,7 +321,6 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
                     value={form.preferredWork}
                     onChange={handleChange}
                     placeholder="Your preferred work type"
-                    required
                   />
                 </Field>
               </FieldGroup>
