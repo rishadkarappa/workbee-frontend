@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   getCoreRowModel,
   getSortedRowModel,
@@ -31,14 +31,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 // Select component (inline)
-const Select = ({ 
-  value, 
-  onValueChange, 
-  children 
-}: { 
-  value: string; 
-  onValueChange: (value: string) => void; 
-  children: React.ReactNode 
+const Select = ({
+  value,
+  onValueChange,
+  children
+}: {
+  value: string;
+  onValueChange: (value: string) => void;
+  children: React.ReactNode
 }) => {
   return (
     <select
@@ -51,12 +51,12 @@ const Select = ({
   );
 };
 
-const SelectItem = ({ 
-  value, 
-  children 
-}: { 
-  value: string; 
-  children: React.ReactNode 
+const SelectItem = ({
+  value,
+  children
+}: {
+  value: string;
+  children: React.ReactNode
 }) => {
   return <option value={value}>{children}</option>;
 };
@@ -158,15 +158,16 @@ const Users = () => {
   // Use your custom debounce hook
   const debouncedSearch = useDebounce(searchValue, 500);
 
-  // Fetch users with server-side pagination, search, and status filter
-  const fetchUsers = async () => {
+  //fetch users in admin dashboard
+  const fetchUsers = useCallback(async () => {
     try {
       setIsLoading(true);
+
       const res = await AuthService.getUsers(
         pagination.pageIndex + 1,
         pagination.pageSize,
         debouncedSearch,
-        statusFilter // Pass status filter to backend
+        statusFilter
       );
 
       setUsers(res.data.data.users);
@@ -177,7 +178,16 @@ const Users = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [
+    pagination.pageIndex,
+    pagination.pageSize,
+    debouncedSearch,
+    statusFilter,
+  ]);
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+  
 
   // Reset to first page when debounced search or status filter changes
   useEffect(() => {
@@ -211,7 +221,7 @@ const Users = () => {
         setIsModalOpen(false);
         fetchUsers();
       }
-      
+
     } catch (error) {
       alert("Error occurred while blocking user");
       console.log(error)
@@ -240,10 +250,9 @@ const Users = () => {
           <span
             className={`
               inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
-              ${
-                user.isBlocked
-                  ? "bg-red-100/80 text-red-700 border border-red-200"
-                  : "bg-green-100/80 text-green-700 border border-green-200"
+              ${user.isBlocked
+                ? "bg-red-100/80 text-red-700 border border-red-200"
+                : "bg-green-100/80 text-green-700 border border-green-200"
               }
             `}
           >
@@ -335,20 +344,18 @@ const Users = () => {
                       <span
                         className={`
                           inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium
-                          ${
-                            selectedUser.isBlocked
-                              ? "bg-red-100/80 text-red-700 border border-red-200"
-                              : "bg-green-100/80 text-green-700 border border-green-200"
+                          ${selectedUser.isBlocked
+                            ? "bg-red-100/80 text-red-700 border border-red-200"
+                            : "bg-green-100/80 text-green-700 border border-green-200"
                           }
                         `}
                       >
                         <span
                           className={`
                             w-2 h-2 rounded-full
-                            ${
-                              selectedUser.isBlocked
-                                ? "bg-red-500"
-                                : "bg-green-500"
+                            ${selectedUser.isBlocked
+                              ? "bg-red-500"
+                              : "bg-green-500"
                             }
                           `}
                         />
@@ -412,9 +419,9 @@ const Users = () => {
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
                   </TableHead>
                 ))}
               </TableRow>
