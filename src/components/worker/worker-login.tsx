@@ -27,20 +27,75 @@ export function WorkerLoginForm({
     ...props
 }: React.ComponentProps<"div">) {
 
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const [form, setForm] = useState({
+        email: "",
+        password: "",
+    });
+
+    const [errors, setErrors] = useState({
+        email: "",
+        password: "",
+    });
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
     const blockedMessage = useBlockedMessage();
 
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+
+        setForm((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+
+        setErrors((prev) => ({
+            ...prev,
+            [name]: "",
+        }));
+    };
+
+    const validate = () => {
+        const newErrors = {
+            email: "",
+            password: "",
+        };
+
+        let isValid = true;
+
+        if (!form.email.trim()) {
+            newErrors.email = "Email is required";
+            isValid = false;
+        } else if (
+            !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(form.email)
+        ) {
+            newErrors.email = "Enter a valid email address";
+            isValid = false;
+        }
+
+        if (!form.password) {
+            newErrors.password = "Password is required";
+            isValid = false;
+        } else if (form.password.length < 6) {
+            newErrors.password = "Password must be at least 6 characters";
+            isValid = false;
+        }
+
+        setErrors(newErrors);
+        return isValid;
+    };
+
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!validate()) return;
         setIsLoading(true);
 
         try {
-            const data = { email, password };
+            const data = {
+                email: form.email,
+                password: form.password,
+            };
             const result = await AuthService.workerLogin(data);
 
             if (result.data.success) {
@@ -53,7 +108,7 @@ export function WorkerLoginForm({
                     }
 
                     AuthHelper.setAuth(accessToken, refreshToken, worker);
-                    
+
                     alert(result.data.message || "Worker login successful");
                     navigate("/worker/worker-dashboard");
                 } else {
@@ -88,10 +143,10 @@ export function WorkerLoginForm({
 
             <Card>
                 <CardHeader>
-                    <BackButton/>
+                    <BackButton />
                     <CardTitle>Worker Login</CardTitle>
                     <CardDescription>
-                        Enter your email below to login to your workbee worker dashboard 
+                        Enter your email below to login to your workbee worker dashboard
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -101,12 +156,18 @@ export function WorkerLoginForm({
                                 <FieldLabel htmlFor="email">Email</FieldLabel>
                                 <Input
                                     id="email"
+                                    name="email"
                                     type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    value={form.email}
+                                    onChange={handleChange}
                                     placeholder="worker@example.com"
-                                    required
                                 />
+
+                                {errors.email && (
+                                    <p className="text-xs text-red-800">
+                                        {errors.email}
+                                    </p>
+                                )}
                             </Field>
                             <Field>
                                 <div className="flex items-center">
@@ -122,13 +183,19 @@ export function WorkerLoginForm({
                                 <div className="relative">
                                     <Input
                                         id="password"
+                                        name="password"
                                         type={showPassword ? "text" : "password"}
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        required
+                                        value={form.password}
+                                        onChange={handleChange}
                                         placeholder="Enter your password"
-                                        className="pr-10" 
+                                        className="pr-10"
                                     />
+
+                                    {errors.password && (
+                                        <p className="mt-1 text-xs text-red-800">
+                                            {errors.password}
+                                        </p>
+                                    )}
 
                                     <button
                                         type="button"
