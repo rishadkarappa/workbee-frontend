@@ -187,17 +187,13 @@ const Users = () => {
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
-  
+
 
   // Reset to first page when debounced search or status filter changes
+
   useEffect(() => {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   }, [debouncedSearch, statusFilter]);
-
-  // Fetch users when pagination, debounced search, or status filter changes
-  useEffect(() => {
-    fetchUsers();
-  }, [pagination.pageIndex, pagination.pageSize, debouncedSearch, statusFilter]);
 
   // Handle search change
   const handleSearchChange = (value: string) => {
