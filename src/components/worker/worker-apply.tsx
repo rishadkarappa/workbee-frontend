@@ -8,6 +8,8 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
+import { PhoneInput } from "@/components/ui/phone-input"
+import { isValidPhoneNumber } from "react-phone-number-input"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { WorkService } from "@/services/work-service"
@@ -31,11 +33,17 @@ export interface ApplyForWorkerDto {
   confirmations: WorkerConfirmationsDto;
 }
 
+type FormErrors = {
+  name?: string;
+  email?: string;
+  phone?: string;
+}
+
 export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"div">) {
   const [form, setForm] = useState({
     name: "",
     email: "",
-    phone: "",
+    phone: undefined as string | undefined,
     password: "",
     confirmPassword: "",
     location: "",
@@ -48,12 +56,23 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
       termsAccepted: false,
     },
   })
+  const [errors, setErrors] = useState<FormErrors>({})
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
+    if (errors[e.target.name as keyof FormErrors]) {
+      setErrors((prev) => ({ ...prev, [e.target.name]: undefined }))
+    }
+  }
+
+  const handlePhoneChange = (value: string | undefined) => {
+    setForm((prev) => ({ ...prev, phone: value }))
+    if (errors.phone) {
+      setErrors((prev) => ({ ...prev, phone: undefined }))
+    }
   }
 
   const handleCheckbox = (name: string) => {
@@ -66,14 +85,35 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
     }))
   }
 
+  const validateStep1 = (): boolean => {
+    const newErrors: FormErrors = {}
+
+    if (!form.name.trim()) {
+      newErrors.name = "Full name is required"
+    }
+
+    if (!form.email.trim()) {
+      newErrors.email = "Email is required"
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      newErrors.email = "Enter a valid email address"
+    }
+
+    if (!form.phone) {
+      newErrors.phone = "Phone number is required"
+    } else if (!isValidPhoneNumber(form.phone)) {
+      newErrors.phone = "Enter a valid phone number"
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
   const handleSubmit = async () => {
     try {
       setIsLoading(true);
 
-      // Validation
-      if (!form.name || !form.email || !form.phone) {
-        alert("Please fill all required details.");
+      if (!validateStep1()) {
+        alert("Please fill all required details correctly.");
         return;
       }
 
@@ -87,7 +127,6 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
         return;
       }
 
-      // Check all confirmations
       if (!form.confirmations.reliable ||
         !form.confirmations.honest ||
         !form.confirmations.termsAccepted) {
@@ -98,7 +137,7 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
       const workerData: ApplyForWorkerDto = {
         name: form.name,
         email: form.email,
-        phone: form.phone,
+        phone: form.phone ?? "",
         password: form.password,
         location: form.location,
         workType: form.workType,
@@ -154,8 +193,13 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
                     value={form.name}
                     onChange={handleChange}
                     placeholder="Enter your full name"
+                    aria-invalid={!!errors.name}
+                    className={errors.name ? "border-red-500 focus-visible:ring-red-500" : ""}
                     required
                   />
+                  {errors.name && (
+                    <p className="text-xs text-red-500 mt-1">{errors.name}</p>
+                  )}
                 </Field>
 
                 <Field>
@@ -167,21 +211,29 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
                     value={form.email}
                     onChange={handleChange}
                     placeholder="Enter your email"
+                    aria-invalid={!!errors.email}
+                    className={errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}
                     required
                   />
+                  {errors.email && (
+                    <p className="text-xs text-red-500 mt-1">{errors.email}</p>
+                  )}
                 </Field>
 
                 <Field>
                   <FieldLabel htmlFor="phone">Phone Number</FieldLabel>
-                  <Input
+                  <PhoneInput
                     id="phone"
-                    name="phone"
-                    type="tel"
-                    value={form.phone}
-                    onChange={handleChange}
+                    variant="lg"
                     placeholder="Enter phone number"
-                    required
+                    defaultCountry="IN"
+                    value={form.phone}
+                    onChange={handlePhoneChange}
+                    aria-invalid={!!errors.phone}
                   />
+                  {errors.phone && (
+                    <p className="text-xs text-red-500 mt-1">{errors.phone}</p>
+                  )}
                 </Field>
               </FieldGroup>
             </form>
