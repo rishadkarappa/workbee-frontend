@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Eye, X, Search, MapPin, Calendar, Clock, Filter, IndianRupee } from "lucide-react"
 import { WorkService } from "@/services/work-service"
 import { useDebounce } from "@/hooks/useDebounce"
@@ -82,7 +82,7 @@ interface Work {
   landmark?: string
   place?: string
   contactNumber: string
-  userName?:string
+  userName?: string
   beforeImage?: string
   petrolAllowance?: string
   extraRequirements?: string
@@ -246,7 +246,7 @@ const WorkDetailsModal = ({
   placeName?: string
   distance?: number | null
 }) => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
   if (!isOpen || !work) return null
 
@@ -254,8 +254,8 @@ const WorkDetailsModal = ({
     try {
       // Create or get existing chat with this client
       const response = await ChatService.createChat({
-        userId: work.userId,  
-        workerId: AuthHelper.getUserId()!  
+        userId: work.userId,
+        workerId: AuthHelper.getUserId()!
       });
 
       const chat = response.data.data;
@@ -268,7 +268,7 @@ const WorkDetailsModal = ({
           workId: work.id,
           workTitle: work.workTitle,
           userName: work.userName || 'Client',
-          currentAmount : work.budget
+          currentAmount: work.budget
         }
       });
 
@@ -584,19 +584,17 @@ export default function WorkerWorksTable() {
   }, [])
 
   // Fetch works with backend pagination and search
-  const fetchWorks = async () => {
+  const fetchWorks = useCallback(async () => {
     try {
-      setLoading(true)
+      setLoading(true);
 
-      // Prepare filters
       const filters: WorkFilters = {
         search: debouncedSearchTerm,
         status: statusFilter,
         page: currentPage,
-        limit: itemsPerPage
-      }
+        limit: itemsPerPage,
+      };
 
-      // Add geospatial filters if distance filter is active
       if (distanceFilter !== "all" && userLocation) {
         const distanceMap: Record<string, number> = {
           "2km": 2,
@@ -607,14 +605,14 @@ export default function WorkerWorksTable() {
           "20km": 20,
           "30km": 30,
           "50km": 50,
-        }
+        };
 
-        filters.latitude = userLocation.lat
-        filters.longitude = userLocation.lng
-        filters.maxDistance = distanceMap[distanceFilter]
+        filters.latitude = userLocation.lat;
+        filters.longitude = userLocation.lng;
+        filters.maxDistance = distanceMap[distanceFilter];
       }
 
-      const response = await WorkService.getAllWorks(filters)
+      const response = await WorkService.getAllWorks(filters);
 
       if (response.data.success) {
         const worksData = response.data.data.works
@@ -659,17 +657,22 @@ export default function WorkerWorksTable() {
         setLoadingPlaces(false)
       }
     } catch (error) {
-      console.error("Error fetching works:", error)
-      alert("Error while fetching works")
+      console.error(error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
-
-  // Fetch works when filters change
+  }, [
+    debouncedSearchTerm,
+    statusFilter,
+    currentPage,
+    itemsPerPage,
+    distanceFilter,
+    userLocation,
+  ]);
   useEffect(() => {
-    fetchWorks()
-  }, [debouncedSearchTerm, statusFilter, currentPage, distanceFilter])
+    fetchWorks();
+  }, [fetchWorks]);
+
 
   // Reset to page 1 when search or status changes
   useEffect(() => {
@@ -930,8 +933,8 @@ export default function WorkerWorksTable() {
                             onClick={() => setCurrentPage(page as number)}
                             disabled={loading}
                             className={`px-3 py-1 rounded text-sm transition-colors ${currentPage === page
-                                ? 'bg-gray-900 text-white'
-                                : 'bg-white text-gray-700 hover:bg-gray-50 border'
+                              ? 'bg-gray-900 text-white'
+                              : 'bg-white text-gray-700 hover:bg-gray-50 border'
                               } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
                             {page}
