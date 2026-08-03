@@ -36,11 +36,52 @@ export function LoginForm({
     const blockedMessage = useBlockedMessage();
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+
+        setForm((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+
+        setErrors((prev) => ({
+            ...prev,
+            [name]: "",
+        }));
+    };
+
+    const [errors, setErrors] = useState({ email: "", password: "" })
+    const validateForm = () => {
+        const newErrors = {
+            email: "",
+            password: "",
+        };
+
+        let isValid = true;
+
+        if (!form.email.trim()) {
+            newErrors.email = "Email is required";
+            isValid = false;
+        } else if (
+            !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(form.email)
+        ) {
+            newErrors.email = "Please enter a valid email address";
+            isValid = false;
+        }
+
+        if (!form.password.trim()) {
+            newErrors.password = "Password is required";
+            isValid = false;
+        }
+
+        setErrors(newErrors);
+        return isValid;
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!validateForm()) return;
+
         setIsLoading(true);
 
         try {
@@ -142,12 +183,16 @@ export function LoginForm({
                                 <Input
                                     id="email"
                                     name="email"
-                                    type="email"
                                     value={form.email}
                                     onChange={handleChange}
                                     placeholder="rishad@example.com"
-                                    required
+
                                 />
+                                {errors.email && (
+                                    <p className="mt-0 text-xs text-red-900">
+                                        {errors.email}
+                                    </p>
+                                )}
                             </Field>
                             <Field>
                                 <div className="flex items-center">
@@ -166,8 +211,9 @@ export function LoginForm({
                                         type={showPassword ? "text" : "password"}
                                         value={form.password}
                                         onChange={handleChange}
-                                        required
+
                                     />
+
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
@@ -176,6 +222,11 @@ export function LoginForm({
                                         {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                     </button>
                                 </div>
+                                {errors.password && (
+                                    <p className="text-xs text-red-900">
+                                        {errors.password}
+                                    </p>
+                                )}
                             </Field>
                             <Field>
                                 <Button className="cursor-pointer" type="submit" disabled={isLoading}>

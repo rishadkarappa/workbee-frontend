@@ -22,6 +22,12 @@ export default tseslint.config([
     rules: {
       //it not a good approach done it in futer for best hot reload
       "react-refresh/only-export-components": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+        },
+      ],
     }
   },
 ])
