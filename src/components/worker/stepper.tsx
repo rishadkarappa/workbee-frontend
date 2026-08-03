@@ -13,6 +13,7 @@ interface StepperProps extends HTMLAttributes<HTMLDivElement> {
   onStepChange?: (step: number) => void;
   onFinalStepCompleted?: () => void;
   onSubmit?: () => void | Promise<void>;
+  onValidateStep?: (step: number) => boolean | Promise<boolean>;
   isSubmitting?: boolean;
   stepCircleContainerClassName?: string;
   stepContainerClassName?: string;
@@ -35,8 +36,9 @@ export default function Stepper({
   initialStep = 1,
   onStepChange = () => { },
   onFinalStepCompleted = () => { },
-  onSubmit, // NEW: Destructure onSubmit
-  isSubmitting = false, // NEW: Destructure isSubmitting
+  onSubmit,
+  onValidateStep,
+  isSubmitting = false,
   stepCircleContainerClassName = '',
   stepContainerClassName = '',
   contentClassName = '',
@@ -51,6 +53,7 @@ export default function Stepper({
 }: StepperProps) {
   const [currentStep, setCurrentStep] = useState<number>(initialStep);
   const [direction, setDirection] = useState<number>(0);
+  const [isValidating, setIsValidating] = useState(false);
   const stepsArray = Children.toArray(children);
   const totalSteps = stepsArray.length;
   const isCompleted = currentStep > totalSteps;
@@ -74,15 +77,30 @@ export default function Stepper({
 
   const navigate = useNavigate()
 
-  const handleNext = () => {
-    if (!isLastStep) {
-      setDirection(1);
-      updateStep(currentStep + 1);
+  //validate current step before advancing
+  const handleNext = async () => {
+    if (isLastStep) return;
+
+    if (onValidateStep) {
+      setIsValidating(true);
+      const isValid = await onValidateStep(currentStep);
+      setIsValidating(false);
+      if (!isValid) return;
     }
+
+    setDirection(1);
+    updateStep(currentStep + 1);
   };
 
-  // NEW: Modified handleComplete to call onSubmit
+  // validate final step before calling onSubmit
   const handleComplete = async () => {
+    if (onValidateStep) {
+      setIsValidating(true);
+      const isValid = await onValidateStep(currentStep);
+      setIsValidating(false);
+      if (!isValid) return;
+    }
+
     if (onSubmit) {
       await onSubmit();
     } else {
@@ -156,7 +174,7 @@ export default function Stepper({
               {currentStep !== 1 && (
                 <button
                   onClick={handleBack}
-                  disabled={isSubmitting} // NEW: Disable during submission
+                  disabled={isSubmitting || isValidating}
                   className={`duration-350 rounded px-2 py-1 transition ${currentStep === 1 || isSubmitting
                       ? 'pointer-events-none opacity-50 text-neutral-400'
                       : 'text-neutral-400 hover:text-neutral-800'
@@ -168,11 +186,10 @@ export default function Stepper({
               )}
               <button
                 onClick={isLastStep ? handleComplete : handleNext}
-                disabled={isSubmitting} // NEW: Disable during submission
+                disabled={isSubmitting || isValidating} 
                 className="duration-350 flex items-center justify-center rounded-full bg-neutral-900 py-1.5 px-3.5 font-medium tracking-tight text-white transition hover:bg-neutral-800 active:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 {...nextButtonProps}
               >
-                {/* NEW: Show loading state */}
                 {isSubmitting ? 'Submitting...' : isLastStep ? 'Apply' : nextButtonText}
               </button>
             </div>

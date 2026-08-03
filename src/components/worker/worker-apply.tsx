@@ -38,6 +38,12 @@ type FormErrors = {
   name?: string;
   email?: string;
   phone?: string;
+  password?: string;
+  confirmPassword?: string;
+  location?: string;
+  workType?: string;
+  preferredWork?: string;
+  confirmations?: string;
 }
 
 export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"div">) {
@@ -86,54 +92,107 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
         [name]: !prev.confirmations[name as keyof typeof prev.confirmations],
       },
     }))
+    if (errors.confirmations) {
+      setErrors((prev) => ({ ...prev, confirmations: undefined }))
+    }
   }
 
+  // ---------- Per-step validators ----------
+
   const validateStep1 = (): boolean => {
-    const newErrors: FormErrors = {}
+    const stepErrors: Partial<FormErrors> = {}
 
     if (!form.name.trim()) {
-      newErrors.name = "Full name is required"
+      stepErrors.name = "Full name is required"
     }
 
     if (!form.email.trim()) {
-      newErrors.email = "Email is required"
+      stepErrors.email = "Email is required"
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
-      newErrors.email = "Enter a valid email address"
+      stepErrors.email = "Enter a valid email address"
     }
 
     if (!form.phone) {
-      newErrors.phone = "Phone number is required"
+      stepErrors.phone = "Phone number is required"
     } else if (!isValidPhoneNumber(form.phone)) {
-      newErrors.phone = "Enter a valid phone number"
+      stepErrors.phone = "Enter a valid phone number"
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+    setErrors((prev) => ({ ...prev, name: undefined, email: undefined, phone: undefined, ...stepErrors }))
+    return Object.keys(stepErrors).length === 0
+  }
+
+  const validateStep2 = (): boolean => {
+    const stepErrors: Partial<FormErrors> = {}
+
+    if (!form.password) {
+      stepErrors.password = "Password is required"
+    } else if (form.password.length < 6) {
+      stepErrors.password = "Password must be at least 6 characters"
+    }
+
+    if (!form.confirmPassword) {
+      stepErrors.confirmPassword = "Please confirm your password"
+    } else if (form.password !== form.confirmPassword) {
+      stepErrors.confirmPassword = "Passwords do not match"
+    }
+
+    setErrors((prev) => ({ ...prev, password: undefined, confirmPassword: undefined, ...stepErrors }))
+    return Object.keys(stepErrors).length === 0
+  }
+
+  const validateStep3 = (): boolean => {
+    const stepErrors: Partial<FormErrors> = {}
+
+    if (!form.location.trim()) {
+      stepErrors.location = "Location is required"
+    }
+    if (!form.workType.trim()) {
+      stepErrors.workType = "Work type is required"
+    }
+    if (!form.preferredWork.trim()) {
+      stepErrors.preferredWork = "Preferred work is required"
+    }
+
+    setErrors((prev) => ({ ...prev, location: undefined, workType: undefined, preferredWork: undefined, ...stepErrors }))
+    return Object.keys(stepErrors).length === 0
+  }
+
+  const validateStep4 = (): boolean => {
+    const stepErrors: Partial<FormErrors> = {}
+
+    if (!form.confirmations.reliable || !form.confirmations.honest || !form.confirmations.termsAccepted) {
+      stepErrors.confirmations = "Please confirm all the required statements."
+    }
+
+    setErrors((prev) => ({ ...prev, confirmations: undefined, ...stepErrors }))
+    return Object.keys(stepErrors).length === 0
+  }
+
+  // Dispatcher — passed to Stepper, called on every "Next"/"Apply" click
+  const validateStep = (step: number): boolean => {
+    switch (step) {
+      case 1: return validateStep1()
+      case 2: return validateStep2()
+      case 3: return validateStep3()
+      case 4: return validateStep4()
+      default: return true
+    }
+  }
+
+  const validateAll = (): boolean => {
+    const v1 = validateStep1()
+    const v2 = validateStep2()
+    const v3 = validateStep3()
+    const v4 = validateStep4()
+    return v1 && v2 && v3 && v4
   }
 
   const handleSubmit = async () => {
     try {
       setIsLoading(true);
 
-      if (!validateStep1()) {
-        alert("Please fill all required details correctly.");
-        return;
-      }
-
-      if (form.password !== form.confirmPassword) {
-        alert("Passwords do not match!");
-        return;
-      }
-
-      if (form.password.length < 6) {
-        alert("Password must be at least 6 characters long.");
-        return;
-      }
-
-      if (!form.confirmations.reliable ||
-        !form.confirmations.honest ||
-        !form.confirmations.termsAccepted) {
-        alert("Please confirm all the required statements.");
+      if (!validateAll()) {
         return;
       }
 
@@ -180,6 +239,7 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
           initialStep={1}
           onStepChange={() => {}}
           onSubmit={handleSubmit}
+          onValidateStep={validateStep}
           isSubmitting={isLoading}
           backButtonText="Previous"
           nextButtonText="Next"
@@ -254,6 +314,8 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
                       value={form.password}
                       onChange={handleChange}
                       placeholder="Enter your password"
+                      aria-invalid={!!errors.password}
+                      className={errors.password ? "border-red-500 focus-visible:ring-red-500" : ""}
                     />
                     <button
                       type="button"
@@ -263,6 +325,9 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
                       {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
                   </div>
+                  {errors.password && (
+                    <p className="text-xs text-red-500 mt-1">{errors.password}</p>
+                  )}
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="confirmPassword">Confirm Password</FieldLabel>
@@ -274,6 +339,8 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
                       value={form.confirmPassword}
                       onChange={handleChange}
                       placeholder="Confirm your password"
+                      aria-invalid={!!errors.confirmPassword}
+                      className={errors.confirmPassword ? "border-red-500 focus-visible:ring-red-500" : ""}
                     />
                     <button
                       type="button"
@@ -283,6 +350,9 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
                       {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
                   </div>
+                  {errors.confirmPassword && (
+                    <p className="text-xs text-red-500 mt-1">{errors.confirmPassword}</p>
+                  )}
                 </Field>
               </FieldGroup>
             </form>
@@ -300,7 +370,12 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
                     value={form.location}
                     onChange={handleChange}
                     placeholder="City / State / Country"
+                    aria-invalid={!!errors.location}
+                    className={errors.location ? "border-red-500 focus-visible:ring-red-500" : ""}
                   />
+                  {errors.location && (
+                    <p className="text-xs text-red-500 mt-1">{errors.location}</p>
+                  )}
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="workType">Work Type</FieldLabel>
@@ -310,7 +385,12 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
                     value={form.workType}
                     onChange={handleChange}
                     placeholder="E.g., Electrician, Plumber, etc."
+                    aria-invalid={!!errors.workType}
+                    className={errors.workType ? "border-red-500 focus-visible:ring-red-500" : ""}
                   />
+                  {errors.workType && (
+                    <p className="text-xs text-red-500 mt-1">{errors.workType}</p>
+                  )}
                 </Field>
 
                 <Field>
@@ -321,7 +401,12 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
                     value={form.preferredWork}
                     onChange={handleChange}
                     placeholder="Your preferred work type"
+                    aria-invalid={!!errors.preferredWork}
+                    className={errors.preferredWork ? "border-red-500 focus-visible:ring-red-500" : ""}
                   />
+                  {errors.preferredWork && (
+                    <p className="text-xs text-red-500 mt-1">{errors.preferredWork}</p>
+                  )}
                 </Field>
               </FieldGroup>
             </form>
@@ -357,11 +442,13 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
                   <Checkbox
                     checked={form.confirmations.termsAccepted}
                     onCheckedChange={() => handleCheckbox("termsAccepted")}
-                    required
                   />
                   <span>I agree to the terms and conditions</span>
                 </label>
               </div>
+              {errors.confirmations && (
+                <p className="text-xs text-red-500">{errors.confirmations}</p>
+              )}
             </div>
           </Step>
         </Stepper>
