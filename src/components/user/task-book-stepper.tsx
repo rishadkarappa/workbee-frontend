@@ -4,8 +4,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import type { Variants } from 'motion/react';
 import BackButton from '../common/back-button';
 import { CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { useNavigate } from 'react-router-dom';
-
 
 interface StepperProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;

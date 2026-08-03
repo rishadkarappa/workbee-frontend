@@ -469,6 +469,14 @@ export default function WorkContent() {
         );
     }
 
+    if (error) {
+        return (
+            <div className="p-4 text-red-600">
+                {error}
+            </div>
+        );
+    }
+
     if (!works || works.length === 0) {
         return (
             <div className="space-y-6">

@@ -195,8 +195,6 @@ export default function LiveWorks() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const user   = AuthHelper.getUser();
-  const userId = user?.id || AuthHelper.getUserId();
   const token  = AuthHelper.getAccessToken();
 
   const getStatusColor = (status?: string) => {

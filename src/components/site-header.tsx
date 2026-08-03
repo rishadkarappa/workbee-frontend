@@ -1,7 +1,5 @@
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { UserCircle } from "lucide-react";
 import WorkerNotificationDropdown from "./worker/WorkerNotificationDropdown";
 
 export function SiteHeader() {

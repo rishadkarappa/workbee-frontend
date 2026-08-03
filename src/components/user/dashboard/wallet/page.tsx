@@ -114,11 +114,6 @@ function TransactionRow({ tx }: { tx: Transaction }) {
       ? "Refund"
       : tx.type;
 
-  const shortDesc =
-    tx.description?.length > 50
-      ? tx.description.substring(0, 50) + "…"
-      : tx.description;
-
   return (
     <div className="border rounded-xl overflow-hidden">
       <button

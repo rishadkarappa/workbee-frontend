@@ -19,5 +19,9 @@ export default tseslint.config([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      //it not a good approach done it in futer for best hot reload
+      "react-refresh/only-export-components": "off",
+    }
   },
 ])

@@ -56,6 +56,7 @@ export default function AskBetterPriceModal({
       setAskBetterPriceModalOpen(false);
       onSent?.();
     } catch (err) {
+      console.log(err)
       setError('Failed to send offer. Please try again.');
     } finally {
       setSending(false);

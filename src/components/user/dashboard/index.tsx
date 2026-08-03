@@ -1,5 +1,5 @@
 import { Separator } from "@/components/ui/separator"
-import { CalendarRange, Car, LucideLayoutDashboard, LucideWorkflow, MessagesSquare, Notebook, User, Wallet2Icon, WorkflowIcon } from "lucide-react"
+import { CalendarRange, LucideLayoutDashboard, LucideWorkflow, MessagesSquare, Notebook, User, Wallet2Icon, WorkflowIcon } from "lucide-react"
 import { Outlet, useLocation } from "react-router-dom"
 import SidebarNav from "./user-sidebar"
 import {
