@@ -257,10 +257,10 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
                     onChange={handleChange}
                     placeholder="Enter your full name"
                     aria-invalid={!!errors.name}
-                    className={errors.name ? "border-red-500 focus-visible:ring-red-500" : ""}
+                    className={errors.name ? "border-red-900 focus-visible:ring-red-800" : ""}
                   />
                   {errors.name && (
-                    <p className="text-xs text-red-500 mt-1">{errors.name}</p>
+                    <p className="text-xs text-red-800">{errors.name}</p>
                   )}
                 </Field>
 
@@ -277,7 +277,7 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
                     className={errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}
                   />
                   {errors.email && (
-                    <p className="text-xs text-red-500 mt-1">{errors.email}</p>
+                    <p className="text-xs text-red-800">{errors.email}</p>
                   )}
                 </Field>
 
@@ -293,7 +293,7 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
                     aria-invalid={!!errors.phone}
                   />
                   {errors.phone && (
-                    <p className="text-xs text-red-500 mt-1">{errors.phone}</p>
+                    <p className="text-xs text-red-800">{errors.phone}</p>
                   )}
                 </Field>
               </FieldGroup>
@@ -326,7 +326,7 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
                     </button>
                   </div>
                   {errors.password && (
-                    <p className="text-xs text-red-500 mt-1">{errors.password}</p>
+                    <p className="text-xs text-red-800">{errors.password}</p>
                   )}
                 </Field>
                 <Field>
@@ -351,7 +351,7 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
                     </button>
                   </div>
                   {errors.confirmPassword && (
-                    <p className="text-xs text-red-500 mt-1">{errors.confirmPassword}</p>
+                    <p className="text-xs text-red-800">{errors.confirmPassword}</p>
                   )}
                 </Field>
               </FieldGroup>
@@ -374,7 +374,7 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
                     className={errors.location ? "border-red-500 focus-visible:ring-red-500" : ""}
                   />
                   {errors.location && (
-                    <p className="text-xs text-red-500 mt-1">{errors.location}</p>
+                    <p className="text-xs text-red-800">{errors.location}</p>
                   )}
                 </Field>
                 <Field>
@@ -389,7 +389,7 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
                     className={errors.workType ? "border-red-500 focus-visible:ring-red-500" : ""}
                   />
                   {errors.workType && (
-                    <p className="text-xs text-red-500 mt-1">{errors.workType}</p>
+                    <p className="text-xs text-red-800">{errors.workType}</p>
                   )}
                 </Field>
 
@@ -405,7 +405,7 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
                     className={errors.preferredWork ? "border-red-500 focus-visible:ring-red-500" : ""}
                   />
                   {errors.preferredWork && (
-                    <p className="text-xs text-red-500 mt-1">{errors.preferredWork}</p>
+                    <p className="text-xs text-red-800">{errors.preferredWork}</p>
                   )}
                 </Field>
               </FieldGroup>
@@ -447,7 +447,7 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
                 </label>
               </div>
               {errors.confirmations && (
-                <p className="text-xs text-red-500">{errors.confirmations}</p>
+                <p className="text-xs text-red-800">{errors.confirmations}</p>
               )}
             </div>
           </Step>
