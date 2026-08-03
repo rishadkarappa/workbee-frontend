@@ -187,7 +187,7 @@ export function LoginForm({
 
                                 />
                                 {errors.email && (
-                                    <p className="mt-0 text-xs text-red-900">
+                                    <p className="mt-0 text-xs text-red-800">
                                         {errors.email}
                                     </p>
                                 )}
@@ -221,7 +221,7 @@ export function LoginForm({
                                     </button>
                                 </div>
                                 {errors.password && (
-                                    <p className="text-xs text-red-900">
+                                    <p className="text-xs text-red-800">
                                         {errors.password}
                                     </p>
                                 )}

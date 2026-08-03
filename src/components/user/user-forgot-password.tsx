@@ -26,14 +26,45 @@ export function UserForgotPassword({
     const [isLoading, setIsLoading] = useState(false);
     const [form, setForm] = useState({ email: ""});
     const navigate = useNavigate();
+    const [errors, setErrors] = useState({
+        email:""
+    })
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
+        const {name, value} = e.target
+        setForm((prev) => ({
+            ...prev,
+            [name]:value
+        }))
+        setErrors((prev) => ({
+            ...prev,
+            [name]:""
+        }))
     };
+
+    const validate = () => {
+        const newErrors = {
+            email:""
+        }
+        let isValid = true
+        if(!form.email.trim()) {
+            newErrors.email = "Email is required";
+            isValid = false
+        } else if(!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(form.email)) {
+            newErrors.email = "Enter a valid email address";
+            isValid = false
+        }
+        setErrors(newErrors)
+        return isValid;
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if(!validate()) return;
+
         setIsLoading(true);
+
 
         try {
 
@@ -68,12 +99,13 @@ export function UserForgotPassword({
                                 <Input
                                     id="email"
                                     name="email"
-                                    type="email"
                                     value={form.email}
                                     onChange={handleChange}
                                     placeholder="rishad@example.com"
-                                    required
                                 />
+                                {errors.email && (
+                                    <p className="text-xs text-red-800">{errors.email}</p>
+                                )}
                             </Field>
                             
                             <Field>
