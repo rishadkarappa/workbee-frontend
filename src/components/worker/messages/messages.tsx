@@ -7,7 +7,8 @@ import { ArrowLeft, Send, User, HandshakeIcon, TicketPercent } from 'lucide-reac
 import { MediaUploadButton } from '@/components/chat/MediaUploadButton';
 import type { UploadedMedia } from '@/components/chat/MediaUploadButton';
 import { MediaMessage } from '@/components/chat/MediaMessage';
-import { SystemMessage, parseSystemMessage, isBidCardActionable } from '@/components/chat/SystemMessage';
+import { SystemMessage } from '@/components/chat/SystemMessage';
+import { parseSystemMessage,isBidCardActionable } from '@/components/chat/system-message-utils';
 import AskBetterPriceModal from './modals/ask-better-price-modal';
 import { BidService } from '@/services/bid-service';
 

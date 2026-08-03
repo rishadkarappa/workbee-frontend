@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Eye, X, Search, BookmarkIcon } from "lucide-react"
 import { WorkService } from "@/services/work-service"
 import { Toggle } from "../ui/toggle"
@@ -278,35 +278,35 @@ export default function WorkersManagementComponent() {
         setCurrentPage(1)
     }, [debouncedSearch, statusFilter])
 
-    // Fetch workers with server-side pagination, search, and status filter
-    const getAllWorkers = async () => {
+    //get all workers in admin dash
+    const getAllWorkers = useCallback(async () => {
         try {
-            setLoading(true)
+            setLoading(true);
+
             const response = await WorkService.getAllWorkers(
                 currentPage,
                 itemsPerPage,
                 debouncedSearch,
                 statusFilter
-            )
+            );
 
             if (response.data.success) {
-                const data = response.data.data
-                setWorkers(data.workers || [])
-                setTotalWorkers(data.total || 0)
-                setTotalPages(data.totalPages || 0)
+                const data = response.data.data;
+                setWorkers(data.workers || []);
+                setTotalWorkers(data.total || 0);
+                setTotalPages(data.totalPages || 0);
             }
         } catch (error) {
-            console.error("Error fetching all workers:", error)
-            alert("Error while fetching all workers")
+            console.error("Error fetching all workers:", error);
+            alert("Error while fetching all workers");
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
-    }
-
-    // Fetch workers when page, debounced search, or status filter changes
+    }, [currentPage, itemsPerPage, debouncedSearch, statusFilter]);
     useEffect(() => {
-        getAllWorkers()
-    }, [currentPage, debouncedSearch, statusFilter])
+        getAllWorkers();
+    }, [getAllWorkers]);
+
 
     const handleBlockUnblock = async (workerId: string) => {
         if (!workerId) {

@@ -1,4 +1,3 @@
-// components/chat/MediaUploadButton.tsx
 import { useRef, useState } from 'react';
 import { Paperclip, X, Loader2 } from 'lucide-react';
 import { ChatService } from '@/services/chat-service';

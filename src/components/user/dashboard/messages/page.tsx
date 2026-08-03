@@ -8,7 +8,8 @@ import { ArrowLeft, Send, User } from 'lucide-react';
 import { MediaUploadButton } from '@/components/chat/MediaUploadButton';
 import type { UploadedMedia } from '@/components/chat/MediaUploadButton';
 import { MediaMessage } from '@/components/chat/MediaMessage';
-import { SystemMessage, isBidCardActionable, parseSystemMessage } from '@/components/chat/SystemMessage';
+import { SystemMessage } from '@/components/chat/SystemMessage';
+import { parseSystemMessage,isBidCardActionable } from '@/components/chat/system-message-utils';
 import { PaymentService } from "@/services/payment-service"
 import { BidService } from '@/services/bid-service';
 import CounterOfferModal from './modals/counter-offer-modal';
@@ -92,7 +93,7 @@ export default function ClientMessages() {
 
   const user = AuthHelper.getUser();
   const token = AuthHelper.getAccessToken();
-  const userId = user?.id|| AuthHelper.getUserId();
+  const userId = user?.id || AuthHelper.getUserId();
   const { chatId: navChatId, workTitle, userName } = location.state || {};
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -627,7 +628,7 @@ export default function ClientMessages() {
                   const isSent = msg.senderId === userId;
 
                   // ── System message ─────────────────────────────────────
-                 
+
                   if (msg.type === 'system') {
                     const payload = parseSystemMessage(msg.content);
                     if (payload) {
