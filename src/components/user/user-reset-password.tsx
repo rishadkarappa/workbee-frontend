@@ -11,31 +11,73 @@ import { getErrorMessage } from "@/utils/error-helper";
 export function UserResetPassword() {
   const { token } = useParams();
 
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const [form, setForm] = useState({
+    password: "",
+    confirmPassword: "",
+  });
+
+  const [errors, setErrors] = useState({
+    password: "",
+    confirmPassword: "",
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
+  };
+
+  const validate = () => {
+    const newErrors = {
+      password: "",
+      confirmPassword: "",
+    };
+
+    let isValid = true;
+
+    if (!form.password) {
+      newErrors.password = "Password is required";
+      isValid = false;
+    } else if (form.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+      isValid = false;
+    }
+
+    if (!form.confirmPassword) {
+      newErrors.confirmPassword = "Confirm your password";
+      isValid = false;
+    } else if (form.password !== form.confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!password) {
-      alert("Password is required");
-      return;
-    }
-    if (password !== confirm) {
-      alert("Passwords do not match");
-      return;
-    }
-
-
+    if (!validate()) return;
 
     try {
       setLoading(true);
 
-      const res = await AuthService.resetPassword(token!, { password });
-
+      const res = await AuthService.resetPassword(token!, {
+        password: form.password,
+      });
       if (res.data.success) {
         alert("Password reset successfully!");
         navigate("/login");
@@ -60,20 +102,30 @@ export function UserResetPassword() {
             <Field>
               <FieldLabel>New Password</FieldLabel>
               <Input
+                name="password"
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
+                value={form.password}
+                onChange={handleChange}
               />
+              {errors.password && (
+                <p className="text-xs text-red-800">
+                  {errors.password}
+                </p>
+              )}
             </Field>
             <Field>
               <FieldLabel>Confirm Password</FieldLabel>
               <Input
+                name="confirmPassword"
                 type="password"
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                required
+                value={form.confirmPassword}
+                onChange={handleChange}
               />
+              {errors.confirmPassword && (
+                <p className="text-xs text-red-800">
+                  {errors.confirmPassword}
+                </p>
+              )}
             </Field>
             <Field>
               <Button type="submit" disabled={loading}>
