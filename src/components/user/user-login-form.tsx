@@ -61,9 +61,7 @@ export function LoginForm({
         if (!form.email.trim()) {
             newErrors.email = "Email is required";
             isValid = false;
-        } else if (
-            !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(form.email)
-        ) {
+        } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(form.email)) {
             newErrors.email = "Please enter a valid email address";
             isValid = false;
         }

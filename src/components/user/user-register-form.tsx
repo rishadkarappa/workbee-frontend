@@ -36,16 +36,77 @@ export function RegisterForm({
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
     const navigate = useNavigate()
+    const [errors, setErrors] = useState({
+        name: "",
+        email: "",
+        password: "",
+        confirmPassword: ""
+    })
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setForm({ ...form, [e.target.name]: e.target.value })
+        const { name, value } = e.target
+        setForm((prev) => ({
+            ...prev,
+            [name]: value
+        }))
+        setErrors((prev) => ({
+            ...prev,
+            [name]: "",
+        }))
     }
+
+    const validate = () => {
+        const newErrors = {
+            name: "",
+            email: "",
+            password: "",
+            confirmPassword: "",
+        };
+
+        let isValid = true;
+
+        if (!form.name.trim()) {
+            newErrors.name = "Full name is required";
+            isValid = false;
+        } else if (form.name.trim().length < 3) {
+            newErrors.name = "Name must be at least 3 characters";
+            isValid = false;
+        }
+
+        if (!form.email.trim()) {
+            newErrors.email = "Email is required";
+            isValid = false;
+        } else if (
+            !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(form.email)
+        ) {
+            newErrors.email = "Enter a valid email address";
+            isValid = false;
+        }
+
+        if (!form.password) {
+            newErrors.password = "Password is required";
+            isValid = false;
+        } else if (form.password.length < 6) {
+            newErrors.password = "Password must be at least 6 characters";
+            isValid = false;
+        }
+
+        if (!form.confirmPassword) {
+            newErrors.confirmPassword = "Confirm your password";
+            isValid = false;
+        } else if (form.password !== form.confirmPassword) {
+            newErrors.confirmPassword = "Passwords do not match";
+            isValid = false;
+        }
+
+        setErrors(newErrors);
+        return isValid;
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
 
-        if (form.password !== form.confirmPassword) {
-            alert("Passwords do not match!")
+        if (!validate()) {
             return
         }
 
@@ -128,8 +189,10 @@ export function RegisterForm({
                                     value={form.name}
                                     onChange={handleChange}
                                     placeholder="Full name"
-                                    required
                                 />
+                                {errors.name && (
+                                    <p className="text-xs text-red-700">{errors.name}</p>
+                                )}
                             </Field>
 
                             <Field>
@@ -141,8 +204,10 @@ export function RegisterForm({
                                     value={form.email}
                                     onChange={handleChange}
                                     placeholder="Email address"
-                                    required
                                 />
+                                {errors.email && (
+                                    <p className="text-xs text-red-700">{errors.email}</p>
+                                )}
                             </Field>
 
                             <Field>
@@ -155,9 +220,8 @@ export function RegisterForm({
                                         value={form.password}
                                         onChange={handleChange}
                                         placeholder="Password"
-                                        required
-                                        minLength={6}
                                     />
+
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
@@ -165,6 +229,9 @@ export function RegisterForm({
                                     >
                                         {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                     </button>
+                                    {errors.password && (
+                                        <p className="text-xs text-red-700">{errors.password}</p>
+                                    )}
                                 </div>
                             </Field>
 
@@ -178,8 +245,6 @@ export function RegisterForm({
                                         value={form.confirmPassword}
                                         onChange={handleChange}
                                         placeholder="Confirm password"
-                                        required
-                                        minLength={6}
                                     />
                                     <button
                                         type="button"
@@ -189,11 +254,11 @@ export function RegisterForm({
                                         {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                     </button>
                                 </div>
-                                {form.password &&
-                                    form.confirmPassword &&
-                                    form.password !== form.confirmPassword && (
-                                        <p className="text-sm text-red-600">Passwords do not match</p>
-                                    )}
+                                {errors.confirmPassword && (
+                                    <p className="text-xs text-red-700">
+                                        {errors.confirmPassword}
+                                    </p>
+                                )}
                             </Field>
 
                             <Field>
