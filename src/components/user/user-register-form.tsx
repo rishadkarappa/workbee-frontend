@@ -51,7 +51,7 @@ export function RegisterForm({
 
         setIsLoading(true)
         try {
-            const { confirmPassword, ...registrationData } = form;
+            const registrationData = { name: form.name, email: form.email, password: form.password, };
             const res = await AuthService.register(registrationData);
 
             if (res.data.success) {
