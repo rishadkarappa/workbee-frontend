@@ -17,7 +17,7 @@ const WorkerRoutes = () => {
         <Routes>
             {/* Public Routes */}
             <Route path={AppRoutes.WORKER.LOGIN} element={<WorkerLogin/>} />
-            <Route path={AppRoutes.WORKER.APPLY}  element={<ApplyWorker/>} />
+            <Route path={AppRoutes.WORKER.APPLY} element={<ApplyWorker/>} />
 
             {/* Protected Routes - Worker Only */}
             <Route 
@@ -31,7 +31,7 @@ const WorkerRoutes = () => {
                 <Route index element={<WorkerDashboard/>} />
                 <Route path={AppRoutes.WORKER.WORKS} element={<Works/>} />
                 <Route path={AppRoutes.WORKER.ACTIVE_WORKS} element={<ActiveWorks/>} />
-                <Route path={AppRoutes.WORKER.CLIENT_MESSAGES} element={<ClientMessages/>} />
+                <Route path={AppRoutes.WORKER.MESSAGES} element={<ClientMessages/>} />
                 <Route path={AppRoutes.WORKER.WALLET} element={<WorkerWallet/>} />
             </Route>
         </Routes>
