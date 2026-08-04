@@ -9,7 +9,9 @@ export const AppRoutes = {
         TASK_BOOKING: "/task-booking",
 
         DASHBOARD: {
-            HOME: "/user-dashboard",
+            DASH: "/user-dashboard",
+            MESSAGES: "/user-dashboard/messages",
+            MY_WORKS: "user-dashboard/works"
         },
     },
 
@@ -25,8 +27,8 @@ export const AppRoutes = {
         LOGIN: "/worker/worker-login",
         APPLY: "/worker/apply-worker",
         DASHBOARD: {
-            HOME: "/worker/worker-dashboard",
-            
+            DASH: "/worker/worker-dashboard",
+            CLIENT_MESSAGES:"/worker/worker-dashboard/client-messages",
         },
     },
 

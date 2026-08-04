@@ -7,6 +7,7 @@ import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import BackButton from "../common/back-button";
 import { AuthService } from "@/services/auth-service";
 import { getErrorMessage } from "@/utils/error-helper";
+import { AppRoutes } from "@/constants/routes/app-routes";
 
 export function UserResetPassword() {
   const { token } = useParams();
@@ -80,7 +81,7 @@ export function UserResetPassword() {
       });
       if (res.data.success) {
         alert("Password reset successfully!");
-        navigate("/login");
+        navigate(AppRoutes.USER.LOGIN);
       }
     } catch (err) {
       alert(getErrorMessage(err));

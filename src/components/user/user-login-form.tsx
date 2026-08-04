@@ -22,6 +22,7 @@ import { AuthService } from "@/services/auth-service"
 import { AuthHelper } from "@/utils/auth-helper"
 import { useBlockedMessage } from "@/hooks/useBlockedMessage"
 import { getErrorMessage } from "@/utils/error-helper"
+import { AppRoutes } from "@/constants/routes/app-routes"
 
 export function LoginForm({
     className,
@@ -96,7 +97,7 @@ export function LoginForm({
 
                     AuthHelper.setAuth(accessToken, refreshToken, user);
                     alert(res.data.message || "Login Successful");
-                    navigate("/");
+                    navigate(AppRoutes.USER.HOME);
                 } else {
                     alert("Login failed - Invalid response");
                 }
@@ -196,7 +197,7 @@ export function LoginForm({
                                 <div className="flex items-center">
                                     <FieldLabel htmlFor="password">Password</FieldLabel>
                                     <a
-                                        onClick={() => navigate("/forgot-password")}
+                                        onClick={() => navigate(AppRoutes.USER.FORGOT_PASSWORD)}
                                         className="ml-auto inline-block text-sm underline-offset-4 hover:underline cursor-pointer"
                                     >
                                         Forgot your password?
@@ -245,7 +246,7 @@ export function LoginForm({
                                 Don&apos;t have an account?{' '}
                                 <a
                                     className="underline underline-offset-4 cursor-pointer"
-                                    onClick={() => navigate("/register")}
+                                    onClick={() => navigate(AppRoutes.USER.REGISTER)}
                                 >
                                     Sign up
                                 </a>
@@ -253,7 +254,7 @@ export function LoginForm({
                                     Are you a worker?{" "}
                                     <a
                                         className="underline underline-offset-4 cursor-pointer"
-                                        onClick={() => navigate("/worker/worker-login")}
+                                        onClick={() => navigate(AppRoutes.WORKER.LOGIN)}
                                     >
                                         Click Here
                                     </a>
@@ -262,7 +263,7 @@ export function LoginForm({
                                     Apply to become a worker?{" "}
                                     <a
                                         className="underline underline-offset-4 cursor-pointer"
-                                        onClick={() => navigate("/worker/apply-worker")}
+                                        onClick={() => navigate(AppRoutes.WORKER.APPLY)}
                                     >
                                         Click Here
                                     </a>

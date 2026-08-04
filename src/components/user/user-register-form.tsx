@@ -21,6 +21,7 @@ import { GoogleLogin, GoogleOAuthProvider, type CredentialResponse } from "@reac
 import { AuthService } from "@/services/auth-service"
 import { AuthHelper } from "@/utils/auth-helper"
 import { getErrorMessage } from "@/utils/error-helper"
+import { AppRoutes } from "@/constants/routes/app-routes"
 
 export function RegisterForm({
     className,
@@ -117,7 +118,7 @@ export function RegisterForm({
             if (res.data.success) {
                 AuthHelper.setUserId(res.data.data.userId);
                 alert(res.data.message);
-                navigate("/otp");
+                navigate(AppRoutes.USER.OTP);
             } else {
                 alert(res.data.message || "Registration failed");
             }
@@ -288,7 +289,7 @@ export function RegisterForm({
                                 Already have any account?{' '}
                                 <a
                                     className="underline underline-offset-4 cursor-pointer"
-                                    onClick={() => navigate("/login")}
+                                    onClick={() => navigate(AppRoutes.USER.LOGIN)}
                                 >
                                     Login
                                 </a>
@@ -296,7 +297,7 @@ export function RegisterForm({
                                     Apply to become a worker?{" "}
                                     <a
                                         className="underline underline-offset-4 cursor-pointer"
-                                        onClick={() => navigate("/worker/apply-worker")}
+                                        onClick={() => navigate(AppRoutes.WORKER.APPLY)}
                                     >
                                         Click Here
                                     </a>

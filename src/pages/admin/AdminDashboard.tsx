@@ -1,3 +1,4 @@
+import { AppRoutes } from "@/constants/routes/app-routes";
 import { AuthService } from "@/services/auth-service";
 import { AuthHelper } from "@/utils/auth-helper";
 import { useNavigate } from "react-router-dom";
@@ -7,15 +8,15 @@ const AdminDashboard = () => {
 
 
   const logout = async () => {
-  try {
-    await AuthService.logout();
-  } catch (err) {
-    console.error(err);
-  } finally {
-    AuthHelper.clearAuth();
-    navigate("/admin");
-  }
-};
+    try {
+      await AuthService.logout();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      AuthHelper.clearAuth();
+      navigate(AppRoutes.ADMIN.LOGIN);
+    }
+  };
 
   return (
     <div>

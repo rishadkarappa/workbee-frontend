@@ -5,6 +5,7 @@ import type { Notification } from "@/services/notification-service";
 import { notificationSocketService } from "@/services/notification-socket-service";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
+import { AppRoutes } from "@/constants/routes/app-routes";
 
 interface NotificationDropdownProps {
   onNotificationClick?: (notification: Notification) => void;
@@ -136,7 +137,7 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
     }
 
     if (notification.type === "NEW_MESSAGE" && notification.data?.chatId) {
-      navigate("/user-dashboard/messages", {
+      navigate(AppRoutes.USER.DASHBOARD.MESSAGES, {
         state: {
           chatId: notification.data.chatId,
           userName: notification.data.senderName,

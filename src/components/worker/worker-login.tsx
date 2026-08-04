@@ -21,6 +21,7 @@ import { AuthService } from "@/services/auth-service"
 import { AuthHelper } from "@/utils/auth-helper"
 import { useBlockedMessage } from "@/hooks/useBlockedMessage"
 import { getErrorMessage } from "@/utils/error-helper"
+import { AppRoutes } from "@/constants/routes/app-routes"
 
 export function WorkerLoginForm({
     className,
@@ -110,7 +111,7 @@ export function WorkerLoginForm({
                     AuthHelper.setAuth(accessToken, refreshToken, worker);
 
                     alert(result.data.message || "Worker login successful");
-                    navigate("/worker/worker-dashboard");
+                    navigate(AppRoutes.WORKER.DASHBOARD.DASH);
                 } else {
                     alert("Login failed - Invalid response");
                 }
@@ -222,7 +223,7 @@ export function WorkerLoginForm({
                                 Apply to become a worker?{" "}
                                 <a
                                     className="underline underline-offset-4 cursor-pointer"
-                                    onClick={() => navigate("/worker/apply-worker")}
+                                    onClick={() => navigate(AppRoutes.WORKER.APPLY)}
                                 >
                                     Click Here
                                 </a>

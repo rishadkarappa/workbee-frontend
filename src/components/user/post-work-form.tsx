@@ -23,6 +23,7 @@ import TaskBookStepper, { Step } from "./task-book-stepper"
 import { WorkService } from "@/services/work-service"
 import AddressAutocomplete from "./AddressAutocomplete"
 import { getErrorMessage } from "@/utils/error-helper"
+import { AppRoutes } from "@/constants/routes/app-routes"
 
 export function PostWorkForm({ className, ...props }: React.ComponentProps<"div">) {
   const [form, setForm] = useState({
@@ -90,7 +91,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
 
       if (!form.userId) {
         alert("Please login first.")
-        navigate("/login")
+        navigate(AppRoutes.USER.LOGIN)
         return
       }
 
@@ -138,7 +139,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
 
       if (result.data.success) {
         alert("Task successfully submitted! We'll connect you with workers soon.")
-        navigate("/")
+        navigate(AppRoutes.USER.DASHBOARD.MY_WORKS)
       }
     } catch (error) {
       console.error("Full error object:", error)

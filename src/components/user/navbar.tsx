@@ -8,6 +8,7 @@ import NotificationDropdown from "./NotificationDropdown";
 import { AuthHelper } from "@/utils/auth-helper";
 import { notificationSocketService } from "@/services/notification-socket-service";
 import { UserRole, type IUser } from "workbee-common";
+import { AppRoutes } from "@/constants/routes/app-routes";
 
 const Navbar = () => {
   const [user, setUser] = useState<IUser | null>(null);
@@ -82,7 +83,7 @@ const Navbar = () => {
       notificationSocketService.disconnect();
       AuthHelper.clearAuth();
       setUser(null);
-      navigate("/");
+      navigate(AppRoutes.USER.HOME);
     }
   };
 

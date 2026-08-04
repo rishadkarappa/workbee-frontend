@@ -3,6 +3,7 @@ import FloatingIcons from "@/components/common/animatedIcons";
 import Navbar from "@/components/user/navbar";
 import { useNavigate } from "react-router-dom";
 import { AuthHelper } from "@/utils/auth-helper";
+import { AppRoutes } from "@/constants/routes/app-routes";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -11,7 +12,7 @@ export default function Login() {
     if (!AuthHelper.isLoggedIn) {
       navigate('/')
     } else {
-      navigate("/task-booking")
+      navigate(AppRoutes.USER.TASK_BOOKING)
     }
   }
 

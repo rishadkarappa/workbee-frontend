@@ -5,6 +5,7 @@ import type { Variants } from 'motion/react';
 import BackButton from '../common/back-button';
 import { CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { useNavigate } from 'react-router-dom';
+import { AppRoutes } from '@/constants/routes/app-routes';
 
 
 interface StepperProps extends HTMLAttributes<HTMLDivElement> {
@@ -197,7 +198,7 @@ export default function Stepper({
               <div className="mt-10 text-center text-sm">
                 Already have an worker account?{' '}
                 <span
-                  onClick={() => navigate("/worker/worker-login")}
+                  onClick={() => navigate(AppRoutes.WORKER.LOGIN)}
                   className="underline underline-offset-4 cursor-pointer text-gray-600 hover:text-gray-800"
 
                 >

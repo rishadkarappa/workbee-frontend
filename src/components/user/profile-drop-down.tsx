@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
 import type { IUser } from "workbee-common";
+import { AppRoutes } from "@/constants/routes/app-routes";
 
 interface ProfileDropDownMenuProps {
     user: IUser;
@@ -69,7 +70,7 @@ const ProfileDropDownMenu = ({ user, onLogout }: ProfileDropDownMenuProps) => {
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel>Account</DropdownMenuLabel>
                 <DropdownMenuGroup>
-                    <DropdownMenuItem onClick={() => navigate("/user-dashboard")}>
+                    <DropdownMenuItem onClick={() => navigate(AppRoutes.USER.DASHBOARD.DASH)}>
                         <LayoutDashboard className="mr-2 h-4 w-4" />
                         My Dashboard
                     </DropdownMenuItem>
