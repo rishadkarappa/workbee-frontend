@@ -10,30 +10,31 @@ import WorkerManagement from "@/pages/admin/WorkerManagement";
 import NewAppliersManagement from "@/pages/admin/NewAppliers";
 import Payments from "@/components/admin/payments";
 import { UserRole } from "workbee-common";
+import { AppRoutes } from "@/constants/app-routes";
 
 const AdminRoute = () => {
-    return (
-        <Routes>
-            {/* Public Route - No protection */}
-            <Route path="/" element={<AdminLogin />} />
-            
-            {/* Protected Routes - Admin Only */}
-            <Route 
-              path="dashboard" 
-              element={
-                <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
-                  <AdminLayout/>
-                </ProtectedRoute>
-              } 
-            >
-                <Route index element={<AdminDashboard/>} />
-                <Route path="users" element={<Users/>} />
-                <Route path="workers" element={<WorkerManagement/>} />
-                <Route path="new-appliers" element={<NewAppliersManagement/>} />
-                <Route path="payments" element={<Payments/>} />
-            </Route>
-        </Routes>
-    )
+  return (
+    <Routes>
+      {/* Public Route - No protection */}
+      <Route path={AppRoutes.ADMIN.LOGIN} element={<AdminLogin />} />
+
+      {/* Protected Routes - Admin Only */}
+      <Route
+        path={AppRoutes.ADMIN.DASHBOARD}
+        element={
+          <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+            <AdminLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<AdminDashboard />} />
+        <Route path={AppRoutes.ADMIN.USERS} element={<Users />} />
+        <Route path={AppRoutes.ADMIN.WORKERS} element={<WorkerManagement />} />
+        <Route path={AppRoutes.ADMIN.NEW_APPLIERS} element={<NewAppliersManagement />} />
+        <Route path={AppRoutes.ADMIN.PAYMENTS} element={<Payments />} />
+      </Route>
+    </Routes>
+  )
 }
 
 export default AdminRoute;

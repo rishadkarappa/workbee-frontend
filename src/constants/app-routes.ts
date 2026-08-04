@@ -1,5 +1,5 @@
 export const AppRoutes = {
-    HOME:"/",
+    HOME: "/",
     USER_ROUTES: {
         LOGIN: "login",
         REGISTER: "register",
@@ -15,5 +15,26 @@ export const AppRoutes = {
         ACTIVE_WORKS: "/user-dashboard/active-works",
         MESSAGES: "/user-dashboard/messages",
         WALLET: "/user-dashboard/user-wallet",
-    }
+    },
+
+    ADMIN: {
+        LOGIN: "/",
+        DASHBOARD: "/dashboard",
+
+        USERS: "/dashboard/users",
+        WORKERS: "/dashboard/workers",
+        NEW_APPLIERS: "/dashboard/new-appliers",
+        PAYMENTS: "/dashboard/payments",
+    },
+
+    WORKER: {
+        LOGIN: "/worker-login",
+        APPLY: "/apply-worker",
+
+        DASHBOARD: "/worker-dashboard",
+        WORKS: "/worker-dashboard/works",
+        ACTIVE_WORKS: "/worker-dashboard/active-works",
+        CLIENT_MESSAGES: "/worker-dashboard/client-messages",
+        WALLET: "/worker-dashboard/wallet",
+    },
 }

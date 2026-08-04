@@ -23,7 +23,7 @@ const UserRoute = () => {
   return (
     <Routes>
       {/*  Public Routes */}
-      <Route path="/" element={<Home />} />
+      <Route path={AppRoutes.HOME} element={<Home />} />
       <Route path={AppRoutes.USER_ROUTES.LOGIN} element={<Login />} />
       <Route path={AppRoutes.USER_ROUTES.REGISTER} element={<Register />} />
       <Route path={AppRoutes.USER_ROUTES.OTP} element={<Otp />} />
