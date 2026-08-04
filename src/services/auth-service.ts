@@ -1,3 +1,4 @@
+import { AuthEndpoints } from "@/constants/api-endpoints/auth-endpoints";
 import { api } from "./axios-instance/axios-instance";
 
 export const AuthService = {
@@ -6,51 +7,51 @@ export const AuthService = {
 
     // register
     register: (data: { name: string, email: string, password: string }) => {
-        return api.post("/auth/register", data)
+        return api.post(AuthEndpoints.AUTH.REGISTER, data)
     },
 
     // verify otp
     verifyOtp: (data: { userId: string | null; otp: string }) => {
-        return api.post("/auth/verifyOtp", data);
+        return api.post(AuthEndpoints.AUTH.VERIFY_OTP, data);
     },
 
     // resent otp
     resendOtp: (data: { userId: string }) => {
-        return api.post("/auth/resend-otp", data)
+        return api.post(AuthEndpoints.AUTH.RESEND_OTP, data)
     },
 
     // login
     login: (data: { email: string, password: string }) => {
-        return api.post("/auth/login", data)
+        return api.post(AuthEndpoints.AUTH.LOGIN, data)
     },
 
     // forgot Password
     forgotPassword: (data: { email: string }) => {
-        return api.post("/auth/forgot-password", data)
+        return api.post(AuthEndpoints.AUTH.FORGOT_PASSWORD, data)
     },
 
     // reset Password
     resetPassword: (token: string, data: { password: string }) => {
-        return api.post(`/auth/reset-password/${token}`, data);
+        return api.post(AuthEndpoints.AUTH.RESET_PASSWORD(token), data);
     },
 
     // verify User
-    verifyUser: () => api.get("/auth/verify"),
+    verifyUser: () => api.get(AuthEndpoints.AUTH.VERIFY),
 
     // refresh token
     refreshToken: (refreshToken: string) => {
-        return api.post("/auth/refresh-token", { refreshToken });
+        return api.post(AuthEndpoints.AUTH.REFRESH_TOKEN, { refreshToken });
     },
 
     // logout
     logout: () => {
-        return api.post("/auth/logout");
+        return api.post(AuthEndpoints.AUTH.LOGOUT);
     },
 
 
     // google Auth
     googleAuthLogin: (data: { credential: string}) => {
-        return api.post("/auth/google-login", data)
+        return api.post(AuthEndpoints.AUTH.GOOGLE_LOGIN, data)
     },
 
 
@@ -58,12 +59,12 @@ export const AuthService = {
 
     //Admin Login
     adminLogin: (data: { email: string, password: string }) => {
-        return api.post("/auth/admin/login", data)
+        return api.post(AuthEndpoints.AUTH.ADMIN.LOGIN, data)
     },
 
     // get users
     getUsers: (page: number, limit: number, search: string, status?: string) => {
-        return api.get("/auth/admin/get-users", {
+        return api.get(AuthEndpoints.AUTH.ADMIN.GET_USERS, {
             params: { page, limit, search, status: status && status !== 'all' ? status : undefined }
         });
     },
@@ -71,14 +72,14 @@ export const AuthService = {
 
     // block user
     blockUser: (id: string) => {
-        return api.patch(`/auth/admin/block-user/${id}`);
+        return api.patch(AuthEndpoints.AUTH.ADMIN.BLOCK_USER(id));
     },
 
     // Worker Api's
 
     //worker Login
     workerLogin: (data: { email: string, password: string }) => {
-        return api.post("/auth/worker-login", data)
+        return api.post(AuthEndpoints.AUTH.WORKER.LOGIN, data)
     },
 
 }

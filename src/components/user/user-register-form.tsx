@@ -114,7 +114,6 @@ export function RegisterForm({
         try {
             const registrationData = { name: form.name, email: form.email, password: form.password, };
             const res = await AuthService.register(registrationData);
-
             if (res.data.success) {
                 AuthHelper.setUserId(res.data.data.userId);
                 alert(res.data.message);
