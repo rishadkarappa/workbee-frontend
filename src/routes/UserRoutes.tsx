@@ -17,30 +17,30 @@ import WorkerMessages from "@/components/user/dashboard/messages/page";
 import ActiveWorks from "@/components/user/dashboard/live-works/page";
 import UserWallet from "@/components/user/dashboard/wallet/page";
 import { UserRole } from "workbee-common";
+import { AppRoutes } from "@/constants/app-routes";
 
 const UserRoute = () => {
   return (
     <Routes>
       {/*  Public Routes */}
       <Route path="/" element={<Home />} />
-      <Route path="login" element={<Login />} />
-      <Route path="register" element={<Register />} />
-      <Route path="otp" element={<Otp />} />
-      <Route path="forgot-password" element={<ForgotPassword />} />
-      <Route path="reset-password/:token" element={<ResetPassword />} />
-      
+      <Route path={AppRoutes.USER_ROUTES.LOGIN} element={<Login />} />
+      <Route path={AppRoutes.USER_ROUTES.REGISTER} element={<Register />} />
+      <Route path={AppRoutes.USER_ROUTES.OTP} element={<Otp />} />
+      <Route path={AppRoutes.USER_ROUTES.FORGOT_PASSWORD} element={<ForgotPassword />} />
+      <Route path={AppRoutes.USER_ROUTES.RESET_PASSWORD} element={<ResetPassword />} />
+
       {/* Protected Routes - User Only */}
-      <Route 
-        path="task-booking" 
-        element={
+      <Route
+        path={AppRoutes.USER_ROUTES.TASK_BOOKING} element={
           <ProtectedRoute allowedRoles={[UserRole.USER]}>
             <TaskBookForm />
           </ProtectedRoute>
-        } 
+        }
       />
 
-      <Route 
-        path="/user-dashboard" 
+      <Route
+        path={AppRoutes.USER_ROUTES.DASHBOARD}
         element={
           <ProtectedRoute allowedRoles={[UserRole.USER]}>
             <Dashboard />
@@ -48,10 +48,10 @@ const UserRoute = () => {
         }
       >
         <Route index element={<DashboardHome />} />
-        <Route path="works" element={<MyWorks />} />
-        <Route path="active-works" element={<ActiveWorks />} />
-        <Route path="messages" element={<WorkerMessages />} />
-        <Route path="user-wallet" element={<UserWallet />} />
+        <Route path={AppRoutes.USER_ROUTES.MY_WORKS} element={<MyWorks />} />
+        <Route path={AppRoutes.USER_ROUTES.ACTIVE_WORKS} element={<ActiveWorks />} />
+        <Route path={AppRoutes.USER_ROUTES.MESSAGES} element={<WorkerMessages />} />
+        <Route path={AppRoutes.USER_ROUTES.WALLET} element={<UserWallet />} />
       </Route>
     </Routes>
   );
