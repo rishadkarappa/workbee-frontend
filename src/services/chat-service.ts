@@ -21,21 +21,11 @@ export const ChatService = {
   },
 
   /**
-   * Upload an image or video file to Cloudinary via the backend.
-   * Returns { url, publicId, resourceType, ... }
+   * Upload an image or video file to Cloudinary direct upload in cloudinary signed url .
+   * only send to backend that signed url
    */
   
-  uploadChatMedia: (file: File, onProgress?: (pct: number) => void) => {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    return api.post(COMMUNICAION_ENDPOINTS.CHAT.UPLOAD_MEDIA, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-      onUploadProgress: (evt) => {
-        if (onProgress && evt.total) {
-          onProgress(Math.round((evt.loaded * 100) / evt.total));
-        }
-      },
-    });
+  getUploadSignature: (resourceType: 'image' | 'video') => {
+    return api.get(COMMUNICAION_ENDPOINTS.CHAT.UPLOAD_SIGNATURE(resourceType));
   },
 };

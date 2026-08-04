@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Paperclip, X, Loader2 } from 'lucide-react';
 import { ChatService } from '@/services/chat-service';
 import { getErrorMessage } from '@/utils/error-helper';
+import axios from 'axios';
 
 export interface UploadedMedia {
   url: string;
@@ -28,7 +29,6 @@ export function MediaUploadButton({ onUploaded, disabled }: MediaUploadButtonPro
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Reset
     setError(null);
 
     if (!ALLOWED_TYPES.includes(file.type)) {
@@ -36,27 +36,49 @@ export function MediaUploadButton({ onUploaded, disabled }: MediaUploadButtonPro
       return;
     }
 
-    const maxSize = file.type.startsWith('video/') ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+    const isVideo = file.type.startsWith('video/');
+    const maxSize = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
     if (file.size > maxSize) {
-      setError(file.type.startsWith('video/') ? 'Video must be under 50 MB.' : 'Image must be under 10 MB.');
+      setError(isVideo ? 'Video must be under 50 MB.' : 'Image must be under 10 MB.');
       return;
     }
 
+    const resourceType: 'image' | 'video' = isVideo ? 'video' : 'image';
+
     try {
       setProgress(0);
-      const response = await ChatService.uploadChatMedia(file, (pct) => setProgress(pct));
-      const data = response.data.data;
+
+      // 1. Get a signed signature from our backend
+      const sigRes = await ChatService.getUploadSignature(resourceType);
+      const { signature, timestamp, apiKey, cloudName, folder } = sigRes.data.data;
+
+      // 2. Upload directly to Cloudinary using that signature
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('api_key', apiKey);
+      formData.append('timestamp', String(timestamp));
+      formData.append('signature', signature);
+      formData.append('folder', folder);
+
+      const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`;
+
+      const cloudinaryRes = await axios.post(uploadUrl, formData, {
+        onUploadProgress: (evt) => {
+          if (evt.total) setProgress(Math.round((evt.loaded * 100) / evt.total));
+        },
+      });
+
+      const data = cloudinaryRes.data;
 
       onUploaded({
-        url: data.url,
-        publicId: data.publicId,
-        resourceType: data.resourceType,
+        url: data.secure_url,
+        publicId: data.public_id,
+        resourceType,
       });
     } catch (err) {
       setError(getErrorMessage(err) || 'Upload failed. Please try again.');
     } finally {
       setProgress(null);
-      // Reset input so same file can be re-selected
       if (inputRef.current) inputRef.current.value = '';
     }
   };
