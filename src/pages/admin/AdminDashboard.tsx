@@ -2,6 +2,7 @@ import { AppRoutes } from "@/constants/routes/app-routes";
 import { AuthService } from "@/services/auth-service";
 import { AuthHelper } from "@/utils/auth-helper";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ const AdminDashboard = () => {
     } finally {
       AuthHelper.clearAuth();
       navigate(AppRoutes.ADMIN.LOGIN);
+      toast.warning('Logout Successfully')
     }
   };
 

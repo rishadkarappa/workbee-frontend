@@ -22,6 +22,7 @@ import { AuthHelper } from "@/utils/auth-helper"
 import { useBlockedMessage } from "@/hooks/useBlockedMessage"
 import { getErrorMessage } from "@/utils/error-helper"
 import { AppRoutes } from "@/constants/routes/app-routes"
+import { toast } from "sonner"
 
 export function WorkerLoginForm({
     className,
@@ -110,17 +111,17 @@ export function WorkerLoginForm({
 
                     AuthHelper.setAuth(accessToken, refreshToken, worker);
 
-                    alert(result.data.message || "Worker login successful");
+                    toast.success(result.data.message || "Worker login successful");
                     navigate(AppRoutes.WORKER.DASHBOARD.DASH);
                 } else {
-                    alert("Login failed - Invalid response");
+                    toast.error("Login failed - Invalid response");
                 }
             } else {
-                alert(result.data.message || "Login failed");
+                toast.error(result.data.message || "Login failed");
             }
         } catch (err) {
             console.error('Worker login error:', err);
-            alert(getErrorMessage(err));
+            toast.error(getErrorMessage(err));
         } finally {
             setIsLoading(false);
         }

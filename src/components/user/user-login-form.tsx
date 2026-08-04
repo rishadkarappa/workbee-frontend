@@ -23,6 +23,7 @@ import { AuthHelper } from "@/utils/auth-helper"
 import { useBlockedMessage } from "@/hooks/useBlockedMessage"
 import { getErrorMessage } from "@/utils/error-helper"
 import { AppRoutes } from "@/constants/routes/app-routes"
+import { toast } from "sonner"
 
 export function LoginForm({
     className,
@@ -96,13 +97,14 @@ export function LoginForm({
                     }
 
                     AuthHelper.setAuth(accessToken, refreshToken, user);
-                    alert(res.data.message || "Login Successful");
+                    toast.success("Logged Successfully")
                     navigate(AppRoutes.USER.HOME);
                 } else {
-                    alert("Login failed - Invalid response");
+                    toast.error("Login failed - Invalid response");
                 }
             } else {
-                alert(res.data.message || "Login failed");
+                console.log(res.data.message)
+                toast.error("Login failed");
             }
         } catch (err) {
             alert(getErrorMessage(err) || "Something went wrong");
@@ -128,8 +130,7 @@ export function LoginForm({
 
                 if (accessToken && refreshToken && user) {
                     AuthHelper.setAuth(accessToken, refreshToken, user);
-                    alert(res.data.message || "Google Auth Successful");
-
+                    toast.success("Google Auth Successful")
                     if (user.role === 'admin') {
                         navigate('/admin/dashboard');
                     } else if (user.role === 'worker') {
@@ -138,13 +139,13 @@ export function LoginForm({
                         navigate('/');
                     }
                 } else {
-                    alert("Google Auth failed - Invalid response");
+                    toast.error("Google Auth failed - Invalid response");
                 }
             } else {
-                alert(res.data.message || "Google Auth Failed");
+                toast.error(res.data.message || "Google Auth Failed");
             }
         } catch (err) {
-            alert(getErrorMessage(err) || "Google Login Failed");
+            toast.error(getErrorMessage(err) || "Google Login Failed");
         }
     };
 

@@ -30,6 +30,7 @@ import { AuthHelper } from "@/utils/auth-helper"
 import { AuthService } from "@/services/auth-service"
 import { useNavigate } from "react-router-dom"
 import { useState } from "react"
+import { toast } from "sonner"
 
 export function NavUser({
   user,
@@ -57,7 +58,6 @@ export function NavUser({
       const userRole = AuthHelper.getUserRole();
 
       AuthHelper.clearAuth();
-
       if (userRole === 'admin') {
         navigate('/admin');
       } else if (userRole === 'worker') {

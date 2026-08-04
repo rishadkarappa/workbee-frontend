@@ -15,6 +15,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { WorkService } from "@/services/work-service"
 import { getErrorMessage } from "@/utils/error-helper"
+import { toast } from "sonner"
 
 export interface WorkerConfirmationsDto {
   reliable: boolean;
@@ -216,17 +217,19 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
       console.log("Application result:", result);
 
       if (result.data.success) {
-        alert("Successfully applied! Check your email. We'll update you within 1 hour.");
+        toast.success("Successfully applied!",{
+          description:"Check your email. We'll update you within 1 hour."
+        });
         navigate('/');
       } else {
-        alert(result.data.message || "Application failed");
+        toast.error(result.data.message || "Application failed");
       }
     } catch (error) {
       console.error(getErrorMessage(error));
 
       const errorMessage = getErrorMessage(error) ||
         "Error while applying to become a worker. Please try again.";
-      alert(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

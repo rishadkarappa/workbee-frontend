@@ -22,6 +22,7 @@ import { AuthService } from "@/services/auth-service"
 import { AuthHelper } from "@/utils/auth-helper"
 import { getErrorMessage } from "@/utils/error-helper"
 import { AppRoutes } from "@/constants/routes/app-routes"
+import { toast } from "sonner"
 
 export function RegisterForm({
     className,
@@ -117,10 +118,10 @@ export function RegisterForm({
             const res = await AuthService.register(registrationData);
             if (res.data.success) {
                 AuthHelper.setUserId(res.data.data.userId);
-                alert(res.data.message);
+                toast.success(res.data.message);
                 navigate(AppRoutes.USER.OTP);
             } else {
-                alert(res.data.message || "Registration failed");
+                toast.error( "Registration failed");
             }
         } catch (err) {
             console.error(err);
@@ -146,7 +147,7 @@ export function RegisterForm({
 
                 if (accessToken && refreshToken && user) {
                     AuthHelper.setAuth(accessToken, refreshToken, user);
-                    alert(res.data.message || "Google Auth Successful");
+                    toast.success(res.data.message || "Google Auth Successful");
 
                     if (user.role === 'admin') {
                         navigate('/admin/dashboard');
@@ -156,13 +157,13 @@ export function RegisterForm({
                         navigate('/');
                     }
                 } else {
-                    alert("Google Auth failed - Invalid response");
+                    toast.error("Google Auth failed - Invalid response");
                 }
             } else {
-                alert(res.data.message || "Google Auth Failed");
+                toast.error(res.data.message || "Google Auth Failed");
             }
         } catch (err) {
-            alert(getErrorMessage(err) || "Google Login Failed");
+            toast.error(getErrorMessage(err) || "Google Login Failed");
         }
     };
 

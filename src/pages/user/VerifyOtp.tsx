@@ -22,6 +22,7 @@ import {
 import { AuthHelper } from "@/utils/auth-helper"
 import { AuthService } from "@/services/auth-service"
 import { getErrorMessage } from "@/utils/error-helper"
+import { toast } from "sonner"
 
 const VerifyOtp = () => {
   const [otp, setOtp] = useState("")
@@ -58,7 +59,7 @@ const VerifyOtp = () => {
     const userId = AuthHelper.getUserId()
     
     if (!userId) {
-      alert("User ID not found. Please register again.")
+      toast.warning("User ID not found. Please register again.")
       navigate('/register')
       return
     }
@@ -69,16 +70,16 @@ const VerifyOtp = () => {
       const res = await AuthService.resendOtp({ userId })
       
       if (res.data.success) {
-        alert(res.data.message || 'OTP sent successfully to your email')
+        toast.success(res.data.message || 'OTP sent successfully to your email')
         setTimeLeft(60)
         setCanResend(false)
         setOtp("")
       } else {
-        alert(res.data.message || 'Failed to resend OTP')
+        toast.error(res.data.message || 'Failed to resend OTP')
       }
     } catch (error: unknown) {
       console.error(error)
-      alert(getErrorMessage(error))
+      toast.error(getErrorMessage(error))
     } finally {
       setIsResending(false)
     }

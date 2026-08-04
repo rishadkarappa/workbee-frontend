@@ -9,6 +9,7 @@ import { AuthHelper } from "@/utils/auth-helper";
 import { notificationSocketService } from "@/services/notification-socket-service";
 import { UserRole, type IUser } from "workbee-common";
 import { AppRoutes } from "@/constants/routes/app-routes";
+import { toast } from "sonner";
 
 const Navbar = () => {
   const [user, setUser] = useState<IUser | null>(null);
@@ -84,6 +85,7 @@ const Navbar = () => {
       AuthHelper.clearAuth();
       setUser(null);
       navigate(AppRoutes.USER.HOME);
+      toast.warning('Logout Successfully')
     }
   };
 

@@ -8,6 +8,7 @@ import BackButton from "../common/back-button";
 import { AuthService } from "@/services/auth-service";
 import { getErrorMessage } from "@/utils/error-helper";
 import { AppRoutes } from "@/constants/routes/app-routes";
+import { toast } from "sonner";
 
 export function UserResetPassword() {
   const { token } = useParams();
@@ -80,7 +81,7 @@ export function UserResetPassword() {
         password: form.password,
       });
       if (res.data.success) {
-        alert("Password reset successfully!");
+        toast.success("Password reset successfully!");
         navigate(AppRoutes.USER.LOGIN);
       }
     } catch (err) {

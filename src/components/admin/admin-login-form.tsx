@@ -20,6 +20,7 @@ import { Eye, EyeOff } from "lucide-react"
 import { AuthHelper } from "@/utils/auth-helper"
 import { getErrorMessage } from "@/utils/error-helper"
 import { AppRoutes } from "@/constants/routes/app-routes"
+import { toast } from "sonner"
 
 export function LoginForm({
   className,
@@ -105,7 +106,7 @@ export function LoginForm({
 
           AuthHelper.setAuth(accessToken, refreshToken, user);
 
-          alert(res.data.message || "Admin login successful");
+          toast.success("Admin login successful");
 
           navigate(AppRoutes.ADMIN.DASHBOARD.DASH);
           
@@ -117,7 +118,7 @@ export function LoginForm({
       }
     } catch (err) {
       console.error('Admin login error:', err);
-      alert(getErrorMessage(err) || 'Login failed');
+      toast.error(getErrorMessage(err) || 'Login failed');
     } finally {
       setIsLoading(false);
     }

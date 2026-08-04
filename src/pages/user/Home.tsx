@@ -4,13 +4,15 @@ import Navbar from "@/components/user/navbar";
 import { useNavigate } from "react-router-dom";
 import { AuthHelper } from "@/utils/auth-helper";
 import { AppRoutes } from "@/constants/routes/app-routes";
+import { toast } from "sonner";
 
 export default function Login() {
   const navigate = useNavigate();
 
   const handleNavigate = () => {
-    if (!AuthHelper.isLoggedIn) {
-      navigate('/')
+    if (!AuthHelper.isLoggedIn()) {
+      navigate('/login')
+      toast.warning("Loggin first")
     } else {
       navigate(AppRoutes.USER.TASK_BOOKING)
     }

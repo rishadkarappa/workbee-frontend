@@ -18,6 +18,7 @@ import { useNavigate } from "react-router-dom"
 import BackButton from "../common/back-button"
 import { AuthService } from "@/services/auth-service"
 import { getErrorMessage } from "@/utils/error-helper"
+import { toast } from "sonner"
 
 export function UserForgotPassword({
     className,
@@ -70,11 +71,11 @@ export function UserForgotPassword({
 
             const res = await AuthService.forgotPassword({email:form.email})
             if (res.data.success) {
-                alert('we sent a reset link into your email')
+                toast.success('we sent a reset link into your email')
                 navigate('/login')
             }
         } catch (err) {
-            alert(getErrorMessage(err)|| "Something went wrong. Please try again.")
+            toast.error(getErrorMessage(err)|| "Something went wrong. Please try again.")
         } finally {
             setIsLoading(false)
         }

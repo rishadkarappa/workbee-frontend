@@ -24,6 +24,7 @@ import { WorkService } from "@/services/work-service"
 import AddressAutocomplete from "./AddressAutocomplete"
 import { getErrorMessage } from "@/utils/error-helper"
 import { AppRoutes } from "@/constants/routes/app-routes"
+import { toast } from "sonner"
 
 export function PostWorkForm({ className, ...props }: React.ComponentProps<"div">) {
   const [form, setForm] = useState({
@@ -90,7 +91,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
       setIsLoading(true)
 
       if (!form.userId) {
-        alert("Please login first.")
+        toast.warning("Please login first.")
         navigate(AppRoutes.USER.LOGIN)
         return
       }
@@ -138,13 +139,15 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
       console.log("Response:", result.data)
 
       if (result.data.success) {
-        alert("Task successfully submitted! We'll connect you with workers soon.")
+        toast.success("Task successfully submitted!", {
+          description: "We'll connect you with workers soon."
+        })
         navigate(AppRoutes.USER.DASHBOARD.MY_WORKS)
       }
     } catch (error) {
       console.error("Full error object:", error)
       console.error("Error response:", getErrorMessage(error))
-      alert(`Error submitting task: ${getErrorMessage(error)}`)
+      toast.error(`Error submitting task: ${getErrorMessage(error)}`)
     } finally {
       setIsLoading(false)
     }
