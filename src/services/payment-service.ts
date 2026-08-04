@@ -7,8 +7,6 @@ export const PaymentService = {
     return api.post("/payment/create-orders", data);
   },
 
-  // Verify payment after Razorpay popup succeeds.
-  // Called client-side with the three values Razorpay returns in handler()
   verifyPayment: (data: {
     razorpayOrderId: string;
     razorpayPaymentId: string;
