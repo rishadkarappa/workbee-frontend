@@ -1,23 +1,23 @@
-import { CommunicaionEndPoints } from '@/constants/api-endpoints/communication-endpoints';
+import { COMMUNICAION_ENDPOINTS } from '@/constants/api-endpoints/communication-endpoints';
 import { api } from './axios-instance/axios-instance';
 
 export const ChatService = {
   createChat: (data: { userId: string; workerId: string }) => {
-    return api.post(CommunicaionEndPoints.CHAT.CREATE, data);
+    return api.post(COMMUNICAION_ENDPOINTS.CHAT.CREATE, data);
   },
 
   getMyChats: () => {
-    return api.get(CommunicaionEndPoints.CHAT.MY_CHATS);
+    return api.get(COMMUNICAION_ENDPOINTS.CHAT.MY_CHATS);
   },
 
   getMessages: (chatId: string, limit?: number, offset?: number) => {
-    return api.get(CommunicaionEndPoints.CHAT.GET_MESSAGES(chatId), {
+    return api.get(COMMUNICAION_ENDPOINTS.CHAT.GET_MESSAGES(chatId), {
       params: { limit, offset },
     });
   },
 
   markChatAsRead: (chatId: string) => {
-    return api.patch(CommunicaionEndPoints.CHAT.MARK_AS_READ(chatId));
+    return api.patch(COMMUNICAION_ENDPOINTS.CHAT.MARK_AS_READ(chatId));
   },
 
   /**
@@ -29,7 +29,7 @@ export const ChatService = {
     const formData = new FormData();
     formData.append('file', file);
 
-    return api.post(CommunicaionEndPoints.CHAT.UPLOAD_MEDIA, formData, {
+    return api.post(COMMUNICAION_ENDPOINTS.CHAT.UPLOAD_MEDIA, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
       onUploadProgress: (evt) => {
         if (onProgress && evt.total) {

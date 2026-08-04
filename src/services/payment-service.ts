@@ -2,16 +2,12 @@ import { api } from "./axios-instance/axios-instance";
 
 export const PaymentService = {
   // Create Razorpay order
-  createOrder: (data: {workId: string;workerId: string;workTitle: string;amount: number;}) => {
+  createOrder: (data: { workId: string; workerId: string; workTitle: string; amount: number; }) => {
     // return api.post("/payment/create-order", data);
     return api.post("/payment/create-orders", data);
   },
 
-  verifyPayment: (data: {
-    razorpayOrderId: string;
-    razorpayPaymentId: string;
-    razorpaySignature: string;
-  }) => {
+  verifyPayment: (data: { razorpayOrderId: string; razorpayPaymentId: string; razorpaySignature: string; }) => {
     return api.post("/payment/verify", data);
   },
 

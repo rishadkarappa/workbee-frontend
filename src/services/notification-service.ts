@@ -1,5 +1,5 @@
 
-import { NotificaionEndpoints } from "@/constants/api-endpoints/notification-endpoints";
+import { NOTIFICATION_ENDPOINTS } from "@/constants/api-endpoints/notification-endpoints";
 import { api } from "./axios-instance/axios-instance";
 
 export interface Notification {
@@ -20,20 +20,20 @@ export interface Notification {
 
 export const NotificationService = {
   getNotifications: (limit?: number, offset?: number) => {
-    return api.get(NotificaionEndpoints.NOTIFICATION.GET_ALL, {
+    return api.get(NOTIFICATION_ENDPOINTS.GET_ALL, {
       params: { limit, offset }
     });
   },
 
   getUnreadCount: () => {
-    return api.get(NotificaionEndpoints.NOTIFICATION.UNREAD_COUNT);
+    return api.get(NOTIFICATION_ENDPOINTS.UNREAD_COUNT);
   },
 
   markAsRead: (notificationId: string) => {
-    return api.patch(NotificaionEndpoints.NOTIFICATION.MARK_AS_READ(notificationId));
+    return api.patch(NOTIFICATION_ENDPOINTS.MARK_AS_READ(notificationId));
   },
 
   markAllAsRead: () => {
-    return api.patch(NotificaionEndpoints.NOTIFICATION.MARK_ALL_READ);
+    return api.patch(NOTIFICATION_ENDPOINTS.MARK_ALL_READ);
   }
 };

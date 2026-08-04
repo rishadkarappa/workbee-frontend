@@ -1,5 +1,6 @@
-export const AuthEndpoints = {
+export const AUTH_ENDPOINTS = {
     AUTH: {
+        
         REGISTER: "/auth/register",
         VERIFY_OTP: "/auth/verifyOtp",
         RESEND_OTP: "/auth/resend-otp",

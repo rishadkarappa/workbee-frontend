@@ -1,4 +1,4 @@
-export const CommunicaionEndPoints = {
+export const COMMUNICAION_ENDPOINTS = {
     CHAT: {
         CREATE: "/communication/chat/create",
         MY_CHATS: "/communication/chat/my-chats",

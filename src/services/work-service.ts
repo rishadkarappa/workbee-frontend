@@ -30,7 +30,7 @@ export const WorkService = {
 
     getAllWorkers: (page: number, limit: number, search: string, status?: string) => {
         return api.get(WORK_ENDPOINTS.GET_WORKERS, {
-            params: { page, limit, search, status: status && status !== 'all' ? status : undefined}
+            params: { page, limit, search, status: status && status !== 'all' ? status : undefined }
         });
     },
 
@@ -54,7 +54,8 @@ export const WorkService = {
         if (filters?.longitude !== undefined) params.append('longitude', filters.longitude.toString());
         if (filters?.maxDistance !== undefined) params.append('maxDistance', filters.maxDistance.toString());
 
-        return api.get(WORK_ENDPOINTS.GET_ALL_WORKS);
+        // return api.get(WORK_ENDPOINTS.GET_ALL_WORKS);
+        return api.get(WORK_ENDPOINTS.GET_ALL_WORKS, { params: filters });
     },
 
     postWork: (formData: FormData) => {
