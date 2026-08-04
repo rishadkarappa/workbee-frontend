@@ -58,6 +58,7 @@ export function NavUser({
       const userRole = AuthHelper.getUserRole();
 
       AuthHelper.clearAuth();
+      toast.info('Worker Logged out Successfully')
       if (userRole === 'admin') {
         navigate('/admin');
       } else if (userRole === 'worker') {

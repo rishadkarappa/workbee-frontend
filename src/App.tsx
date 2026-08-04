@@ -8,7 +8,7 @@ import { Toaster } from "./components/ui/sonner";
 const App = () => {
   return (
     <Router>
-      <Toaster position="top-center" closeButton/>
+      <Toaster position="top-center" closeButton />
       <Routes>
         {/* User side */}
         <Route path="/*" element={<UserRoutes />} />
