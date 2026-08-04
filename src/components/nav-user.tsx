@@ -45,7 +45,7 @@ export function NavUser({
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const logOut = async () => {
-    if (isLoggingOut) return; 
+    if (isLoggingOut) return;
 
     setIsLoggingOut(true);
 
@@ -55,7 +55,7 @@ export function NavUser({
       console.error("Logout error:", error);
     } finally {
       const userRole = AuthHelper.getUserRole();
-      
+
       AuthHelper.clearAuth();
 
       if (userRole === 'admin') {
@@ -63,7 +63,7 @@ export function NavUser({
       } else if (userRole === 'worker') {
         navigate('/worker/worker-login');
       } else {
-        navigate('/login'); 
+        navigate('/login');
       }
 
       setIsLoggingOut(false);

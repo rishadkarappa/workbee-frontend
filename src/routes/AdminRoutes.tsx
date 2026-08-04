@@ -10,7 +10,7 @@ import WorkerManagement from "@/pages/admin/WorkerManagement";
 import NewAppliersManagement from "@/pages/admin/NewAppliers";
 import Payments from "@/components/admin/payments";
 import { UserRole } from "workbee-common";
-import { AppRoutes } from "@/constants/app-routes";
+import { RouteSegments } from "@/constants/routes/route-segments";
 
 const AdminRoute = () => {
     return (
@@ -20,7 +20,7 @@ const AdminRoute = () => {
             
             {/* Protected Routes - Admin Only */}
             <Route 
-              path={AppRoutes.ADMIN.DASHBOARD}
+              path={RouteSegments.ADMIN.DASHBOARD}
               element={
                 <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
                   <AdminLayout/>
@@ -28,10 +28,10 @@ const AdminRoute = () => {
               } 
             >
                 <Route index element={<AdminDashboard/>} />
-                <Route path={AppRoutes.ADMIN.USERS} element={<Users/>} />
-                <Route path={AppRoutes.ADMIN.WORKERS} element={<WorkerManagement/>} />
-                <Route path={AppRoutes.ADMIN.NEW_APPLIERS} element={<NewAppliersManagement/>} />
-                <Route path={AppRoutes.ADMIN.PAYMENTS} element={<Payments/>} />
+                <Route path={RouteSegments.ADMIN.USERS} element={<Users/>} />
+                <Route path={RouteSegments.ADMIN.WORKERS} element={<WorkerManagement/>} />
+                <Route path={RouteSegments.ADMIN.NEW_APPLIERS} element={<NewAppliersManagement/>} />
+                <Route path={RouteSegments.ADMIN.PAYMENTS} element={<Payments/>} />
             </Route>
         </Routes>
     )

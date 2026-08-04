@@ -19,6 +19,7 @@ import { AuthService } from "@/services/auth-service"
 import { Eye, EyeOff } from "lucide-react"
 import { AuthHelper } from "@/utils/auth-helper"
 import { getErrorMessage } from "@/utils/error-helper"
+import { AppRoutes } from "@/constants/routes/app-routes"
 
 export function LoginForm({
   className,
@@ -105,7 +106,9 @@ export function LoginForm({
           AuthHelper.setAuth(accessToken, refreshToken, user);
 
           alert(res.data.message || "Admin login successful");
-          navigate('/admin/dashboard');
+
+          navigate(AppRoutes.ADMIN.DASHBOARD.DASH);
+          
         } else {
           alert('Login failed - Invalid response');
         }
@@ -126,7 +129,7 @@ export function LoginForm({
         <CardHeader>
           <CardTitle>Admin Login</CardTitle>
           <CardDescription>
-            Enter your email below to login to your account
+            Enter credentials below to login to admin dashboard
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -168,6 +171,7 @@ export function LoginForm({
                     value={form.password}
                     onChange={handleChange}
                     className="pr-10"
+                    placeholder="Enter Password"
                   />
 
                   {errors.password && (

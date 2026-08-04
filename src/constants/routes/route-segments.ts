@@ -1,5 +1,6 @@
-export const AppRoutes = {
+export const RouteSegments = {
   USER: {
+    HOME:"/",
     LOGIN: "login",
     REGISTER: "register",
     OTP: "otp",
@@ -14,6 +15,7 @@ export const AppRoutes = {
   },
   
   ADMIN: {
+    LOGIN: "admin",
     DASHBOARD: "dashboard",
     USERS: "users",
     WORKERS: "workers",

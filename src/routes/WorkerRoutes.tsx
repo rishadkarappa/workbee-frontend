@@ -10,18 +10,18 @@ import ClientMessages from "@/components/worker/messages/messages";
 import ActiveWorks from "@/components/worker/active-works";
 import WorkerWallet from "@/components/worker/wallet";
 import { UserRole } from "workbee-common";
-import { AppRoutes } from "@/constants/app-routes";
+import { RouteSegments } from "@/constants/routes/route-segments";
 
 const WorkerRoutes = () => {
     return (
         <Routes>
             {/* Public Routes */}
-            <Route path={AppRoutes.WORKER.LOGIN} element={<WorkerLogin/>} />
-            <Route path={AppRoutes.WORKER.APPLY} element={<ApplyWorker/>} />
+            <Route path={RouteSegments.WORKER.LOGIN} element={<WorkerLogin/>} />
+            <Route path={RouteSegments.WORKER.APPLY} element={<ApplyWorker/>} />
 
             {/* Protected Routes - Worker Only */}
             <Route 
-                path={AppRoutes.WORKER.DASHBOARD}
+                path={RouteSegments.WORKER.DASHBOARD}
                 element={
                     <ProtectedRoute allowedRoles={[UserRole.WORKER]}>
                         <WorkerLayout/>
@@ -29,10 +29,10 @@ const WorkerRoutes = () => {
                 }
             >
                 <Route index element={<WorkerDashboard/>} />
-                <Route path={AppRoutes.WORKER.WORKS} element={<Works/>} />
-                <Route path={AppRoutes.WORKER.ACTIVE_WORKS} element={<ActiveWorks/>} />
-                <Route path={AppRoutes.WORKER.MESSAGES} element={<ClientMessages/>} />
-                <Route path={AppRoutes.WORKER.WALLET} element={<WorkerWallet/>} />
+                <Route path={RouteSegments.WORKER.WORKS} element={<Works/>} />
+                <Route path={RouteSegments.WORKER.ACTIVE_WORKS} element={<ActiveWorks/>} />
+                <Route path={RouteSegments.WORKER.MESSAGES} element={<ClientMessages/>} />
+                <Route path={RouteSegments.WORKER.WALLET} element={<WorkerWallet/>} />
             </Route>
         </Routes>
     )
