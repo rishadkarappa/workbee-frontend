@@ -95,10 +95,10 @@ export function SystemMessage({
               <p className="text-xs text-center text-gray-400 py-1">You have responded to this request</p>
             ) : (
               <div className="flex gap-2">
-                <button onClick={() => onAccept?.(payload.workId)} className="flex-1 flex items-center justify-center gap-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold py-2 rounded-xl transition-colors">
+                <button onClick={() => onAccept?.(payload.workId)} className="flex-1 flex items-center justify-center border-3 gap-1.5 bg-white-900 hover:bg-gray-100 text-black text-sm font-semibold py-2 rounded-xl transition-colors">
                   <CheckCircle className="w-4 h-4" /> Accept
                 </button>
-                <button onClick={() => onReject?.(payload.workId)} className="flex-1 flex items-center justify-center gap-1.5 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold py-2 rounded-xl transition-colors">
+                <button onClick={() => onReject?.(payload.workId)} className="flex-1 flex items-center justify-center gap-1.5 bg-gray-900 hover:bg-gray-700 text-white text-sm font-semibold py-2 rounded-xl transition-colors">
                   <XCircle className="w-4 h-4" /> Reject
                 </button>
               </div>
@@ -222,14 +222,14 @@ export function SystemMessage({
           </div>
           {iAmRecipient && isBidActionable ? (
             <div className="flex gap-2">
-              <button onClick={() => onBidAccept?.(payload)} className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold py-2 rounded-xl transition-colors">
+              <button onClick={() => onBidAccept?.(payload)} className="flex-1 hover:bg-gray-100 text-black border-2 text-xs font-semibold py-2 rounded-xl transition-colors">
                 Accept
               </button>
-              <button onClick={() => onBidReject?.(payload)} className="flex-1 bg-red-500 hover:bg-red-600 text-white text-xs font-semibold py-2 rounded-xl transition-colors">
+              <button onClick={() => onBidReject?.(payload)} className="flex-1 hover:bg-gray-100 border-2 text-black text-xs font-semibold py-2 rounded-xl transition-colors">
                 Reject
               </button>
               {canCounter && (
-                <button onClick={() => onBidCounter?.(payload)} className="flex-1 border border-gray-900 text-gray-900 text-xs font-semibold py-2 rounded-xl hover:bg-gray-100 transition-colors">
+                <button onClick={() => onBidCounter?.(payload)} className="flex-1 border-2 text-gray-900 text-xs font-semibold py-2 rounded-xl hover:bg-gray-100 transition-colors">
                   Counter
                 </button>
               )}
