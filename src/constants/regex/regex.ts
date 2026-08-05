@@ -1,0 +1,10 @@
+// password regex
+export const passwordRegex = {
+    capitalLetter : /(?=.*[A-Z])/,
+    sizDigit : /^.{6,}$/
+}
+
+// email regex
+export const emailRegex = {
+    validEmail : /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+}

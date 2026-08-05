@@ -17,6 +17,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp"
+
 export function OTPForm({ ...props }: React.ComponentProps<typeof Card>) {
   return (
     <Card {...props}>

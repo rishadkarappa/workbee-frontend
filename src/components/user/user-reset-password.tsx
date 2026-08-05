@@ -10,6 +10,7 @@ import { getErrorMessage } from "@/utils/error-helper";
 import { AppRoutes } from "@/constants/routes/app-routes";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
+import { passwordRegex } from "@/constants/regex/regex";
 
 export function UserResetPassword() {
   const { token } = useParams();
@@ -55,7 +56,7 @@ export function UserResetPassword() {
     if (!form.password) {
       newErrors.password = "Password is required";
       isValid = false;
-    } else if (form.password.length < 6) {
+    } else if (!passwordRegex.sizDigit.test(form.password)) {
       newErrors.password = "Password must be at least 6 characters";
       isValid = false;
     }

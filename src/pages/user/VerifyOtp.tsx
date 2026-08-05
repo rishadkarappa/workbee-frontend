@@ -110,7 +110,7 @@ const VerifyOtp = () => {
         
         AuthHelper.setAuth(accessToken, refreshToken, user)
         
-        toast.success(res.data.message || 'OTP verified successfully')
+        toast.success(res.data.message || `Welcome${user.name}`,{description: `Welcome to WorkBee ${user.name}`})
         navigate('/')
       } else {
         toast.error(res.data.message || 'OTP verification failed')
