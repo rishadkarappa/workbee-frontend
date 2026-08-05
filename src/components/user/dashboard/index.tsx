@@ -125,7 +125,7 @@ const sidebarNavItems = [
     {
         title: 'Account Settings',
         icon: <User size={18} />,
-        href: '/user/dashboard/settings',
+        href: '/user-dashboard/profile-settings',
     },
 ]
 

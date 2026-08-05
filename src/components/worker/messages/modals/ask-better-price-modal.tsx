@@ -31,7 +31,7 @@ export default function AskBetterPriceModal({
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-    console.log("curramounttttttttt", currentAmount);
+    // console.log("curramounttttttttt", currentAmount);
 
 
   const handleSendBetterPrice = async () => {
@@ -80,7 +80,7 @@ export default function AskBetterPriceModal({
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
           />
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-red-900">{error}</p>}
 
           <div className="flex justify-end gap-2">
             <DialogClose asChild>

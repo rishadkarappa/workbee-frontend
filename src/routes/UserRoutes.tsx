@@ -1,6 +1,9 @@
 import { Route, Routes } from "react-router-dom";
 import { ProtectedRoute } from "@/components/common/ProtectedRoute";
 
+import { UserRole } from "workbee-common";
+import { RouteSegments } from "@/constants/routes/route-segments";
+
 import Home from "@/pages/user/Home";
 import Login from "@/pages/user/Login";
 import Register from "@/pages/user/Register";
@@ -16,8 +19,8 @@ import MyWorks from "@/components/user/dashboard/my-works/components/work-conten
 import WorkerMessages from "@/components/user/dashboard/messages/page";
 import ActiveWorks from "@/components/user/dashboard/live-works/page";
 import UserWallet from "@/components/user/dashboard/wallet/page";
-import { UserRole } from "workbee-common";
-import { RouteSegments } from "@/constants/routes/route-segments";
+import ProfileSettings from "@/components/user/dashboard/profile-settings/page";
+
 
 const UserRoute = () => {
   return (
@@ -40,8 +43,7 @@ const UserRoute = () => {
         } 
       />
 
-      <Route 
-        path={RouteSegments.USER.DASHBOARD}
+      <Route path={RouteSegments.USER.DASHBOARD}
         element={
           <ProtectedRoute allowedRoles={[UserRole.USER]}>
             <Dashboard />
@@ -53,6 +55,7 @@ const UserRoute = () => {
         <Route path={RouteSegments.USER.ACTIVE_WORKS} element={<ActiveWorks />} />
         <Route path={RouteSegments.USER.MESSAGES} element={<WorkerMessages />} />
         <Route path={RouteSegments.USER.WALLET} element={<UserWallet />} />
+        <Route path={RouteSegments.USER.PROFILE} element={<ProfileSettings/>}/>
       </Route>
     </Routes>
   );

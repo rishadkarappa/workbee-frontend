@@ -12,6 +12,8 @@ export const AUTH_ENDPOINTS = {
         LOGOUT: "/auth/logout",
         GOOGLE_LOGIN: "/auth/google-login",
 
+        GET_USER_DETAILS: (id:string) => `/auth/get-user-details/${id}`,
+
         ADMIN: {
             LOGIN: "/auth/admin/login",
             GET_USERS: "/auth/admin/get-users",

@@ -30,6 +30,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
 // Select component (inline)
 const Select = ({
   value,
@@ -63,6 +64,7 @@ const SelectItem = ({
 import { AuthService } from "@/services/auth-service";
 import { useDebounce } from "@/hooks/useDebounce";
 import { getErrorMessage } from "@/utils/error-helper";
+import { toast } from "sonner";
 
 // Define User type
 interface User {
@@ -213,13 +215,13 @@ const Users = () => {
       const res = await AuthService.blockUser(selectedUser.id);
 
       if (res.data.success) {
-        alert(selectedUser.isBlocked ? "User Unblocked" : "User Blocked");
+        toast.warning(selectedUser.isBlocked ? "User Unblocked" : "User Blocked");
         setIsModalOpen(false);
         fetchUsers();
       }
 
     } catch (error) {
-      alert("Error occurred while blocking user");
+      toast.error("Error occurred while blocking user");
       console.log(error)
     }
   };

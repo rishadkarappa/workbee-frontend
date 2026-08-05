@@ -85,7 +85,7 @@ export default function CounterOfferModal({
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
           />
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-gray-800">{error}</p>}
 
           <div className="flex justify-end gap-2">
             <DialogClose asChild>
