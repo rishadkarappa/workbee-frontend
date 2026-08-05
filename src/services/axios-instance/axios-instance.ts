@@ -5,6 +5,18 @@ import type { ApiErrorResponse } from "@/types/api";
 
 const baseURL = import.meta.env.VITE_GATEWAY_URL;
 
+const PUBLIC_ENDPOINTS = [
+  "/auth/login",
+  "/auth/register",
+  "/auth/verifyOtp",
+  "/auth/resend-otp",
+  "/auth/forgot-password",
+  "/auth/reset-password",
+  "/auth/google-login",
+  "/auth/worker-login",
+  "/auth/admin/login",
+];
+
 export const api = axios.create({
   baseURL,
   headers: {
@@ -73,6 +85,14 @@ api.interceptors.response.use(
     const originalRequest = error.config;
     const status = error.response?.status;
     const responseData = error.response?.data;
+
+    const isPublicEndpoint = PUBLIC_ENDPOINTS.some((path) =>
+      originalRequest?.url?.includes(path)
+    );
+
+    if (isPublicEndpoint) {
+      return Promise.reject(error);
+    }
 
     // Case 1: Account blocked — immediate logout, no refresh attempt
     // Gateway returns 401 with code "ACCOUNT_BLOCKED"

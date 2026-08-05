@@ -9,12 +9,16 @@ import { AuthService } from "@/services/auth-service";
 import { getErrorMessage } from "@/utils/error-helper";
 import { AppRoutes } from "@/constants/routes/app-routes";
 import { toast } from "sonner";
+import { Eye, EyeOff } from "lucide-react";
 
 export function UserResetPassword() {
   const { token } = useParams();
 
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [form, setForm] = useState({
     password: "",
@@ -85,7 +89,8 @@ export function UserResetPassword() {
         navigate(AppRoutes.USER.LOGIN);
       }
     } catch (err) {
-      alert(getErrorMessage(err));
+      console.log(err)
+      toast.error(getErrorMessage(err) || "Error while reset pass");
     } finally {
       setLoading(false);
     }
@@ -103,12 +108,25 @@ export function UserResetPassword() {
           <FieldGroup>
             <Field>
               <FieldLabel>New Password</FieldLabel>
-              <Input
-                name="password"
-                type="password"
-                value={form.password}
-                onChange={handleChange}
-              />
+
+              <div className="relative">
+                <Input
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  value={form.password}
+                  onChange={handleChange}
+                  placeholder="Enter your new password"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+
               {errors.password && (
                 <p className="text-xs text-red-800">
                   {errors.password}
@@ -117,12 +135,25 @@ export function UserResetPassword() {
             </Field>
             <Field>
               <FieldLabel>Confirm Password</FieldLabel>
-              <Input
-                name="confirmPassword"
-                type="password"
-                value={form.confirmPassword}
-                onChange={handleChange}
-              />
+
+              <div className="relative">
+                <Input
+                  name="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={form.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="Confirm your new password"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+
               {errors.confirmPassword && (
                 <p className="text-xs text-red-800">
                   {errors.confirmPassword}

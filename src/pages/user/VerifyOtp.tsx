@@ -96,7 +96,7 @@ const VerifyOtp = () => {
     }
 
     if (otp.length !== 5) {
-      alert("Please enter complete 5-digit OTP")
+      toast.error("Please enter complete 5-digit OTP")
       return
     }
 
@@ -110,10 +110,10 @@ const VerifyOtp = () => {
         
         AuthHelper.setAuth(accessToken, refreshToken, user)
         
-        alert(res.data.message || 'OTP verified successfully')
+        toast.success(res.data.message || 'OTP verified successfully')
         navigate('/')
       } else {
-        alert(res.data.message || 'OTP verification failed')
+        toast.error(res.data.message || 'OTP verification failed')
       }
     } catch (error: unknown) {
       console.error(error)

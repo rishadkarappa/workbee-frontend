@@ -92,7 +92,7 @@ export function LoginForm({
 
                 if (accessToken && refreshToken && user) {
                     if (user.role !== "user") {
-                        alert("Access denied. Please use the correct login page.");
+                        toast.error("Access denied. Please use the correct login page.");
                         return;
                     }
 
@@ -107,7 +107,7 @@ export function LoginForm({
                 toast.error("Login failed");
             }
         } catch (err) {
-            alert(getErrorMessage(err) || "Something went wrong");
+            toast.error(getErrorMessage(err) || "Something went wrong");
         } finally {
             setIsLoading(false);
         }
