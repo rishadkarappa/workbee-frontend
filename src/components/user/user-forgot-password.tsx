@@ -19,6 +19,7 @@ import BackButton from "../common/back-button"
 import { AuthService } from "@/services/auth-service"
 import { getErrorMessage } from "@/utils/error-helper"
 import { toast } from "sonner"
+import { emailRegex } from "@/constants/regex/regex"
 
 export function UserForgotPassword({
     className,
@@ -51,7 +52,7 @@ export function UserForgotPassword({
         if(!form.email.trim()) {
             newErrors.email = "Email is required";
             isValid = false
-        } else if(!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(form.email)) {
+        } else if(!emailRegex.validEmail.test(form.email)) {
             newErrors.email = "Enter a valid email address";
             isValid = false
         }

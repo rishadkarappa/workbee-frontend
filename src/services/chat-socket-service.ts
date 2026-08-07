@@ -13,6 +13,7 @@ export type { IncomingSocketMessage };
 class SocketService {
   private static instance: SocketService;
 
+  // create modules
   private connection = new ChatSocketConnection();
   private chat = new ChatSocketModule(this.connection);
   private work = new WorkSocketModule(this.connection);
@@ -39,6 +40,7 @@ class SocketService {
 
   joinChat = (chatId: string) => this.chat.joinChat(chatId);
   leaveChat = (chatId: string) => this.chat.leaveChat(chatId);
+
   sendMessage = (data: SendMessageData) => this.chat.sendMessage(data);
   onNewMessage = (cb: Parameters<ChatSocketModule['onNewMessage']>[0]) => this.chat.onNewMessage(cb);
   offNewMessage = (cb?: Parameters<ChatSocketModule['offNewMessage']>[0]) => this.chat.offNewMessage(cb);

@@ -23,6 +23,7 @@ import { useBlockedMessage } from "@/hooks/useBlockedMessage"
 import { getErrorMessage } from "@/utils/error-helper"
 import { AppRoutes } from "@/constants/routes/app-routes"
 import { toast } from "sonner"
+import { emailRegex } from "@/constants/regex/regex"
 
 export function WorkerLoginForm({
     className,
@@ -69,9 +70,7 @@ export function WorkerLoginForm({
         if (!form.email.trim()) {
             newErrors.email = "Email is required";
             isValid = false;
-        } else if (
-            !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(form.email)
-        ) {
+        } else if (!emailRegex.validEmail.test(form.email)) {
             newErrors.email = "Enter a valid email address";
             isValid = false;
         }

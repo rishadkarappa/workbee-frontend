@@ -16,6 +16,7 @@ import { useNavigate } from "react-router-dom"
 import { WorkService } from "@/services/work-service"
 import { getErrorMessage } from "@/utils/error-helper"
 import { toast } from "sonner"
+import { emailRegex } from "@/constants/regex/regex"
 
 export interface WorkerConfirmationsDto {
   reliable: boolean;
@@ -109,7 +110,7 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
 
     if (!form.email.trim()) {
       stepErrors.email = "Email is required"
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+    } else if (!emailRegex.validEmail.test(form.email.trim())) {
       stepErrors.email = "Enter a valid email address"
     }
 
