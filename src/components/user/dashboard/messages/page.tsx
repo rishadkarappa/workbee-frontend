@@ -9,7 +9,7 @@ import { MediaUploadButton } from '@/components/chat/MediaUploadButton';
 import type { UploadedMedia } from '@/components/chat/MediaUploadButton';
 import { MediaMessage } from '@/components/chat/MediaMessage';
 import { SystemMessage } from '@/components/chat/SystemMessage';
-import { parseSystemMessage,isBidCardActionable } from '@/components/chat/system-message-utils';
+import { parseSystemMessage, isBidCardActionable } from '@/components/chat/system-message-utils';
 import { PaymentService } from "@/services/payment-service"
 import { BidService } from '@/services/bid-service';
 import CounterOfferModal from './modals/counter-offer-modal';
@@ -100,11 +100,7 @@ export default function ClientMessages() {
   const selectedChatRef = useRef<Chat | null>(null);
   const isInitialLoadRef = useRef(false);
 
-  const processBidPayment = async (
-    workId: string,
-    workerId: string,
-    title: string,
-    amount: number,
+  const processBidPayment = async (workId: string, workerId: string, title: string, amount: number, 
     onSuccess: () => Promise<void>
   ) => {
     const loaded = await loadRazorpayScript();
@@ -114,6 +110,7 @@ export default function ClientMessages() {
     }
 
     const orderRes = await PaymentService.createOrder({ workId, workerId, workTitle: title, amount });
+
     const { orderId, amount: amountPaise, currency, keyId } = orderRes.data.data;
 
     await new Promise<void>((resolve, reject) => {

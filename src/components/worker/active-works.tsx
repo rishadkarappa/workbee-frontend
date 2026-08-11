@@ -299,7 +299,7 @@ export default function ActiveWorks() {
       const res = await WorkService.getWorkerAssignedWorks();
 
       if (res.data.success) {
-        setWorks(res.data.data?.works || []);
+        setWorks(res.data.data || []);
       } else {
         setError('Failed to load assigned works');
       }
