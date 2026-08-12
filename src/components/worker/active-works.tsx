@@ -349,30 +349,41 @@ export default function ActiveWorks() {
       const updatePayload: UpdateWorkPayload = { progress: newProgress };
       if (newProgress === 'completed') {
         updatePayload.status = 'completed';
+      } else {
+        updatePayload.status = 'in-progress';
       }
       await WorkService.updateWork(work.id, updatePayload);
-
+      
       if (newProgress === 'completed') {
         await notifyWorkCompleted(work.id);
       }
 
-
-      // 2. Find chat between this worker and the work owner
+      // 2. Find (or create) chat between this worker and the work owner
       const chatsRes = await ChatService.getMyChats();
       const allChats: Chat[] = chatsRes.data.data || [];
-      const relatedChat = allChats.find(
-        (c) => c.participants.userId === work.userId
-      );
+      let chatId = allChats.find(
+        (c) =>
+          c.participants.userId === work.userId &&
+          c.participants.workerId === userId
+      )?.id;
+
+      if (!chatId) {
+        const chatRes = await ChatService.createChat({
+          userId: work.userId,
+          workerId: userId!,
+        });
+        chatId = chatRes.data.data?.id;
+      }
 
       // 3. Emit socket progress event
-      if (relatedChat) {
+      if (chatId) {
         await socketService.updateWorkProgress({
-          chatId: relatedChat.id,
+          chatId,
           workId: work.id,
           workTitle: work.workTitle,
           progress: newProgress,
           workerId: userId!,
-          userId: work.userId, 
+          userId: work.userId,
         });
       }
 
@@ -380,7 +391,11 @@ export default function ActiveWorks() {
       setWorks(prev =>
         prev.map(w =>
           w.id === work.id
-            ? { ...w, progress: newProgress, status: newProgress === 'completed' ? 'completed' : w.status }
+            ? {
+                ...w,
+                progress: newProgress,
+                status: newProgress === 'completed' ? 'completed' : 'in-progress',
+              }
             : w
         )
       );
@@ -397,11 +412,21 @@ export default function ActiveWorks() {
   // ── Chat with user ────────────────────────────────────────────────────────
   const handleChatWithUser = async (work: Work) => {
     try {
-      const response = await ChatService.createChat({
-        userId: work.userId,
-        workerId: userId!,
-      });
-      const chat = response.data.data;
+      const chatsRes = await ChatService.getMyChats();
+      const allChats: Chat[] = chatsRes.data.data || [];
+      const existingChat = allChats.find(
+        (c) =>
+          c.participants.userId === work.userId &&
+          c.participants.workerId === userId
+      );
+
+      const chat = existingChat
+        ? existingChat
+        : (await ChatService.createChat({
+            userId: work.userId,
+            workerId: userId!,
+          })).data.data;
+
       navigate('/worker/worker-dashboard/client-messages', {
         state: {
           chatId: chat.id,

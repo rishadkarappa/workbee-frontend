@@ -11,6 +11,7 @@ interface UpdateWorkDto {
     endDate?: string;
     budget?: number;
     status?: string;
+    progress?: string;
     workerId?: string;
     manualAddress?: string;
     landmark?: string;
