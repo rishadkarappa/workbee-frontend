@@ -5,10 +5,10 @@ export class WorkSocketModule {
   private progressCallbacks: Set<(data: { workId: string; progress: string }) => void> = new Set();
 
   private connection: ChatSocketConnection;
-    constructor(connection: ChatSocketConnection) {
-        this.connection = connection;
-        this.connection.registerAttacher((socket) => this.reattach(socket))
-    }
+  constructor(connection: ChatSocketConnection) {
+    this.connection = connection;
+    this.connection.registerAttacher((socket) => this.reattach(socket))
+  }
   private reattach(socket: Socket): void {
     this.progressCallbacks.forEach(cb => {
       socket.off('work_progress_changed', cb);
@@ -41,15 +41,15 @@ export class WorkSocketModule {
   }
 
   async updateWorkProgress(data: {
-    chatId: string; workId: string; workTitle: string; progress: string; workerId: string;
-  }): Promise<void> {
-    try {
-      await this.connection.emitEnsured('work_progress_update', data);
-    } catch (err) {
-      console.error('[Socket] updateWorkProgress failed:', err);
-      throw err;
-    }
+  chatId: string; workId: string; workTitle: string; progress: string; workerId: string; userId: string;
+}): Promise<void> {
+  try {
+    await this.connection.emitEnsured('work_progress_update', data);
+  } catch (err) {
+    console.error('[Socket] updateWorkProgress failed:', err);
+    throw err;
   }
+}
 
   onWorkProgressChanged(callback: (data: { workId: string; progress: string }) => void): void {
     this.progressCallbacks.add(callback);

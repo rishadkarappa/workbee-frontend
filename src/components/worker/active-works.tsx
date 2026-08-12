@@ -292,10 +292,6 @@ export default function ActiveWorks() {
       setLoading(true);
       setError(null);
 
-      // Get ALL works and filter by assigned status
-      // (WorkerWorksTable uses getAllWorks — for worker's own assigned works
-      //  we use getAllWorks with a special worker filter OR a dedicated endpoint)
-      // Using getAllWorks filtered to 'assigned' status — works the worker confirmed
       const res = await WorkService.getWorkerAssignedWorks();
 
       if (res.data.success) {
@@ -376,6 +372,7 @@ export default function ActiveWorks() {
           workTitle: work.workTitle,
           progress: newProgress,
           workerId: userId!,
+          userId: work.userId, 
         });
       }
 
