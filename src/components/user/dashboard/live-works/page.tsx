@@ -87,7 +87,7 @@ function ProgressDisplay({ progress }: { progress?: string }) {
         <p className="text-xs text-gray-500">
           {progress === 'started'   && '🔧 Worker has started the job'}
           {progress === 'ongoing'   && '⚙️ Work is currently in progress'}
-          {progress === 'completed' && '✅ Work has been completed!'}
+          {progress === 'completed' && '☑ Work has been completed!'}
         </p>
       )}
     </div>
