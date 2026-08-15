@@ -54,6 +54,8 @@ function ProgressDisplay({ progress }: { progress?: string }) {
     );
   }
 
+  // work progress
+
   return (
     <div className="space-y-2">
       <Label className="text-sm font-medium text-gray-700">Work Progress</Label>
