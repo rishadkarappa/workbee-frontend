@@ -14,14 +14,13 @@ export default function ProfileSettings() {
   const [userProfileData, setUserProfileData] =
     useState<UserProfileData | null>(null);
 
-  const userId = AuthHelper.getUserId();
 
   // get users details api
   useEffect(() => {
     console.log("haiiiii");
     const userDetails = async () => {
       try {
-        const resp = await api.get(`/auth/get-user-profile-settings/${userId}`);
+        const resp = await api.get('/auth/get-user-profile-settings');
 
         if (resp.data.success) {
           setUserProfileData(resp.data.data);
@@ -32,7 +31,7 @@ export default function ProfileSettings() {
     };
 
     userDetails();
-  }, [userId]);
+  }, []);
   const joinedDate = userProfileData?.createdAt ? new Date(userProfileData.createdAt).toLocaleDateString() : null;
 
   // modal open

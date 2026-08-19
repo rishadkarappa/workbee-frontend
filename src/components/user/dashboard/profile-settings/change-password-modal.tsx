@@ -23,6 +23,8 @@ export default function ChangePasswordModal({ isOpen, setIsOpen }: any) {
                 newPassword
             })
             if (resp.data.success) {
+                console.log(resp.data.data)
+                console.log(resp.data)
                 toast.success("Password had been updated")
                 setIsOpen(false)
             } else {
