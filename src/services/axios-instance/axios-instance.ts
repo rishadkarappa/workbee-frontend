@@ -40,7 +40,8 @@ const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue = []
 }
 
-// ─── Shared logout helper ────────────────────────────────────────────────────
+
+// shared logout helper
 const forceLogout = (reason: "blocked" | "expired") => {
   notificationSocketService.disconnect();
 
@@ -50,37 +51,29 @@ const forceLogout = (reason: "blocked" | "expired") => {
   if (reason === "blocked") {
     // Small delay so any in-flight UI renders complete
     setTimeout(() => {
-      const loginPath =
-        userRole === "admin" ? "/admin" :
-          userRole === "worker" ? "/worker/worker-login" :
-            "/login";
+      const loginPath = userRole === "admin" ? "/admin" : userRole === "worker" ? "/worker/worker-login" : "/login";
 
       // Pass a flag so the login page can show "Your account has been blocked"
       window.location.href = `${loginPath}?blocked=true`;
     }, 100);
   } else {
-    const loginPath =
-      userRole === "admin" ? "/admin" :
-        userRole === "worker" ? "/worker/worker-login" :
-          "/login";
+    const loginPath = userRole === "admin" ? "/admin" : userRole === "worker" ? "/worker/worker-login" : "/login";
     window.location.href = loginPath;
   }
 };
-// ─────────────────────────────────────────────────────────────────────────────
+
+
 
 // Request Interceptor
-api.interceptors.request.use(
-  (config) => {
-    const token = AuthHelper.getAccessToken();
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+api.interceptors.request.use((config) => {
+  const token = AuthHelper.getAccessToken();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+}, (error) => Promise.reject(error));
+
 
 // Response Interceptor
-api.interceptors.response.use(
-  (response) => response,
+api.interceptors.response.use((response) => response,
   async (error) => {
     const originalRequest = error.config;
     const status = error.response?.status;

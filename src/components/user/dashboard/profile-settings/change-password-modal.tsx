@@ -1,7 +1,7 @@
 import { api } from "@/services/axios-instance/axios-instance"
 import { AuthHelper } from "@/utils/auth-helper"
 import { XIcon } from "lucide-react"
-import { useState } from "react"
+import React, { useState } from "react"
 import { toast } from "sonner"
 
 export default function ChangePasswordModal({ isOpen, setIsOpen }: any) {
@@ -14,14 +14,21 @@ export default function ChangePasswordModal({ isOpen, setIsOpen }: any) {
 
     // change password api
     const userId = AuthHelper.getUserId()
-    const changePassowrd = async () => {
+    const changePassowrd = async (e:React.SubmitEvent<HTMLFormElement>) => {
+        e.preventDefault()
         try {
 
-            let resp = await api.post(`/auth/change-user-password/${userId}`, {
+            let resp = await api.post('/auth/change-user-password', {
                 currentPassword,
-                confirmNewPassword
+                newPassword
             })
-            setIsOpen(false)
+            if (resp.data.success) {
+                toast.success("Password had been updated")
+                setIsOpen(false)
+            } else {
+
+                toast.warning("Somethings went wrong!")
+            }
 
         } catch (error: any) {
             toast.error("Cant able to change password", error)
