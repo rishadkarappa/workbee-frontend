@@ -58,7 +58,7 @@ export default function ProfileSettings() {
     fileInputRef.current?.click();
   };
 
-  const AddProfileImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
 
     const file = e.target.files?.[0];
     if (!file) return;
@@ -128,30 +128,40 @@ export default function ProfileSettings() {
 
 
       {/* add profile image div */}
-      <div className="rounded-full bg-gray-300 h-18 w-18 flex items-center justify-center">
-        {userProfileData?.userProfileImage ? (
-          <img
-            src={userProfileData.userProfileImage}
-            alt="Profile"
-            className="w-full h-full rounded object-cover"
-          />
-        ) : (
-          <button
-            type="button"
-            onClick={handleAddProfileImage}
-            className="h-full w-full text-xs text-gray-700"
-          >
-            Add profile
-          </button>
+      <div className="relative h-20 w-20">
+        <div className="rounded-full bg-gray-300 h-18 w-18 flex items-center justify-center">
+          {userProfileData?.userProfileImage ? (
+            <img
+              src={userProfileData.userProfileImage}
+              alt="Profile"
+              className="w-full h-full rounded object-cover"
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={handleAddProfileImage}
+              className="h-full w-full text-xs text-gray-700"
+            >
+              Add profile
+            </button>
+          )}
+        </div>
+
+        {/* uploading overlay */}
+        {uploading && (
+          <div className="absalute inset-0 flex intems-center justify-center rounded-full bg-black/50 text-xs test-white">
+            Uploading...
+          </div>
         )}
       </div>
 
-      {/* uploading overlay */}
-      {uploading && (
-        <div className="absalute inset-0 flex intems-center justify-center rounded-full bg-black/50 text-xs test-white">
-          Uploading...
-        </div>
-      )}
+      {/* hidden input */}
+        <input 
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg, image/png, image/webp"
+        onChange={handleFileChange}
+        />
 
 
       <h2>{userProfileData?.name}</h2>
