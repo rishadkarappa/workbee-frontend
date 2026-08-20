@@ -2,6 +2,7 @@ import { api } from "@/services/axios-instance/axios-instance";
 import { useEffect, useRef, useState } from "react";
 import ChangePasswordModal from "./change-password-modal";
 import { toast } from "sonner";
+import axios from "axios";
 
 interface UserProfileData {
   name: string;
@@ -17,6 +18,10 @@ export default function ProfileSettings() {
 
   //file input ref
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // uploading state
+  const [uploading, setUploading] = useState(false);
+
 
   // get users details api
   useEffect(() => {
@@ -53,27 +58,65 @@ export default function ProfileSettings() {
     fileInputRef.current?.click();
   };
 
-  const AddProfileImage = (e:React.ChangeEvent<HTMLInputElement>) => {
+  const AddProfileImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // valdate file type
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.warning("Only JPG, PNG and WEBP images are allowed")
+    }
+
+    // validate file size
+    const maxSize = 5 * 1024 * 1024
+    if (file.size > maxSize) {
+      toast.error("Image must be smaller than 5MB ")
+      return
+    }
+
     try {
-      const file = e.target.files?.[0];
-      if(!file) return;
+      setUploading(true)
 
-      // valdate file type
-      const allowedTypes = ["image/jpeg","image/png","image/webp"];
-      if(!allowedTypes.includes(file.type)) {
-        toast.warning("Only JPG, PNG and WEBP images are allowed")
+      //1 - get Cloudinary signature
+      const signatureResponse = await api.get("/auth/profile-image/upload-signature")
+      const { signature, timestamp, apiKey, cloudeName, folder } = signatureResponse.data.data
+
+      //2 - upload directly to cloudinary
+      const formData = new FormData();
+
+      formData.append("file", file);
+      formData.append("api_key", apiKey);
+      formData.append("timestamp", String(timestamp));
+      formData.append("signature", signature);
+      formData.append("folder", folder);
+
+      const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloudeName}/image/upload`
+      const cloudinaryReponse = await axios.post(cloudinaryUrl, formData)
+      const { secureUrl, public_id } = cloudinaryReponse.data
+
+      //3 - save img URL in auth service
+      const saveResponse = await api.patch("/auth/profile-image", {
+        imageUrl: secureUrl,
+        public_id: public_id
+      })
+
+      if (saveResponse.data.success) {
+        setUserProfileData(prev =>
+          prev ? { ...prev, userProfileImage: secureUrl } : prev
+        )
+        toast.success("Profile image updated successfully");
       }
 
-      // validate file size
-      const maxSize = 5 * 1024 * 1024
-      if(file.size > maxSize) {
-        toast.error("Image must be smaller than 5MB ")
-        return
-      }
-
-      
     } catch (error) {
       console.log(error)
+      toast.error("Failed to upload profile image.");
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   }
 
@@ -89,7 +132,13 @@ export default function ProfileSettings() {
         {userProfileData?.userProfileImage ? (
           <img src={userProfileData.userProfileImage} alt="Set Profile Image" className="w-full h-full rounded object-cover" />
         ) : (
-          <button onClick={AddProfileImage} type="button" className="text-xs text-gray-700">Add profile Image</button>
+          <button
+            type="button"
+            onClick={handleAddProfileImage}
+            className="h-full w-full text-xs text-gray-700"
+          >
+            Add profile
+          </button>
         )}
       </div>
 
