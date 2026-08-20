@@ -66,7 +66,8 @@ export default function ProfileSettings() {
     // valdate file type
     const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
-      toast.warning("Only JPG, PNG and WEBP images are allowed")
+      toast.warning("Only JPG, PNG and WEBP images are allowed");
+      return;
     }
 
     // validate file size
@@ -157,12 +158,12 @@ export default function ProfileSettings() {
       </div>
 
       {/* hidden input */}
-        <input 
+      <input
         ref={fileInputRef}
         type="file"
         accept="image/jpeg, image/png, image/webp"
         onChange={handleFileChange}
-        />
+      />
 
 
       <h2>{userProfileData?.name}</h2>
