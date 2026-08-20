@@ -1,6 +1,5 @@
 import { api } from "@/services/axios-instance/axios-instance";
-import { AuthHelper } from "@/utils/auth-helper";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ChangePasswordModal from "./change-password-modal";
 
 interface UserProfileData {
@@ -15,9 +14,12 @@ export default function ProfileSettings() {
   // user profile data states
   const [userProfileData, setUserProfileData] = useState<UserProfileData | null>(null);
 
+  //file input ref
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   // get users details api
   useEffect(() => {
-    console.log("haiiiii");
+    // console.log("haiiiii");
     const userDetails = async () => {
       try {
         const resp = await api.get('/auth/get-user-profile-settings');
@@ -40,9 +42,19 @@ export default function ProfileSettings() {
 
   // ------------------------------------------------
 
-  const AddProfileImage = () => {
-    try {
 
+  /**
+   * add profile functionality
+   */
+
+  // Open file selector
+  const handleAddProfileImage = () => {
+    fileInputRef.current?.click();
+  };
+
+  const AddProfileImage = (e:React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      
     } catch (error) {
       console.log(error)
     }
