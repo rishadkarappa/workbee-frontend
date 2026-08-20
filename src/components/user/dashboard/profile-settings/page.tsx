@@ -130,7 +130,11 @@ export default function ProfileSettings() {
       {/* add profile image div */}
       <div className="rounded-full bg-gray-300 h-18 w-18 flex items-center justify-center">
         {userProfileData?.userProfileImage ? (
-          <img src={userProfileData.userProfileImage} alt="Set Profile Image" className="w-full h-full rounded object-cover" />
+          <img
+            src={userProfileData.userProfileImage}
+            alt="Profile"
+            className="w-full h-full rounded object-cover"
+          />
         ) : (
           <button
             type="button"
@@ -142,6 +146,10 @@ export default function ProfileSettings() {
         )}
       </div>
 
+      {/* uploading overlay */}
+        <div className="absalute inset-0 flex intems-center justify-center rounded-full bg-black/50 text-xs test-white">
+          Uploading...
+        </div>
 
 
       <h2>{userProfileData?.name}</h2>
