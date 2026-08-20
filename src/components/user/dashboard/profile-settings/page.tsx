@@ -147,9 +147,11 @@ export default function ProfileSettings() {
       </div>
 
       {/* uploading overlay */}
+      {uploading && (
         <div className="absalute inset-0 flex intems-center justify-center rounded-full bg-black/50 text-xs test-white">
           Uploading...
         </div>
+      )}
 
 
       <h2>{userProfileData?.name}</h2>
