@@ -1,6 +1,7 @@
 import { api } from "@/services/axios-instance/axios-instance";
 import { useEffect, useRef, useState } from "react";
 import ChangePasswordModal from "./change-password-modal";
+import { toast } from "sonner";
 
 interface UserProfileData {
   name: string;
@@ -54,6 +55,22 @@ export default function ProfileSettings() {
 
   const AddProfileImage = (e:React.ChangeEvent<HTMLInputElement>) => {
     try {
+      const file = e.target.files?.[0];
+      if(!file) return;
+
+      // valdate file type
+      const allowedTypes = ["image/jpeg","image/png","image/webp"];
+      if(!allowedTypes.includes(file.type)) {
+        toast.warning("Only JPG, PNG and WEBP images are allowed")
+      }
+
+      // validate file size
+      const maxSize = 5 * 1024 * 1024
+      if(file.size > maxSize) {
+        toast.error("Image must be smaller than 5MB ")
+        return
+      }
+
       
     } catch (error) {
       console.log(error)
