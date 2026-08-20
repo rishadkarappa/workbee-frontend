@@ -94,17 +94,18 @@ export default function ProfileSettings() {
 
       const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloudeName}/image/upload`
       const cloudinaryReponse = await axios.post(cloudinaryUrl, formData)
-      const { secureUrl, public_id } = cloudinaryReponse.data
+      // const { secureUrl, public_id } = cloudinaryReponse.data
+      const { secure_url, public_id } = cloudinaryReponse.data;
 
       //3 - save img URL in auth service
       const saveResponse = await api.patch("/auth/profile-image", {
-        imageUrl: secureUrl,
-        public_id: public_id
+        imageUrl: secure_url,
+        publicId: public_id
       })
 
       if (saveResponse.data.success) {
         setUserProfileData(prev =>
-          prev ? { ...prev, userProfileImage: secureUrl } : prev
+          prev ? { ...prev, userProfileImage: secure_url } : prev
         )
         toast.success("Profile image updated successfully");
       }
