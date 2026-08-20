@@ -8,12 +8,12 @@ interface UserProfileData {
   email: string;
   phone?: number;
   createdAt?: Date;
+  userProfileImage?: string;
 }
 
 export default function ProfileSettings() {
-  const [userProfileData, setUserProfileData] =
-    useState<UserProfileData | null>(null);
-
+  // user profile data states
+  const [userProfileData, setUserProfileData] = useState<UserProfileData | null>(null);
 
   // get users details api
   useEffect(() => {
@@ -32,15 +32,40 @@ export default function ProfileSettings() {
 
     userDetails();
   }, []);
+  // Joined Date change readable formalt
   const joinedDate = userProfileData?.createdAt ? new Date(userProfileData.createdAt).toLocaleDateString() : null;
 
   // modal open
   const [isOpen, setIsOpen] = useState(false)
 
+  // ------------------------------------------------
+
+  const AddProfileImage = () => {
+    try {
+
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+
 
   return (
     <div>
       <h1>User Profile</h1>
+
+
+      {/* add profile image div */}
+      <div className="rounded-full bg-gray-300 h-18 w-18 flex items-center justify-center">
+        {userProfileData?.userProfileImage ? (
+          <img src={userProfileData.userProfileImage} alt="Set Profile Image" className="w-full h-full rounded object-cover" />
+        ) : (
+          <button onClick={AddProfileImage} type="button" className="text-xs text-gray-700">Add profile Image</button>
+        )}
+      </div>
+
+
+
       <h2>{userProfileData?.name}</h2>
       <h2>{userProfileData?.email}</h2>
       <h2>{joinedDate}</h2>

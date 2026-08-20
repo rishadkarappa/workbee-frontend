@@ -50,6 +50,7 @@ export function MediaUploadButton({ onUploaded, disabled }: MediaUploadButtonPro
 
       // 1. Get a signed signature from our backend
       const sigRes = await ChatService.getUploadSignature(resourceType);
+      
       const { signature, timestamp, apiKey, cloudName, folder } = sigRes.data.data;
 
       // 2. Upload directly to Cloudinary using that signature
