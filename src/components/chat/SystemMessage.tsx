@@ -61,8 +61,8 @@ interface SystemMessageProps {
 }
 
 const progressConfig: Record<string, { label: string; color: string; Icon: LucideIcon; step: number }> = {
-  started: { label: 'Work Started', color: 'text-blue-600', Icon: Wrench, step: 1 },
-  ongoing: { label: 'Work In Progress', color: 'text-amber-600', Icon: TrendingUp, step: 2 },
+  started: { label: 'Work Started', color: 'text-gray-900', Icon: Wrench, step: 1 },
+  ongoing: { label: 'Work In Progress', color: 'text-gray-900', Icon: TrendingUp, step: 2 },
   completed: { label: 'Work Completed', color: 'text-green-600', Icon: Flag, step: 3 },
 };
 
@@ -179,7 +179,7 @@ export function SystemMessage({
               const active = step === idx + 1;
               return (
                 <div key={s} className="flex items-center flex-1">
-                  <div className={`h-2 flex-1 rounded-full transition-colors ${done || active ? (s === 'completed' ? 'bg-green-500' : s === 'ongoing' ? 'bg-amber-500' : 'bg-blue-500') : 'bg-gray-200'}`} />
+                  <div className={`h-2 flex-1 rounded-full transition-colors ${done || active ? (s === 'completed' ? 'bg-green-500' : s === 'ongoing' ? 'bg-gray-900' : 'bg-gray-900') : 'bg-gray-200'}`} />
                   {idx < 2 && <div className={`w-1 h-1 rounded-full mx-0.5 ${done ? 'bg-gray-400' : 'bg-gray-200'}`} />}
                 </div>
               );
