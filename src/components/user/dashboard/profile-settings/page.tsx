@@ -1,6 +1,6 @@
 import { api } from "@/services/axios-instance/axios-instance";
 import { useEffect, useRef, useState } from "react";
-import ChangePasswordModal from "./change-password-modal";
+import ChangePasswordModal from "./models/change-password-modal";
 import { toast } from "sonner";
 import axios from "axios";
 import { Camera, Mail, MapPin, Calendar } from "lucide-react";
