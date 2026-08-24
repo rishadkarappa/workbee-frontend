@@ -214,7 +214,8 @@ export default function WorkerWallet() {
       setLoading(true);
       setError(null);
       const res = await PaymentService.getMyWallet();
-      setWallet(res.data.data.wallet);
+      // console.log("wallet resp", res.data);
+      setWallet(res.data.data);
       setTransactions(res.data.data.transactions || []);
     } catch (err) {
       setError(getErrorMessage(err));
@@ -260,7 +261,7 @@ export default function WorkerWallet() {
   }
 
   return (
-      <div className="space-y-6 p-4 sm:p-6 w-full max-w-6xl mx-auto">
+    <div className="space-y-6 p-4 sm:p-6 w-full max-w-6xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -357,11 +358,10 @@ export default function WorkerWallet() {
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors capitalize ${
-                    filter === f
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors capitalize ${filter === f
                       ? "bg-gray-900 text-white"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
+                    }`}
                 >
                   {f}
                 </button>
