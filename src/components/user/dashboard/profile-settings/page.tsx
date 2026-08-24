@@ -1,4 +1,3 @@
-import { api } from "@/services/axios-instance/axios-instance";
 import { useEffect, useRef, useState } from "react";
 import ChangePasswordModal from "./models/change-password-modal";
 import { toast } from "sonner";
@@ -98,10 +97,6 @@ export default function ProfileSettings() {
       const cloudinaryReponse = await axios.post(cloudinaryUrl, formData);
       const { secure_url, public_id } = cloudinaryReponse.data;
 
-      // const saveResponse = await api.patch("/auth/profile-image", {
-      //   imageUrl: secure_url,
-      //   publicId: public_id,
-      // });
       const saveResponse = await AuthService.saveImageUrlFromCloud({
         imageUrl: secure_url,
         publicId: public_id,
