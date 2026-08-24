@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import axios from "axios";
 import { Camera, Mail, MapPin, Calendar } from "lucide-react";
 import type { ExtraProfileData, UserProfileData } from "./types/types";
-
+import { AuthService } from "@/services/auth-service";
 
 
 const TABS = ["Personal", "Account", "Security", "Notifications"] as const;
@@ -29,10 +29,11 @@ export default function ProfileSettings() {
     badge: "Pro Member",
   });
 
+  // get user profile data api
   useEffect(() => {
     const userDetails = async () => {
       try {
-        const resp = await api.get("/auth/get-user-profile-settings");
+        const resp = await AuthService.getUserProfileData()
         if (resp.data.success) {
           setUserProfileData(resp.data.data);
         }

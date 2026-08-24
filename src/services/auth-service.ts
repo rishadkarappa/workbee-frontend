@@ -48,6 +48,11 @@ export const AuthService = {
         return api.post(AUTH_ENDPOINTS.AUTH.LOGOUT);
     },
 
+    //get user details
+    getUserProfileData: () => {
+        return api.get(AUTH_ENDPOINTS.AUTH.GET_USER_PROFILE_DETAILS)
+    },
+
 
     // google Auth
     googleAuthLogin: (data: { credential: string}) => {
