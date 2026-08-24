@@ -107,12 +107,12 @@ function TransactionRow({ tx }: { tx: Transaction }) {
     tx.type === "payment"
       ? "Payment for work"
       : tx.type === "hold"
-      ? "Amount held"
-      : tx.type === "credit"
-      ? "Payment received"
-      : tx.type === "refund"
-      ? "Refund"
-      : tx.type;
+        ? "Amount held"
+        : tx.type === "credit"
+          ? "Payment received"
+          : tx.type === "refund"
+            ? "Refund"
+            : tx.type;
 
   return (
     <div className="border rounded-xl overflow-hidden">
@@ -123,9 +123,8 @@ function TransactionRow({ tx }: { tx: Transaction }) {
         <div className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
           <div className="flex items-center gap-3">
             <div
-              className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
-                isDebit ? "bg-red-50" : "bg-green-50"
-              }`}
+              className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${isDebit ? "bg-red-50" : "bg-green-50"
+                }`}
             >
               {isDebit ? (
                 <ArrowUpCircle className="w-5 h-5 text-red-500" />
@@ -145,9 +144,8 @@ function TransactionRow({ tx }: { tx: Transaction }) {
           <div className="flex items-center gap-3 flex-shrink-0 ml-4">
             <div className="text-right">
               <p
-                className={`text-sm font-semibold ${
-                  isDebit ? "text-red-600" : "text-green-600"
-                }`}
+                className={`text-sm font-semibold ${isDebit ? "text-red-600" : "text-green-600"
+                  }`}
               >
                 {isDebit ? "−" : "+"}
                 {formatAmount(tx.amount)}
@@ -226,9 +224,15 @@ export default function UserWallet() {
     try {
       setLoading(true);
       setError(null);
+
       const res = await PaymentService.getMyWallet();
-      setWallet(res.data.data.wallet);
+
+      // console.log("wallet resp", res.data);
+      // console.log("wlt dataaaa", res.data.data);
+
+      setWallet(res.data.data);
       setTransactions(res.data.data.transactions || []);
+
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -271,7 +275,7 @@ export default function UserWallet() {
   }
 
   return (
-      <div className="space-y-6 p-4 sm:p-6 w-full max-w-6xl mx-auto">
+    <div className="space-y-6 p-4 sm:p-6 w-full max-w-6xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -347,11 +351,10 @@ export default function UserWallet() {
                   <button
                     key={f}
                     onClick={() => setFilter(f)}
-                    className={`px-3 py-1 rounded-full text-xs font-medium transition-colors capitalize ${
-                      filter === f
+                    className={`px-3 py-1 rounded-full text-xs font-medium transition-colors capitalize ${filter === f
                         ? "bg-gray-900 text-white"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
+                      }`}
                   >
                     {f}
                   </button>
