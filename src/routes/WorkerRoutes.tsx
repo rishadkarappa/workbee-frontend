@@ -1,6 +1,9 @@
 import { Routes, Route } from "react-router-dom";
 import { ProtectedRoute } from "@/components/common/ProtectedRoute";
 
+import { UserRole } from "workbee-common";
+import { RouteSegments } from "@/constants/routes/route-segments";
+
 import ApplyWorker from "@/pages/worker/ApplyWorker";
 import WorkerLayout from "@/layout/WorkerLayout";
 import WorkerDashboard from "@/pages/worker/WorkerDashboard";
@@ -9,8 +12,7 @@ import Works from "@/pages/worker/Works";
 import ClientMessages from "@/components/worker/messages/messages";
 import ActiveWorks from "@/components/worker/active-works";
 import WorkerWallet from "@/components/worker/wallet";
-import { UserRole } from "workbee-common";
-import { RouteSegments } from "@/constants/routes/route-segments";
+import WorkerAccountSettings from "@/components/worker/account-settings";
 
 const WorkerRoutes = () => {
     return (
@@ -33,6 +35,7 @@ const WorkerRoutes = () => {
                 <Route path={RouteSegments.WORKER.ACTIVE_WORKS} element={<ActiveWorks/>} />
                 <Route path={RouteSegments.WORKER.MESSAGES} element={<ClientMessages/>} />
                 <Route path={RouteSegments.WORKER.WALLET} element={<WorkerWallet/>} />
+                <Route path={RouteSegments.WORKER.ACCOUNT} element={<WorkerAccountSettings/>} />
             </Route>
         </Routes>
     )

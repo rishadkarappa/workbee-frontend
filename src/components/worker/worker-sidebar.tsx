@@ -67,7 +67,7 @@ const items = [
   },
   {
     title: "Account Settings",
-    route: "/workr/worker-dashboard/account",
+    route: "/worker/worker-dashboard/worker-account",
     icon: User, 
   },
 ];
