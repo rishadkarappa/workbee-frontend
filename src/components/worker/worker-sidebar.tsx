@@ -18,6 +18,9 @@ import {
   ShieldAlert,
   CreditCard,
   Bell,
+  User,
+  BriefcaseBusiness,
+  HardHat
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -30,12 +33,12 @@ const items = [
   {
     title: "Works",
     route: "/worker/worker-dashboard/works",
-    icon: Users,
+    icon: BriefcaseBusiness,
   },    
   {
     title: "Active Works",
     route: "/worker/worker-dashboard/active-works",
-    icon: Users,
+    icon: HardHat,
   }, 
   {
     title: "Notifications",
@@ -63,9 +66,9 @@ const items = [
     icon: MessageSquare, 
   },
   {
-    title: "Group Messages",
-    route: "/workr/worker-dashboard/feedbacks",
-    icon: MessageSquare, 
+    title: "Account Settings",
+    route: "/workr/worker-dashboard/account",
+    icon: User, 
   },
 ];
 
