@@ -47,18 +47,18 @@ export default function ProfileSettings() {
 
   const joinedDate = userProfileData?.createdAt
     ? new Date(userProfileData.createdAt).toLocaleDateString("en-US", {
-        month: "long",
-        year: "numeric",
-      })
+      month: "long",
+      year: "numeric",
+    })
     : "—";
 
   const initials = userProfileData?.name
     ? userProfileData.name
-        .split(" ")
-        .map((n) => n[0])
-        .slice(0, 2)
-        .join("")
-        .toUpperCase()
+      .split(" ")
+      .map((n) => n[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase()
     : "U";
 
   const handleAddProfileImage = () => {
@@ -98,7 +98,11 @@ export default function ProfileSettings() {
       const cloudinaryReponse = await axios.post(cloudinaryUrl, formData);
       const { secure_url, public_id } = cloudinaryReponse.data;
 
-      const saveResponse = await api.patch("/auth/profile-image", {
+      // const saveResponse = await api.patch("/auth/profile-image", {
+      //   imageUrl: secure_url,
+      //   publicId: public_id,
+      // });
+      const saveResponse = await AuthService.saveImageUrlFromCloud({
         imageUrl: secure_url,
         publicId: public_id,
       });
@@ -203,11 +207,10 @@ export default function ProfileSettings() {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${
-              activeTab === tab
+            className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${activeTab === tab
                 ? "bg-white text-gray-900 shadow-sm"
                 : "text-gray-500 hover:text-gray-700"
-            }`}
+              }`}
           >
             {tab}
           </button>

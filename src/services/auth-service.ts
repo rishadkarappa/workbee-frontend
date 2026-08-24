@@ -55,10 +55,12 @@ export const AuthService = {
     getUploadSign: () => {
         return api.get(AUTH_ENDPOINTS.AUTH.GET_UPLOAD_SIGN)
     },
-
+    saveImageUrlFromCloud: (data: { imageUrl: string; publicId: string; }) => {
+        return api.patch(AUTH_ENDPOINTS.AUTH.SAVE_IMAGE_URL_FROM_CLOUD, data);
+    },
 
     // google Auth
-    googleAuthLogin: (data: { credential: string}) => {
+    googleAuthLogin: (data: { credential: string }) => {
         return api.post(AUTH_ENDPOINTS.AUTH.GOOGLE_LOGIN, data)
     },
 

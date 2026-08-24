@@ -1,6 +1,6 @@
 export const AUTH_ENDPOINTS = {
     AUTH: {
-        
+
         REGISTER: "/auth/register",
         VERIFY_OTP: "/auth/verifyOtp",
         RESEND_OTP: "/auth/resend-otp",
@@ -12,10 +12,11 @@ export const AUTH_ENDPOINTS = {
         LOGOUT: "/auth/logout",
         GOOGLE_LOGIN: "/auth/google-login",
 
-        GET_USER_DETAILS: (id:string) => `/auth/get-user-details/${id}`,
+        GET_USER_DETAILS: (id: string) => `/auth/get-user-details/${id}`,
 
         GET_USER_PROFILE_DETAILS: "/auth/get-user-profile-settings",
         GET_UPLOAD_SIGN: "/auth/profile-image/upload-signature",
+        SAVE_IMAGE_URL_FROM_CLOUD: "/auth/profile-image",
 
         ADMIN: {
             LOGIN: "/auth/admin/login",
