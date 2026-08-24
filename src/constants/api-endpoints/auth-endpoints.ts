@@ -15,6 +15,7 @@ export const AUTH_ENDPOINTS = {
         GET_USER_DETAILS: (id:string) => `/auth/get-user-details/${id}`,
 
         GET_USER_PROFILE_DETAILS: "/auth/get-user-profile-settings",
+        GET_UPLOAD_SIGN: "/auth/profile-image/upload-signature",
 
         ADMIN: {
             LOGIN: "/auth/admin/login",

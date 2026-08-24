@@ -84,7 +84,7 @@ export default function ProfileSettings() {
     try {
       setUploading(true);
 
-      const signatureResponse = await api.get("/auth/profile-image/upload-signature");
+      const signatureResponse = await AuthService.getUploadSign();
       const { signature, timestamp, apiKey, cloudeName, folder } = signatureResponse.data.data;
 
       const formData = new FormData();

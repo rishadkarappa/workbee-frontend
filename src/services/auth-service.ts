@@ -48,9 +48,12 @@ export const AuthService = {
         return api.post(AUTH_ENDPOINTS.AUTH.LOGOUT);
     },
 
-    //get user details
+    //user profile apis
     getUserProfileData: () => {
         return api.get(AUTH_ENDPOINTS.AUTH.GET_USER_PROFILE_DETAILS)
+    },
+    getUploadSign: () => {
+        return api.get(AUTH_ENDPOINTS.AUTH.GET_UPLOAD_SIGN)
     },
 
 
