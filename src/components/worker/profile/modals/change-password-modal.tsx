@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 
 import { api } from "@/services/axios-instance/axios-instance";
 import type { ChangePasswordModalProps } from "../types/types";
+import { AuthService } from "@/services/auth-service";
 
 export default function ChangePasswordModal({
   isOpen,
@@ -51,13 +52,18 @@ export default function ChangePasswordModal({
     try {
       setLoading(true);
 
-      const response = await api.post("/auth/change-worker-password",
-        {
-          currentPassword,
-          newPassword,
-        }
-      );
+      // const response = await api.post("/auth/change-worker-password",
+      //   {
+      //     currentPassword,
+      //     newPassword,
+      //   }
+      // );
 
+      const response = await AuthService.changeWorkerPassword({
+        currentPassword,
+        newPassword,
+      });
+      
       if (response.data.success) {
         toast.success("Password changed successfully");
 
@@ -72,14 +78,14 @@ export default function ChangePasswordModal({
 
       const message =
         error &&
-        typeof error === "object" &&
-        "response" in error &&
-        error.response &&
-        typeof error.response === "object" &&
-        "data" in error.response &&
-        error.response.data &&
-        typeof error.response.data === "object" &&
-        "message" in error.response.data
+          typeof error === "object" &&
+          "response" in error &&
+          error.response &&
+          typeof error.response === "object" &&
+          "data" in error.response &&
+          error.response.data &&
+          typeof error.response.data === "object" &&
+          "message" in error.response.data
           ? String(error.response.data.message)
           : "Failed to change password";
 

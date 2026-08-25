@@ -186,8 +186,7 @@ export default function ChangePasswordModal({
     try {
       setLoading(true);
 
-      const response = await api.post(
-        "/auth/change-user-password",
+      const response = await api.post("/auth/change-user-password",
         {
           currentPassword,
           newPassword,

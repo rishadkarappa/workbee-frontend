@@ -92,6 +92,11 @@ export const AuthService = {
         return api.post(AUTH_ENDPOINTS.AUTH.WORKER.LOGIN, data)
     },
 
+    //change worker pass
+    changeWorkerPassword: (data: { currentPassword: string; newPassword: string; }) => {
+        return api.post(AUTH_ENDPOINTS.AUTH.WORKER.CHANGE_PASSWORD, data);
+    },
+
 }
 
 

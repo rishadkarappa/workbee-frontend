@@ -26,6 +26,7 @@ export const AUTH_ENDPOINTS = {
 
         WORKER: {
             LOGIN: "/auth/worker-login",
+            CHANGE_PASSWORD: "/auth/change-worker-password"
         },
     },
 };

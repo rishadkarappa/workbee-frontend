@@ -141,7 +141,7 @@ export default function WorkerAccountSettings() {
     : "—";
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-6 p-4">
+    <div className="mx-auto w-full space-y-6 p-4">
       {/* ---------- header card ---------- */}
       <div className="flex flex-col gap-6 rounded-xl border border-gray-200 bg-white p-6 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-5">
