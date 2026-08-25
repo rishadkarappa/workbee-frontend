@@ -1,29 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
-import { Camera } from "lucide-react";
+import { Camera, Mail, MapPin, Calendar, Briefcase } from "lucide-react";
 import { toast } from "sonner";
 
 import { WorkService } from "@/services/work-service";
-// import ChangePasswordModal from "./modals/change-password-modal";
+import ChangePasswordModal from "./modals/change-password-modal";
+import type { WorkerProfileData } from "./types/types";
 
-interface WorkerProfileData {
-  _id: string;
-  name: string;
-  email: string;
-  phone: string;
-  location: string;
-  workType: string;
-  preferredWorks: string[];
-  workerProfileImage?: string;
-  workerProfileImagePublicId?: string;
-  createdAt: string;
-}
+const TABS = ["Personal", "Work Info", "Security", "Notifications"] as const;
+type Tab = (typeof TABS)[number];
 
 export default function WorkerAccountSettings() {
   const [worker, setWorker] = useState<WorkerProfileData | null>(null);
 
   const [uploading, setUploading] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<Tab>("Personal");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -55,11 +47,7 @@ export default function WorkerAccountSettings() {
 
     if (!file) return;
 
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-    ];
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
 
     if (!allowedTypes.includes(file.type)) {
       toast.warning("Only JPG, PNG and WEBP images are allowed");
@@ -77,16 +65,10 @@ export default function WorkerAccountSettings() {
       setUploading(true);
 
       // 1. Get signed Cloudinary upload data from Work Service
-      const signatureResponse =
-        await WorkService.getUploadSign();
+      const signatureResponse = await WorkService.getUploadSign();
 
-      const {
-        signature,
-        timestamp,
-        apiKey,
-        cloudName,
-        folder,
-      } = signatureResponse.data.data;
+      const { signature, timestamp, apiKey, cloudName, folder } =
+        signatureResponse.data.data;
 
       // 2. Upload directly to Cloudinary
       const formData = new FormData();
@@ -99,22 +81,15 @@ export default function WorkerAccountSettings() {
 
       const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
 
-      const cloudinaryResponse = await axios.post(
-        cloudinaryUrl,
-        formData
-      );
+      const cloudinaryResponse = await axios.post(cloudinaryUrl, formData);
 
-      const {
-        secure_url,
-        public_id,
-      } = cloudinaryResponse.data;
+      const { secure_url, public_id } = cloudinaryResponse.data;
 
       // 3. Save Cloudinary information in Worker DB
-      const saveResponse =
-        await WorkService.saveImageUrlFromCloud({
-          imageUrl: secure_url,
-          publicId: public_id,
-        });
+      const saveResponse = await WorkService.saveImageUrlFromCloud({
+        imageUrl: secure_url,
+        publicId: public_id,
+      });
 
       if (saveResponse.data.success) {
         setWorker((prev) =>
@@ -143,8 +118,10 @@ export default function WorkerAccountSettings() {
 
   if (!worker) {
     return (
-      <div className="p-6">
-        Loading worker profile...
+      <div className="mx-auto w-full max-w-5xl space-y-6 p-4">
+        <div className="rounded-xl border border-gray-200 bg-white p-6 text-sm text-gray-500">
+          Loading worker profile...
+        </div>
       </div>
     );
   }
@@ -156,27 +133,21 @@ export default function WorkerAccountSettings() {
     .join("")
     .toUpperCase();
 
+  const joinedDate = worker.createdAt
+    ? new Date(worker.createdAt).toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric",
+      })
+    : "—";
+
   return (
-    <div className="max-w-3xl space-y-6 p-6">
-
-      {/* Profile */}
-      <div className="rounded-xl border bg-white p-6">
-
-        <h1 className="text-xl font-semibold">
-          Worker Account Settings
-        </h1>
-
-        <p className="mt-1 text-sm text-gray-500">
-          Manage your worker profile and account.
-        </p>
-
-        {/* Profile image */}
-        <div className="mt-6 flex items-center gap-4">
-
-          <div className="relative h-20 w-20">
-
-            <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gray-100 text-xl font-semibold">
-
+    <div className="mx-auto w-full max-w-5xl space-y-6 p-4">
+      {/* ---------- header card ---------- */}
+      <div className="flex flex-col gap-6 rounded-xl border border-gray-200 bg-white p-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-5">
+          {/* avatar */}
+          <div className="relative h-20 w-20 flex-shrink-0">
+            <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gray-100 text-xl font-medium text-gray-500">
               {worker.workerProfileImage ? (
                 <img
                   src={worker.workerProfileImage}
@@ -184,23 +155,22 @@ export default function WorkerAccountSettings() {
                   className="h-full w-full object-cover"
                 />
               ) : (
-                initials
+                <span>{initials}</span>
               )}
-
             </div>
 
             <button
               type="button"
               onClick={handleProfileImageClick}
-              className="absolute bottom-0 right-0 rounded-full border bg-white p-2 shadow"
               disabled={uploading}
+              className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50"
             >
-              <Camera size={15} />
+              <Camera className="h-3.5 w-3.5 text-gray-600" />
             </button>
 
             {uploading && (
-              <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 text-xs text-white">
-                Uploading
+              <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 text-[10px] text-white">
+                Uploading...
               </div>
             )}
 
@@ -213,101 +183,159 @@ export default function WorkerAccountSettings() {
             />
           </div>
 
+          {/* name + meta */}
           <div>
-            <h2 className="font-semibold">
-              {worker.name}
-            </h2>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold text-gray-900">
+                {worker.name}
+              </h1>
+              <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+                Worker
+              </span>
+            </div>
+            <p className="mt-0.5 text-sm text-gray-500">{worker.workType}</p>
 
-            <p className="text-sm text-gray-500">
-              {worker.workType}
-            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-gray-500">
+              <span className="flex items-center gap-1.5">
+                <Mail className="h-3.5 w-3.5" />
+                {worker.email ?? "—"}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5" />
+                {worker.location ?? "—"}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5" />
+                Joined {joinedDate}
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Worker information */}
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
-
-          <ProfileField
-            label="Name"
-            value={worker.name}
-          />
-
-          <ProfileField
-            label="Email"
-            value={worker.email}
-          />
-
-          <ProfileField
-            label="Phone"
-            value={String(worker.phone)}
-          />
-
-          <ProfileField
-            label="Location"
-            value={worker.location}
-          />
-
-          <ProfileField
-            label="Work Type"
-            value={worker.workType}
-          />
-
-          <ProfileField
-            label="Preferred Works"
-            value={worker.preferredWorks?.join(", ") || "—"}
-          />
-
-        </div>
-      </div>
-
-      {/* Security */}
-      <div className="rounded-xl border bg-white p-6">
-
-        <h2 className="text-lg font-semibold">
-          Security
-        </h2>
-
-        <p className="mt-1 text-sm text-gray-500">
-          Manage your account password.
-        </p>
-
         <button
           type="button"
-          onClick={() => setIsPasswordModalOpen(true)}
-          className="mt-4 rounded-lg bg-gray-900 px-4 py-2 text-sm text-white"
+          className="h-fit rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
         >
-          Change Password
+          Edit Profile
         </button>
-
       </div>
 
-      {/* <ChangePasswordModal
+      {/* ---------- tabs ---------- */}
+      <div className="flex gap-1 rounded-lg bg-gray-100 p-1">
+        {TABS.map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${
+              activeTab === tab
+                ? "bg-white text-gray-900 shadow-sm"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
+      {/* ---------- tab content ---------- */}
+      {activeTab === "Personal" && (
+        <div className="rounded-xl border border-gray-200 bg-white p-6">
+          <h2 className="text-lg font-bold text-gray-900">
+            Personal Information
+          </h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Your personal details on file.
+          </p>
+
+          <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <Field label="Name" value={worker.name} disabled />
+            <Field label="Email" value={worker.email} disabled />
+            <Field label="Phone" value={String(worker.phone ?? "—")} disabled />
+            <Field label="Location" value={worker.location} disabled />
+          </div>
+
+          <div className="mt-6 border-t border-gray-100 pt-6">
+            <h3 className="text-sm font-semibold text-gray-900">
+              Change Password
+            </h3>
+            <button
+              onClick={() => setIsPasswordModalOpen(true)}
+              className="mt-3 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+            >
+              Change Password
+            </button>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "Work Info" && (
+        <div className="rounded-xl border border-gray-200 bg-white p-6">
+          <div className="flex items-center gap-2">
+            <Briefcase className="h-4 w-4 text-gray-500" />
+            <h2 className="text-lg font-bold text-gray-900">Work Details</h2>
+          </div>
+          <p className="mt-1 text-sm text-gray-500">
+            The type of work and preferences tied to your worker profile.
+          </p>
+
+          <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <Field label="Work Type" value={worker.workType} disabled />
+            <Field
+              label="Preferred Works"
+              value={worker.preferredWorks?.join(", ") || "—"}
+              disabled
+            />
+          </div>
+        </div>
+      )}
+
+      {activeTab === "Security" && <PlaceholderPanel title="Security" />}
+      {activeTab === "Notifications" && (
+        <PlaceholderPanel title="Notifications" />
+      )}
+
+      <ChangePasswordModal
         isOpen={isPasswordModalOpen}
         setIsOpen={setIsPasswordModalOpen}
-      /> */}
-
+      />
     </div>
   );
 }
 
-function ProfileField({
+function Field({
   label,
   value,
+  onChange,
+  disabled,
 }: {
   label: string;
   value: string;
+  onChange?: (v: string) => void;
+  disabled?: boolean;
 }) {
   return (
     <div>
-      <label className="mb-1 block text-sm font-medium text-gray-700">
+      <label className="mb-1.5 block text-sm font-medium text-gray-700">
         {label}
       </label>
-
       <input
+        type="text"
         value={value}
-        disabled
-        className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600"
+        disabled={disabled}
+        onChange={(e) => onChange?.(e.target.value)}
+        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none focus:border-gray-400 disabled:bg-gray-50 disabled:text-gray-500"
       />
+    </div>
+  );
+}
+
+function PlaceholderPanel({ title }: { title: string }) {
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+      <p className="mt-1 text-sm text-gray-500">
+        This section isn't wired up yet — coming soon.
+      </p>
     </div>
   );
 }

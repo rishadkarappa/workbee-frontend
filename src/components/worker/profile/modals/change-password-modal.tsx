@@ -1,128 +1,108 @@
-import { api } from "@/services/axios-instance/axios-instance"
-import { XIcon } from "lucide-react"
-import React, { useState } from "react"
-import { toast } from "sonner"
-
-interface ModalProps {
-    isOpen:boolean;
-    setIsOpen:React.Dispatch<React.SetStateAction<boolean>>
+interface ChangePasswordModalProps {
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
 }
 
-export default function ChangePasswordModal({ isOpen, setIsOpen }: ModalProps) {
+export default function ChangePasswordModal({
+  isOpen,
+  setIsOpen,
+}: ChangePasswordModalProps) {
 
-    const [currentPassword, setCurrentPassword] = useState("")
-    const [newPassword, setNewPassword] = useState("")
-    const [confirmNewPassword, setConfirmNewPassword] = useState("")
+  if (!isOpen) return null;
 
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
+    // password change API will come here
+  };
 
-    // change password api
-    const changePassowrd = async (e:React.SubmitEvent<HTMLFormElement>) => {
-        e.preventDefault()
-        try {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
 
-            const resp = await api.post('/auth/change-user-password', {
-                currentPassword,
-                newPassword
-            })
-            if (resp.data.success) {
-                console.log(resp.data.data)
-                console.log(resp.data)
-                toast.success("Password had been updated")
-                setIsOpen(false)
-            } else {
+      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
 
-                toast.warning("Somethings went wrong!")
-            }
+        {/* Header */}
+        <div className="mb-5 flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">
+              Change Password
+            </h2>
 
-        } catch (error) {
-            toast.error("Cant able to change password")
-            console.log(error)
-        }
-    }
+            <p className="mt-1 text-sm text-gray-500">
+              Update your account password.
+            </p>
+          </div>
 
-    if (!isOpen) {
-        return null;
-    }
-
-    return (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/50">
-            <div className="relative w-full max-w-md rounded-lg bg-white p-8">
-
-                {/* close X button */}
-                <button
-                    type="button"
-                    onClick={() => setIsOpen(false)}
-                    className="absolute right-4 top-4 rounded-full p-1 text-gray-500 hover:bg-gray-100 hover:text-black"
-                >
-                    <XIcon size={20} />
-                </button>
-
-                {/* Heading */}
-                <h2 className="mb-6 text-xl font-semibold">
-                    Change Password
-                </h2>
-
-                <form
-                    onSubmit={changePassowrd}
-                    className="flex flex-col gap-4"
-                >
-                    {/* Current password */}
-                    <div className="flex flex-col gap-1">
-                        <label className="text-sm font-medium">
-                            Current Password
-                        </label>
-
-                        <input
-                            type="password"
-                            placeholder="Enter current password"
-                            value={currentPassword}
-                            onChange={(e) => setCurrentPassword(e.target.value)}
-                            className="rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-gray-900"
-                        />
-                    </div>
-
-                    {/* New password */}
-                    <div className="flex flex-col gap-1">
-                        <label className="text-sm font-medium">
-                            New Password
-                        </label>
-
-                        <input
-                            type="password"
-                            placeholder="Enter new password"
-                            value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
-                            className="rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-gray-900"
-                        />
-                    </div>
-
-                    {/* Confirm password */}
-                    <div className="flex flex-col gap-1">
-                        <label className="text-sm font-medium">
-                            Confirm New Password
-                        </label>
-
-                        <input
-                            type="password"
-                            placeholder="Confirm new password"
-                            value={confirmNewPassword}
-                            onChange={(e) => setConfirmNewPassword(e.target.value)}
-                            className="rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-gray-900"
-                        />
-                    </div>
-
-                    {/* Submit */}
-                    <button
-                        type="submit"
-                        className="mt-2 rounded-lg bg-gray-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-gray-800"
-                    >
-                        Change Password
-                    </button>
-                </form>
-
-            </div>
+          <button
+            type="button"
+            onClick={() => setIsOpen(false)}
+            className="text-xl text-gray-400 hover:text-gray-600"
+          >
+            ×
+          </button>
         </div>
-    )
-}
 
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              Current Password
+            </label>
+
+            <input
+              type="password"
+              placeholder="Enter current password"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-500"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              New Password
+            </label>
+
+            <input
+              type="password"
+              placeholder="Enter new password"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-500"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              Confirm New Password
+            </label>
+
+            <input
+              type="password"
+              placeholder="Confirm new password"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-500"
+            />
+          </div>
+
+          {/* Buttons */}
+          <div className="flex justify-end gap-3 pt-2">
+
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="submit"
+              className="rounded-lg bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-800"
+            >
+              Change Password
+            </button>
+
+          </div>
+
+        </form>
+      </div>
+    </div>
+  );
+}
