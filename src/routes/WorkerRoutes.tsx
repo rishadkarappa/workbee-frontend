@@ -12,7 +12,7 @@ import Works from "@/pages/worker/Works";
 import ClientMessages from "@/components/worker/messages/messages";
 import ActiveWorks from "@/components/worker/active-works";
 import WorkerWallet from "@/components/worker/wallet";
-import WorkerAccountSettings from "@/components/worker/account-settings";
+import WorkerAccountSettings from "@/components/worker/profile/account-settings";
 
 const WorkerRoutes = () => {
     return (
