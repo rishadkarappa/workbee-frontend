@@ -51,8 +51,7 @@ export default function ChangePasswordModal({
     try {
       setLoading(true);
 
-      const response = await api.post(
-        "/auth/change-worker-password",
+      const response = await api.post("/auth/change-worker-password",
         {
           currentPassword,
           newPassword,
@@ -98,7 +97,7 @@ export default function ChangePasswordModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[390px]">
 
         {/* <BackButton/> */}
 
