@@ -98,6 +98,24 @@ export const WorkService = {
         return api.get(WORK_ENDPOINTS.GET_WORKER_ASSIGNED_WORKS);
     },
 
+    getWorkerProfile: () => {
+        return api.get("/work/worker/profile");
+    },
+
+    getUploadSign: () => {
+        return api.get("/work/worker/profile-image/upload-signature");
+    },
+
+    saveImageUrlFromCloud: (data: {
+        imageUrl: string;
+        publicId: string;
+    }) => {
+        return api.patch(
+            "/work/worker/profile-image",
+            data
+        );
+    },
+
 
     // askWorkerReview: () => {
     //     return api.post('/work/review-of-worker',{

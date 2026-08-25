@@ -6,7 +6,6 @@ import { Camera, Mail, MapPin, Calendar } from "lucide-react";
 import type { ExtraProfileData, UserProfileData } from "./types/types";
 import { AuthService } from "@/services/auth-service";
 
-
 const TABS = ["Personal", "Account", "Security", "Notifications"] as const;
 type Tab = (typeof TABS)[number];
 

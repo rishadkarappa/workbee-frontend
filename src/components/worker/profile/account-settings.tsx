@@ -1,124 +1,315 @@
+import { useEffect, useRef, useState } from "react";
+import axios from "axios";
+import { Camera } from "lucide-react";
+import { toast } from "sonner";
 
-// export default function WorkerAccountSettings() {
-//   return (
-//     <div>
-//       <h1>Worker Account Settings</h1>
-//     </div>
-//   )
-// }
+import { WorkService } from "@/services/work-service";
+import { AuthService } from "@/services/auth-service";
+// import ChangePasswordModal from "./modals/change-password-modal";
 
-
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
-import { Switch } from "@/components/ui/switch"
-import { Textarea } from "@/components/ui/textarea"
+interface WorkerProfileData {
+  _id: string;
+  name: string;
+  email: string;
+  phone: string;
+  location: string;
+  workType: string;
+  preferredWorks: string[];
+  profileImage?: string;
+  profileImagePublicId?: string;
+  createdAt: string;
+}
 
 export default function WorkerAccountSettings() {
-  return (
-    <div className="container max-w-4xl py-10 px-4 sm:px-6 lg:px-8">
-      {/* Header section */}
-      <div className="space-y-0.5 mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">Account Profile</h1>
-        <p className="text-muted-foreground text-sm">
-          Manage your public avatar, personal bio, and notification settings.
-        </p>
+  const [worker, setWorker] = useState<WorkerProfileData | null>(null);
+
+  const [uploading, setUploading] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const getWorkerProfile = async () => {
+      try {
+        const response = await WorkService.getWorkerProfile();
+
+        if (response.data.success) {
+          setWorker(response.data.data);
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to load worker profile");
+      }
+    };
+
+    getWorkerProfile();
+  }, []);
+
+  const handleProfileImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      toast.warning("Only JPG, PNG and WEBP images are allowed");
+      return;
+    }
+
+    const maxSize = 5 * 1024 * 1024;
+
+    if (file.size > maxSize) {
+      toast.error("Image must be smaller than 5MB");
+      return;
+    }
+
+    try {
+      setUploading(true);
+
+      // 1. Get signed Cloudinary upload data from Work Service
+      const signatureResponse =
+        await WorkService.getUploadSign();
+
+      const {
+        signature,
+        timestamp,
+        apiKey,
+        cloudName,
+        folder,
+      } = signatureResponse.data.data;
+
+      // 2. Upload directly to Cloudinary
+      const formData = new FormData();
+
+      formData.append("file", file);
+      formData.append("api_key", apiKey);
+      formData.append("timestamp", String(timestamp));
+      formData.append("signature", signature);
+      formData.append("folder", folder);
+
+      const cloudinaryUrl =
+        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
+
+      const cloudinaryResponse = await axios.post(
+        cloudinaryUrl,
+        formData
+      );
+
+      const {
+        secure_url,
+        public_id,
+      } = cloudinaryResponse.data;
+
+      // 3. Save Cloudinary information in Worker DB
+      const saveResponse =
+        await WorkService.saveImageUrlFromCloud({
+          imageUrl: secure_url,
+          publicId: public_id,
+        });
+
+      if (saveResponse.data.success) {
+        setWorker((prev) =>
+          prev
+            ? {
+                ...prev,
+                profileImage: secure_url,
+                profileImagePublicId: public_id,
+              }
+            : prev
+        );
+
+        toast.success("Profile image updated successfully");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to upload profile image");
+    } finally {
+      setUploading(false);
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  if (!worker) {
+    return (
+      <div className="p-6">
+        Loading worker profile...
       </div>
-      <Separator className="my-6" />
+    );
+  }
 
-      <div className="grid gap-8 md:grid-cols-[1fr_250px] items-start">
-        {/* Main Forms Section */}
-        <div className="space-y-6">
-          {/* Personal Info Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Public Profile</CardTitle>
-              <CardDescription>
-                This information will be displayed publicly to other users.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="first-name">First name</Label>
-                  <Input id="first-name" defaultValue="Alex" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="last-name">Last name</Label>
-                  <Input id="last-name" defaultValue="Morgan" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
-                <Input id="username" defaultValue="alexmorgan" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="bio">Biography</Label>
-                <Textarea 
-                  id="bio" 
-                  placeholder="Tell us a little bit about yourself..." 
-                  className="min-h-[100px] resize-none"
-                  defaultValue="Full Stack Developer passionate about responsive layouts and component architecture."
+  const initials = worker.name
+    ?.split(" ")
+    .map((name) => name[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
+  return (
+    <div className="max-w-3xl space-y-6 p-6">
+
+      {/* Profile */}
+      <div className="rounded-xl border bg-white p-6">
+
+        <h1 className="text-xl font-semibold">
+          Worker Account Settings
+        </h1>
+
+        <p className="mt-1 text-sm text-gray-500">
+          Manage your worker profile and account.
+        </p>
+
+        {/* Profile image */}
+        <div className="mt-6 flex items-center gap-4">
+
+          <div className="relative h-20 w-20">
+
+            <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gray-100 text-xl font-semibold">
+
+              {worker.profileImage ? (
+                <img
+                  src={worker.profileImage}
+                  alt="Worker profile"
+                  className="h-full w-full object-cover"
                 />
-              </div>
-            </CardContent>
-            <CardFooter className="flex justify-end gap-2 border-t px-6 py-4">
-              <Button variant="outline">Cancel</Button>
-              <Button>Save Changes</Button>
-            </CardFooter>
-          </Card>
+              ) : (
+                initials
+              )}
 
-          {/* Preferences Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Preferences</CardTitle>
-              <CardDescription>
-                Configure how you want to interact with the platform.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between space-x-2 border rounded-lg p-4">
-                <div className="space-y-0.5">
-                  <Label htmlFor="public-profile">Public visibility</Label>
-                  <p className="text-sm text-muted-foreground">Allow search engines to index your profile.</p>
-                </div>
-                <Switch id="public-profile" defaultChecked />
+            </div>
+
+            <button
+              type="button"
+              onClick={handleProfileImageClick}
+              className="absolute bottom-0 right-0 rounded-full border bg-white p-2 shadow"
+              disabled={uploading}
+            >
+              <Camera size={15} />
+            </button>
+
+            {uploading && (
+              <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 text-xs text-white">
+                Uploading
               </div>
-              <div className="flex items-center justify-between space-x-2 border rounded-lg p-4">
-                <div className="space-y-0.5">
-                  <Label htmlFor="email-notifications">Email notifications</Label>
-                  <p className="text-sm text-muted-foreground">Receive weekly updates about community activity.</p>
-                </div>
-                <Switch id="email-notifications" />
-              </div>
-            </CardContent>
-          </Card>
+            )}
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </div>
+
+          <div>
+            <h2 className="font-semibold">
+              {worker.name}
+            </h2>
+
+            <p className="text-sm text-gray-500">
+              {worker.workType}
+            </p>
+          </div>
         </div>
 
-        {/* Sidebar Avatar Panel */}
-        <Card className="md:sticky md:top-6 order-first md:order-last">
-          <CardHeader className="text-center">
-            <CardTitle className="text-sm font-medium">Profile Image</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center gap-4">
-            <Avatar className="h-24 w-24">
-              <AvatarImage src="https://unsplash.com" alt="Avatar" />
-              <AvatarFallback>AM</AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col w-full gap-2">
-              <Button variant="outline" size="sm" className="w-full">
-                Upload image
-              </Button>
-              <Button variant="ghost" size="sm" className="w-full text-destructive hover:text-destructive hover:bg-destructive/10">
-                Remove
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Worker information */}
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+
+          <ProfileField
+            label="Name"
+            value={worker.name}
+          />
+
+          <ProfileField
+            label="Email"
+            value={worker.email}
+          />
+
+          <ProfileField
+            label="Phone"
+            value={String(worker.phone)}
+          />
+
+          <ProfileField
+            label="Location"
+            value={worker.location}
+          />
+
+          <ProfileField
+            label="Work Type"
+            value={worker.workType}
+          />
+
+          <ProfileField
+            label="Preferred Works"
+            value={worker.preferredWorks?.join(", ") || "—"}
+          />
+
+        </div>
       </div>
+
+      {/* Security */}
+      <div className="rounded-xl border bg-white p-6">
+
+        <h2 className="text-lg font-semibold">
+          Security
+        </h2>
+
+        <p className="mt-1 text-sm text-gray-500">
+          Manage your account password.
+        </p>
+
+        <button
+          type="button"
+          onClick={() => setIsPasswordModalOpen(true)}
+          className="mt-4 rounded-lg bg-gray-900 px-4 py-2 text-sm text-white"
+        >
+          Change Password
+        </button>
+
+      </div>
+
+      {/* <ChangePasswordModal
+        isOpen={isPasswordModalOpen}
+        setIsOpen={setIsPasswordModalOpen}
+      /> */}
+
     </div>
-  )
+  );
+}
+
+function ProfileField({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div>
+      <label className="mb-1 block text-sm font-medium text-gray-700">
+        {label}
+      </label>
+
+      <input
+        value={value}
+        disabled
+        className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600"
+      />
+    </div>
+  );
 }
