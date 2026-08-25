@@ -11,3 +11,10 @@ export interface WorkerProfileData {
   workerProfileImagePublicId?: string;
   createdAt: string;
 }
+
+// modal props
+
+export interface ChangePasswordModalProps {
+isOpen: boolean;
+setIsOpen: (isOpen: boolean) => void;
+}
