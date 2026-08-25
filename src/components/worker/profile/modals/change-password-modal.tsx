@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
-import { api } from "@/services/axios-instance/axios-instance";
 import type { ChangePasswordModalProps } from "../types/types";
 import { AuthService } from "@/services/auth-service";
 
@@ -52,18 +51,11 @@ export default function ChangePasswordModal({
     try {
       setLoading(true);
 
-      // const response = await api.post("/auth/change-worker-password",
-      //   {
-      //     currentPassword,
-      //     newPassword,
-      //   }
-      // );
-
       const response = await AuthService.changeWorkerPassword({
         currentPassword,
         newPassword,
       });
-      
+
       if (response.data.success) {
         toast.success("Password changed successfully");
 

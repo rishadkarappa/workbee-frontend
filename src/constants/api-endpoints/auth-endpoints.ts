@@ -17,6 +17,7 @@ export const AUTH_ENDPOINTS = {
         GET_USER_PROFILE_DETAILS: "/auth/get-user-profile-settings",
         GET_UPLOAD_SIGN: "/auth/profile-image/upload-signature",
         SAVE_IMAGE_URL_FROM_CLOUD: "/auth/profile-image",
+        CHANGE_PASSWORD: "/auth/change-user-password",
 
         ADMIN: {
             LOGIN: "/auth/admin/login",
