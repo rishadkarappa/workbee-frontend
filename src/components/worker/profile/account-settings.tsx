@@ -4,7 +4,6 @@ import { Camera } from "lucide-react";
 import { toast } from "sonner";
 
 import { WorkService } from "@/services/work-service";
-import { AuthService } from "@/services/auth-service";
 // import ChangePasswordModal from "./modals/change-password-modal";
 
 interface WorkerProfileData {
@@ -15,8 +14,8 @@ interface WorkerProfileData {
   location: string;
   workType: string;
   preferredWorks: string[];
-  profileImage?: string;
-  profileImagePublicId?: string;
+  workerProfileImage?: string;
+  workerProfileImagePublicId?: string;
   createdAt: string;
 }
 
@@ -98,8 +97,7 @@ export default function WorkerAccountSettings() {
       formData.append("signature", signature);
       formData.append("folder", folder);
 
-      const cloudinaryUrl =
-        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
+      const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
 
       const cloudinaryResponse = await axios.post(
         cloudinaryUrl,
@@ -123,8 +121,8 @@ export default function WorkerAccountSettings() {
           prev
             ? {
                 ...prev,
-                profileImage: secure_url,
-                profileImagePublicId: public_id,
+                workerProfileImage: secure_url,
+                workerProfileImagePublicId: public_id,
               }
             : prev
         );
@@ -179,9 +177,9 @@ export default function WorkerAccountSettings() {
 
             <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gray-100 text-xl font-semibold">
 
-              {worker.profileImage ? (
+              {worker.workerProfileImage ? (
                 <img
-                  src={worker.profileImage}
+                  src={worker.workerProfileImage}
                   alt="Worker profile"
                   className="h-full w-full object-cover"
                 />

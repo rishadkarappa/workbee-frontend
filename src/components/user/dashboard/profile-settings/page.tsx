@@ -16,7 +16,7 @@ export default function ProfileSettings() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("Personal");
 
-  // ---- dummy data until these fields have real backing endpoints ----
+  //  dummy data until these fields have real backing endpoints ----
   const [extra, setExtra] = useState<ExtraProfileData>({
     firstName: "John",
     lastName: "Doe",
