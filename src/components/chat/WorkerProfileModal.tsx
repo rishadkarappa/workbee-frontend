@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { X, Star, User, CheckCircle2 } from 'lucide-react';
-import { WorkService } from '@/services/work-service';
 import { ReviewService } from '@/services/review-service';
 
 interface WorkerProfileStats {

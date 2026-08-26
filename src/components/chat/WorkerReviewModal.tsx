@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Star, X } from 'lucide-react';
-import { WorkService } from '@/services/work-service';
 import { ReviewService } from '@/services/review-service';
 
 interface WorkerReviewModalProps {
@@ -79,7 +78,7 @@ export default function WorkerReviewModal({ open, onClose, workId, workerId, wor
 
         <div className="flex gap-2 mt-4">
           <button onClick={onClose} className="flex-1 py-2 rounded-xl border text-sm font-semibold text-gray-600 hover:bg-gray-50">
-            Skip
+            Maybe Latar
           </button>
           <button
             onClick={handleSubmit}
