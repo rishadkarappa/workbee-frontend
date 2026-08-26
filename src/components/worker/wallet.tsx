@@ -263,7 +263,7 @@ export default function WorkerWallet() {
   return (
     <div className="space-y-6 p-4 sm:p-6 w-full max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <Wallet className="w-6 h-6" />
@@ -273,11 +273,8 @@ export default function WorkerWallet() {
             Earnings, pending payouts, and work history
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchWallet}>
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Refresh
-        </Button>
-      </div>
+        
+      </div> */}
 
       {/* Balance Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -346,6 +343,12 @@ export default function WorkerWallet() {
         </div>
       )}
 
+      {/* refresh button */}
+      <Button variant="outline" size="sm" onClick={fetchWallet}>
+        <RefreshCw className="w-4 h-4 mr-2" />
+        Refresh
+      </Button>
+
       {/* Transactions */}
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-3">
@@ -359,8 +362,8 @@ export default function WorkerWallet() {
                   key={f}
                   onClick={() => setFilter(f)}
                   className={`px-3 py-1 rounded-full text-xs font-medium transition-colors capitalize ${filter === f
-                      ? "bg-gray-900 text-white"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    ? "bg-gray-900 text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                     }`}
                 >
                   {f}
