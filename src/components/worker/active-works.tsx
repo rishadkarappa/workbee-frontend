@@ -473,12 +473,13 @@ export default function ActiveWorks() {
 
   return (
     <div className="space-y-6 p-6 w-full">
-      <div>
+      {/* active work page heading */}
+      {/* <div>
         <h1 className="text-3xl font-bold tracking-tight">Active Works</h1>
         <p className="text-muted-foreground mt-2">
           {works.length} assigned work{works.length !== 1 ? 's' : ''} — update progress as you go
         </p>
-      </div>
+      </div> */}
 
       <div className="grid gap-4 w-full">
         {works.map(work => (
