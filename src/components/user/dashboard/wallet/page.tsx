@@ -278,7 +278,8 @@ export default function UserWallet() {
     <div className="space-y-6 p-4 sm:p-6 w-full max-w-6xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
+        
+        {/* <div>
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
             <Wallet className="w-6 h-6" />
             My Wallet
@@ -286,9 +287,10 @@ export default function UserWallet() {
           <p className="text-sm text-muted-foreground mt-1">
             Payment history and spending overview
           </p>
-        </div>
+        </div> */}
+
         <Button variant="outline" size="sm" onClick={fetchWallet}>
-          <RefreshCw className="w-4 h-4 mr-2" />
+          <RefreshCw className="mr-5 w-4 h-4 mr-2" />
           Refresh
         </Button>
       </div>
