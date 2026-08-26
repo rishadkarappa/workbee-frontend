@@ -14,6 +14,9 @@ import { PaymentService } from "@/services/payment-service"
 import { BidService } from '@/services/bid-service';
 import CounterOfferModal from './modals/counter-offer-modal';
 import { getErrorMessage } from '@/utils/error-helper';
+import WorkerReviewModal from '@/components/chat/WorkerReviewModal';
+import WorkerProfileModal from '@/components/chat/WorkerProfileModal';
+import { ReviewService } from '@/services/review-service';
 
 interface Message {
   id: string;
@@ -91,6 +94,13 @@ export default function ClientMessages() {
 
   const [respondedConfirms, setRespondedConfirms] = useState<Set<string>>(new Set());
 
+  //review states
+  const [reviewModalData, setReviewModalData] = useState<{
+    workId: string; workerId: string; workerName: string; workTitle: string;
+  } | null>(null);
+  const [reviewPromptedWorks, setReviewPromptedWorks] = useState<Set<string>>(new Set());
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+
   const user = AuthHelper.getUser();
   const token = AuthHelper.getAccessToken();
   const userId = user?.id || AuthHelper.getUserId();
@@ -100,7 +110,7 @@ export default function ClientMessages() {
   const selectedChatRef = useRef<Chat | null>(null);
   const isInitialLoadRef = useRef(false);
 
-  const processBidPayment = async (workId: string, workerId: string, title: string, amount: number, 
+  const processBidPayment = async (workId: string, workerId: string, title: string, amount: number,
     onSuccess: () => Promise<void>
   ) => {
     const loaded = await loadRazorpayScript();
@@ -197,6 +207,41 @@ export default function ClientMessages() {
   const scrollToBottomSmooth = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
+
+  useEffect(() => {
+    if (!selectedChat) return;
+
+    const checkForCompletedWork = async () => {
+      for (let i = messages.length - 1; i >= 0; i--) {
+        const msg = messages[i];
+        if (msg.type !== 'system') continue;
+        const parsed = parseSystemMessage(msg.content);
+        if (parsed?.type === 'WORK_PROGRESS_UPDATE' && parsed.progress === 'completed') {
+          const workId = parsed.workId;
+          if (reviewPromptedWorks.has(workId)) return;
+
+          try {
+            const res = await ReviewService.checkReviewExists(workId);
+            setReviewPromptedWorks(prev => new Set(prev).add(workId));
+            if (!res.data.data.exists) {
+              const otherUser = getOtherParticipant(selectedChat);
+              setReviewModalData({
+                workId,
+                workerId: selectedChat.participants.workerId,
+                workerName: otherUser?.name || 'Worker',
+                workTitle: parsed.workTitle,
+              });
+            }
+          } catch {
+            // will retry on next message change
+          }
+          return; // only the most recent completed work matters
+        }
+      }
+    };
+
+    checkForCompletedWork();
+  }, [messages, selectedChat, reviewPromptedWorks]);
 
   useEffect(() => {
     if (messages.length === 0) return;
@@ -439,7 +484,7 @@ export default function ClientMessages() {
               });
 
               await WorkService.updateWork(workId, { status: "assigned", workerId });
-              
+
               await socketService.confirmResponse({
                 chatId: selectedChat.id,
                 workId,
@@ -596,7 +641,7 @@ export default function ClientMessages() {
               <button onClick={() => navigate(-1)} className="lg:hidden p-2 hover:bg-gray-100 rounded-full">
                 <ArrowLeft className="w-5 h-5" />
               </button>
-              {(() => {
+              {/* {(() => {
                 const otherUser = getOtherParticipant(selectedChat);
                 return (
                   <>
@@ -612,6 +657,24 @@ export default function ClientMessages() {
                       {workTitle && <p className="text-sm text-gray-500">Regarding: {workTitle}</p>}
                     </div>
                   </>
+                );
+              })()} */}
+              {(() => {
+                const otherUser = getOtherParticipant(selectedChat);
+                return (
+                  <button onClick={() => setProfileModalOpen(true)} className="flex items-center gap-3 text-left hover:opacity-80">
+                    {otherUser?.avatar ? (
+                      <img src={otherUser.avatar} alt={otherUser.name} className="w-10 h-10 rounded-full" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
+                        <User className="w-5 h-5 text-gray-600" />
+                      </div>
+                    )}
+                    <div>
+                      <h3 className="font-semibold">{otherUser?.name || userName || 'Unknown User'}</h3>
+                      {workTitle && <p className="text-sm text-gray-500">Regarding: {workTitle}</p>}
+                    </div>
+                  </button>
                 );
               })()}
             </div>
@@ -755,8 +818,26 @@ export default function ClientMessages() {
           workerAskedPrice={activeBidPayload.amount}
         />
       )}
-    </div>
 
+      {reviewModalData && (
+        <WorkerReviewModal
+          open={!!reviewModalData}
+          onClose={() => setReviewModalData(null)}
+          workId={reviewModalData.workId}
+          workerId={reviewModalData.workerId}
+          workerName={reviewModalData.workerName}
+          workTitle={reviewModalData.workTitle}
+        />
+      )}
+
+      {selectedChat && (
+        <WorkerProfileModal
+          open={profileModalOpen}
+          onClose={() => setProfileModalOpen(false)}
+          workerId={selectedChat.participants.workerId}
+        />
+      )}
+    </div>
   );
 }
 
