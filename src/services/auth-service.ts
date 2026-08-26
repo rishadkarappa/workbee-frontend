@@ -61,6 +61,9 @@ export const AuthService = {
     changeUserPassword: (data: { currentPassword: string; newPassword: string; }) => {
         return api.post(AUTH_ENDPOINTS.AUTH.CHANGE_PASSWORD, data);
     },
+    getUserProfileById: (userId: string) => {
+        return api.get(AUTH_ENDPOINTS.AUTH.GET_USER_PROFILE_BY_ID(userId));
+    },
 
     // google Auth
     googleAuthLogin: (data: { credential: string }) => {

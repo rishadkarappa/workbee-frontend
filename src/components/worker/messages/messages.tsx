@@ -8,9 +8,10 @@ import { MediaUploadButton } from '@/components/chat/MediaUploadButton';
 import type { UploadedMedia } from '@/components/chat/MediaUploadButton';
 import { MediaMessage } from '@/components/chat/MediaMessage';
 import { SystemMessage } from '@/components/chat/SystemMessage';
-import { parseSystemMessage,isBidCardActionable } from '@/components/chat/system-message-utils';
+import { parseSystemMessage, isBidCardActionable } from '@/components/chat/system-message-utils';
 import AskBetterPriceModal from './modals/ask-better-price-modal';
 import { BidService } from '@/services/bid-service';
+import UserProfileModal from '@/components/chat/UserProfileModal';
 
 // types
 import type { Message, Chat } from './types/messages.types'
@@ -30,13 +31,15 @@ export default function WorkerMessages() {
   const [pendingMedia, setPendingMedia] = useState<UploadedMedia | null>(null);
   const [askConfirmLoading, setAskConfirmLoading] = useState(false);
   // ask better price bidding
-  const [askNewPriceLoading, ] = useState(false);
+  const [askNewPriceLoading,] = useState(false);
   const [AskNewPriceModalOpen, setAskNewPriceModalOpen] = useState(false);
   // Track which workIds have already had a ask new price request sent in this chat
   const [sentAskNewPriceRequests, setSentAskNewPriceRequests] = useState<Set<string>>(new Set());
 
   // Track which workIds have already had a confirm request sent in this chat
   const [sentConfirmRequests, setSentConfirmRequests] = useState<Set<string>>(new Set());
+
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const selectedChatRef = useRef<Chat | null>(null);
@@ -45,7 +48,7 @@ export default function WorkerMessages() {
   const user = AuthHelper.getUser();
   const token = AuthHelper.getAccessToken();
   const userId = user?.id || AuthHelper.getUserId();
-  const { chatId: navChatId, workTitle, workId: navWorkId, currentAmount} = location.state || {};
+  const { chatId: navChatId, workTitle, workId: navWorkId, currentAmount } = location.state || {};
 
   // ── Scroll helpers ────────────────────────────────────────────────────────
   const scrollToBottomInstant = useCallback(() => {
@@ -398,17 +401,23 @@ export default function WorkerMessages() {
                 const otherUser = getOtherParticipant(selectedChat);
                 return (
                   <>
-                    {otherUser?.avatar ? (
-                      <img src={otherUser.avatar} alt={otherUser.name} className="w-10 h-10 rounded-full" />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-                        <User className="w-5 h-5 text-gray-600" />
+                    <button
+                      onClick={() => setProfileModalOpen(true)}
+                      className="flex items-center gap-3 text-left hover:opacity-80 flex-1 min-w-0"
+                    >
+                      {otherUser?.avatar ? (
+                        <img src={otherUser.avatar} alt={otherUser.name} className="w-10 h-10 rounded-full" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
+                          <User className="w-5 h-5 text-gray-600" />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <h3 className="font-semibold truncate">{otherUser?.name || 'Unknown User'}</h3>
+                        {workTitle && <p className="text-sm text-gray-500 truncate">Regarding: {workTitle}</p>}
                       </div>
-                    )}
-                    <div className="flex-1">
-                      <h3 className="font-semibold">{otherUser?.name || 'Unknown User'}</h3>
-                      {workTitle && <p className="text-sm text-gray-500">Regarding: {workTitle}</p>}
-                    </div>
+                    </button>
+
                     {/* Ask for Confirm button — only shown when there's a work context */}
                     {hasWorkContext && (
                       <button
@@ -440,7 +449,6 @@ export default function WorkerMessages() {
                         {askNewPriceLoading ? 'Sending…' : alreadySentNewPrice ? 'Sent' : 'Ask Better Price'}
                       </button>
                     )}
-
                   </>
                 );
               })()}
@@ -588,6 +596,13 @@ export default function WorkerMessages() {
         onSent={() => setSentAskNewPriceRequests(prev => new Set(prev).add(navWorkId))}
       />
 
+      {selectedChat && (
+        <UserProfileModal
+          open={profileModalOpen}
+          onClose={() => setProfileModalOpen(false)}
+          userId={selectedChat.participants.userId}
+        />
+      )}
 
     </div>
 
