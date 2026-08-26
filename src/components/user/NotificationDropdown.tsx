@@ -17,12 +17,14 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
 
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("unread");
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   const displayedNotifications =
     activeTab === "unread"
@@ -50,12 +52,8 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
 
   useEffect(() => {
     loadNotifications();
-    loadUnreadCount();
     notificationSocketService.onNotification(handleNewNotification);
-
-    return () => {
-      notificationSocketService.offNotification(handleNewNotification);
-    };
+    return () => notificationSocketService.offNotification(handleNewNotification);
   }, [handleNewNotification]);
 
   useEffect(() => {
@@ -220,11 +218,10 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
 
                 <button
                   onClick={() => setActiveTab("unread")}
-                  className={`px-3 py-1 text-xs rounded-full font-medium transition ${
-                    activeTab === "unread"
-                      ? "bg-white shadow text-black"
-                      : "text-gray-500 hover:text-black"
-                  }`}
+                  className={`px-3 py-1 text-xs rounded-full font-medium transition ${activeTab === "unread"
+                    ? "bg-white shadow text-black"
+                    : "text-gray-500 hover:text-black"
+                    }`}
                 >
                   Unread
                   {unreadCount > 0 && (
@@ -236,11 +233,10 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
 
                 <button
                   onClick={() => setActiveTab("all")}
-                  className={`px-3 py-1 text-xs rounded-full font-medium transition ${
-                    activeTab === "all"
-                      ? "bg-white shadow text-black"
-                      : "text-gray-500 hover:text-black"
-                  }`}
+                  className={`px-3 py-1 text-xs rounded-full font-medium transition ${activeTab === "all"
+                    ? "bg-white shadow text-black"
+                    : "text-gray-500 hover:text-black"
+                    }`}
                 >
                   All
                 </button>
@@ -326,11 +322,10 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
 
                     <button
                       onClick={(e) => handleMarkOneAsRead(e, notification)}
-                      className={`p-1.5 rounded-full mt-1 ${
-                        notification.isRead
-                          ? "text-green-700"
-                          : "text-gray-500 hover:bg-gray-100"
-                      }`}
+                      className={`p-1.5 rounded-full mt-1 ${notification.isRead
+                        ? "text-green-700"
+                        : "text-gray-500 hover:bg-gray-100"
+                        }`}
                     >
                       <CheckCheck className="w-4 h-4" />
                     </button>
