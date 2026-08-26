@@ -15,6 +15,7 @@ import UserProfileModal from '@/components/chat/UserProfileModal';
 
 // types
 import type { Message, Chat } from './types/messages.types'
+import { AuthService } from '@/services/auth-service';
 
 
 export default function WorkerMessages() {
@@ -40,6 +41,9 @@ export default function WorkerMessages() {
   const [sentConfirmRequests, setSentConfirmRequests] = useState<Set<string>>(new Set());
 
   const [profileModalOpen, setProfileModalOpen] = useState(false);
+
+  // profile image
+  const [profileImages, setProfileImages] = useState<Record<string, string>>({});
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const selectedChatRef = useRef<Chat | null>(null);
@@ -85,6 +89,8 @@ export default function WorkerMessages() {
 
     setSentAskNewPriceRequests(sentIds);
   }, [messages]);
+
+
 
   useEffect(() => {
     if (messages.length === 0) return;
@@ -193,15 +199,55 @@ export default function WorkerMessages() {
     if (sentIds.size > 0) setSentConfirmRequests(sentIds);
   }, [messages, userId]);
 
+
   const loadChats = async () => {
     try {
       setLoading(true);
+
       const response = await ChatService.getMyChats();
       const fetchedChats: Chat[] = response.data.data || [];
+
       setChats(fetchedChats);
+
       const counts: Record<string, number> = {};
-      fetchedChats.forEach(c => { counts[c.id] = c.myUnreadCount ?? 0; });
+
+      fetchedChats.forEach(chat => {
+        counts[chat.id] = chat.myUnreadCount ?? 0;
+      });
+
       setUnreadCounts(counts);
+
+      // Don't wait for profile images
+      const loadProfileImages = async () => {
+        const images: Record<string, string> = {};
+
+        await Promise.all(
+          fetchedChats.map(async chat => {
+            const userId = chat.participants.userId;
+
+            try {
+              const response = await AuthService.getUserProfileById(userId);
+
+              const image = response.data.data?.userProfileImage;
+
+              if (image) {
+                images[userId] = image;
+              }
+            } catch (error) {
+              console.error(
+                `Failed to load profile image for ${userId}`,
+                error
+              );
+            }
+          })
+        );
+
+        setProfileImages(images);
+      };
+
+      // Run separately
+      loadProfileImages();
+
     } catch (error) {
       console.error('Failed to load chats:', error);
     } finally {
@@ -353,33 +399,62 @@ export default function WorkerMessages() {
               const otherUser = getOtherParticipant(chat);
               const isSelected = selectedChat?.id === chat.id;
               const unread = unreadCounts[chat.id] || 0;
+
+              const profileImage = profileImages[chat.participants.userId];
+
               return (
                 <div
                   key={chat.id}
                   onClick={() => handleSelectChat(chat)}
-                  className={`p-4 border-b cursor-pointer hover:bg-gray-50 transition-colors ${isSelected ? 'bg-blue-50' : ''}`}
+                  className={`p-4 border-b cursor-pointer hover:bg-gray-50 transition-colors ${isSelected ? 'bg-blue-50' : ''
+                    }`}
                 >
                   <div className="flex items-center gap-3">
-                    {otherUser?.avatar ? (
-                      <img src={otherUser.avatar} alt={otherUser.name} className="w-12 h-12 rounded-full flex-shrink-0" />
+
+                    {profileImage ? (
+                      <img
+                        src={profileImage}
+                        alt={otherUser?.name || 'User'}
+                        className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                      />
+                    ) : otherUser?.avatar ? (
+                      <img
+                        src={otherUser.avatar}
+                        alt={otherUser.name}
+                        className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                      />
                     ) : (
                       <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0">
                         <User className="w-6 h-6 text-gray-600" />
                       </div>
                     )}
+
                     <div className="flex-1 min-w-0">
-                      <h3 className={`truncate ${unread > 0 ? 'font-semibold text-gray-900' : 'font-medium text-gray-900'}`}>
+                      <h3
+                        className={`truncate ${unread > 0
+                            ? 'font-semibold text-gray-900'
+                            : 'font-medium text-gray-900'
+                          }`}
+                      >
                         {otherUser?.name || 'Unknown User'}
                       </h3>
-                      <p className={`text-sm truncate ${unread > 0 ? 'font-medium text-gray-800' : 'text-gray-500'}`}>
+
+                      <p
+                        className={`text-sm truncate ${unread > 0
+                            ? 'font-medium text-gray-800'
+                            : 'text-gray-500'
+                          }`}
+                      >
                         {chat.lastMessage || 'No messages yet'}
                       </p>
                     </div>
+
                     {unread > 0 && (
                       <span className="flex-shrink-0 min-w-[20px] h-5 px-1.5 bg-black text-white text-[11px] font-bold rounded-full flex items-center justify-center">
                         {unread > 99 ? '99+' : unread}
                       </span>
                     )}
+
                   </div>
                 </div>
               );
@@ -399,56 +474,38 @@ export default function WorkerMessages() {
               </button>
               {(() => {
                 const otherUser = getOtherParticipant(selectedChat);
+                const profileImage = profileImages[selectedChat.participants.userId];
+
                 return (
                   <>
                     <button
                       onClick={() => setProfileModalOpen(true)}
                       className="flex items-center gap-3 text-left hover:opacity-80 flex-1 min-w-0"
                     >
-                      {otherUser?.avatar ? (
-                        <img src={otherUser.avatar} alt={otherUser.name} className="w-10 h-10 rounded-full" />
+                      {profileImage ? (
+                        <img
+                          src={profileImage}
+                          alt={otherUser?.name || 'User'}
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                      ) : otherUser?.avatar ? (
+                        <img
+                          src={otherUser.avatar}
+                          alt={otherUser?.name || 'User'}
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
                       ) : (
                         <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
                           <User className="w-5 h-5 text-gray-600" />
                         </div>
                       )}
+
                       <div className="min-w-0">
-                        <h3 className="font-semibold truncate">{otherUser?.name || 'Unknown User'}</h3>
-                        {workTitle && <p className="text-sm text-gray-500 truncate">Regarding: {workTitle}</p>}
+                        <h3 className="font-semibold truncate">
+                          {otherUser?.name || 'Unknown User'}
+                        </h3>
                       </div>
                     </button>
-
-                    {/* Ask for Confirm button — only shown when there's a work context */}
-                    {hasWorkContext && (
-                      <button
-                        onClick={handleAskForConfirm}
-                        disabled={askConfirmLoading || alreadySentConfirm}
-                        title={alreadySentConfirm ? 'Confirmation request already sent' : 'Ask client to confirm this deal'}
-                        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${alreadySentConfirm
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'bg-gray-900 hover:bg-gray-700 text-white'
-                          }`}
-                      >
-                        <HandshakeIcon className="w-3.5 h-3.5" />
-                        {askConfirmLoading ? 'Sending…' : alreadySentConfirm ? 'Sent' : 'Ask for Confirm'}
-                      </button>
-                    )}
-
-                    {/* Ask for New Price (bidding) — only shown when there's a work context */}
-                    {hasWorkContext && (
-                      <button
-                        onClick={() => setAskNewPriceModalOpen(true)}
-                        disabled={askNewPriceLoading || alreadySentNewPrice}
-                        title={alreadySentConfirm ? 'Confirmation request already sent' : 'Ask client to confirm this deal'}
-                        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${alreadySentConfirm
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'bg-gray-900 hover:bg-gray-700 text-white'
-                          }`}
-                      >
-                        <TicketPercent className="w-3.5 h-3.5" />
-                        {askNewPriceLoading ? 'Sending…' : alreadySentNewPrice ? 'Sent' : 'Ask Better Price'}
-                      </button>
-                    )}
                   </>
                 );
               })()}
