@@ -12,7 +12,8 @@ export const RouteSegments = {
     ACTIVE_WORKS: "active-works",
     MESSAGES: "messages",
     WALLET: "user-wallet",
-    PROFILE: "profile-settings"
+    PROFILE: "profile-settings",
+    POST_WORK: "task-booking"
   },
   
   ADMIN: {

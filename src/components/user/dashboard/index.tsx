@@ -146,7 +146,7 @@ const sidebarNavItems = [
     {
         title: 'Post a Work',
         icon: <CalendarRange size={18} />,
-        href: '/user/dashboard/inspection',
+        href: '/user-dashboard/task-booking',
     },
     {
         title: 'History',
