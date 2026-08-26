@@ -106,6 +106,9 @@ export default function ClientMessages() {
   const userId = user?.id || AuthHelper.getUserId();
   const { chatId: navChatId, workTitle, userName } = location.state || {};
 
+  //user profile
+  const [profileImages, setProfileImages] = useState<Record<string, string>>({});
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const selectedChatRef = useRef<Chat | null>(null);
   const isInitialLoadRef = useRef(false);
@@ -333,15 +336,55 @@ export default function ClientMessages() {
     if (responded.size > 0) setRespondedConfirms(responded);
   }, [messages]);
 
+ 
   const loadChats = async () => {
     try {
       setLoading(true);
+
       const response = await ChatService.getMyChats();
       const fetchedChats: Chat[] = response.data.data || [];
+
       setChats(fetchedChats);
+
       const counts: Record<string, number> = {};
-      fetchedChats.forEach(c => { counts[c.id] = c.myUnreadCount ?? 0; });
+
+      fetchedChats.forEach(chat => {
+        counts[chat.id] = chat.myUnreadCount ?? 0;
+      });
+
       setUnreadCounts(counts);
+
+      // Load each worker's profile image
+      const loadProfileImages = async () => {
+        const images: Record<string, string> = {};
+
+        await Promise.all(
+          fetchedChats.map(async chat => {
+            const workerId = chat.participants.workerId;
+
+            try {
+              // Use your worker profile API
+              const response = await ReviewService.getWorkerProfileStats(workerId);
+
+              const image = response.data.data?.workerProfileImage;
+
+              if (image) {
+                images[workerId] = image;
+              }
+            } catch (error) {
+              console.error(
+                `Failed to load worker profile image for ${workerId}`,
+                error
+              );
+            }
+          })
+        );
+
+        setProfileImages(images);
+      };
+
+      loadProfileImages();
+
     } catch (error) {
       console.error('Failed to load chats:', error);
     } finally {
@@ -597,15 +640,29 @@ export default function ClientMessages() {
               const otherUser = getOtherParticipant(chat);
               const isSelected = selectedChat?.id === chat.id;
               const unread = unreadCounts[chat.id] || 0;
+              const profileImage = profileImages[chat.participants.workerId];
+
               return (
                 <div
                   key={chat.id}
                   onClick={() => handleSelectChat(chat)}
-                  className={`p-4 border-b cursor-pointer hover:bg-gray-50 transition-colors ${isSelected ? 'bg-blue-50' : ''}`}
+                  className={`p-4 border-b cursor-pointer hover:bg-gray-50 transition-colors ${isSelected ? 'bg-blue-50' : ''
+                    }`}
                 >
                   <div className="flex items-center gap-3">
-                    {otherUser?.avatar ? (
-                      <img src={otherUser.avatar} alt={otherUser.name} className="w-12 h-12 rounded-full flex-shrink-0" />
+
+                    {profileImage ? (
+                      <img
+                        src={profileImage}
+                        alt={otherUser?.name || 'Worker'}
+                        className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                      />
+                    ) : otherUser?.avatar ? (
+                      <img
+                        src={otherUser.avatar}
+                        alt={otherUser.name}
+                        className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                      />
                     ) : (
                       <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0">
                         <User className="w-6 h-6 text-gray-600" />
@@ -641,42 +698,49 @@ export default function ClientMessages() {
               <button onClick={() => navigate(-1)} className="lg:hidden p-2 hover:bg-gray-100 rounded-full">
                 <ArrowLeft className="w-5 h-5" />
               </button>
-              {/* {(() => {
-                const otherUser = getOtherParticipant(selectedChat);
-                return (
-                  <>
-                    {otherUser?.avatar ? (
-                      <img src={otherUser.avatar} alt={otherUser.name} className="w-10 h-10 rounded-full" />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-                        <User className="w-5 h-5 text-gray-600" />
-                      </div>
-                    )}
-                    <div>
-                      <h3 className="font-semibold">{otherUser?.name || userName || 'Unknown User'}</h3>
-                      {workTitle && <p className="text-sm text-gray-500">Regarding: {workTitle}</p>}
-                    </div>
-                  </>
-                );
-              })()} */}
               {(() => {
                 const otherUser = getOtherParticipant(selectedChat);
+                const profileImage = profileImages[selectedChat.participants.workerId];
+
                 return (
-                  <button onClick={() => setProfileModalOpen(true)} className="flex items-center gap-3 text-left hover:opacity-80">
-                    {otherUser?.avatar ? (
-                      <img src={otherUser.avatar} alt={otherUser.name} className="w-10 h-10 rounded-full" />
+                  <button
+                    onClick={() => setProfileModalOpen(true)}
+                    className="flex items-center gap-3 text-left hover:opacity-80"
+                  >
+                    {profileImage ? (
+                      <img
+                        src={profileImage}
+                        alt={otherUser?.name || 'Worker'}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                    ) : otherUser?.avatar ? (
+                      <img
+                        src={otherUser.avatar}
+                        alt={otherUser.name}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
                         <User className="w-5 h-5 text-gray-600" />
                       </div>
                     )}
+
                     <div>
-                      <h3 className="font-semibold">{otherUser?.name || userName || 'Unknown User'}</h3>
-                      {workTitle && <p className="text-sm text-gray-500">Regarding: {workTitle}</p>}
+                      <h3 className="font-semibold">
+                        {otherUser?.name || userName || 'Unknown User'}
+                      </h3>
+
+                      {workTitle && (
+                        <p className="text-sm text-gray-500">
+                          Regarding: {workTitle}
+                        </p>
+                      )}
                     </div>
                   </button>
                 );
               })()}
+
+
             </div>
 
             {/* Messages */}
@@ -840,5 +904,4 @@ export default function ClientMessages() {
     </div>
   );
 }
-
 
