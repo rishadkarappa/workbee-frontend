@@ -14,26 +14,57 @@ import {
 const UserDashboard = () => {
     const location = useLocation()
 
+    // const getBreadcrumbs = () => {
+    //     const pathSegments = location.pathname.split('/').filter(Boolean)
+    //     const breadcrumbs: { title: string; href: string; current: boolean }[] = []
+
+    //     let currentPath = ''
+
+    //     pathSegments.forEach((segment, index) => {
+    //         currentPath += `/${segment}`
+    //         const matchingItem = sidebarNavItems.find(item =>
+    //             item.href.toLowerCase() === currentPath.toLowerCase()
+    //         )
+
+    //         if (matchingItem) {
+    //             breadcrumbs.push({
+    //                 title: matchingItem.title,
+    //                 href: currentPath,
+    //                 current: index === pathSegments.length - 1
+    //             })
+    //         }
+    //     })
+
+    //     return breadcrumbs
+    // }
     const getBreadcrumbs = () => {
-        const pathSegments = location.pathname.split('/').filter(Boolean)
-        const breadcrumbs: { title: string; href: string; current: boolean }[] = []
+        const breadcrumbs: {
+            title: string
+            href: string
+            current: boolean
+        }[] = []
 
-        let currentPath = ''
+        const pathname = location.pathname
 
-        pathSegments.forEach((segment, index) => {
-            currentPath += `/${segment}`
-            const matchingItem = sidebarNavItems.find(item =>
-                item.href.toLowerCase() === currentPath.toLowerCase()
-            )
+        if (pathname.startsWith('/user-dashboard')) {
+            breadcrumbs.push({
+                title: 'Dashboard',
+                href: '/user-dashboard/works',
+                current: false,
+            })
+        }
 
-            if (matchingItem) {
-                breadcrumbs.push({
-                    title: matchingItem.title,
-                    href: currentPath,
-                    current: index === pathSegments.length - 1
-                })
-            }
-        })
+        const matchingItem = sidebarNavItems.find(
+            item => item.href.toLowerCase() === pathname.toLowerCase()
+        )
+
+        if (matchingItem) {
+            breadcrumbs.push({
+                title: matchingItem.title,
+                href: pathname,
+                current: true,
+            })
+        }
 
         return breadcrumbs
     }
@@ -88,20 +119,20 @@ const UserDashboard = () => {
 
 const sidebarNavItems = [
     {
-        title: 'Dashboard',
+        title: 'My Works',
         icon: <LucideLayoutDashboard size={18} />,
-        href: '/user-dashboard',
+        href: '/user-dashboard/works',
     },
     {
         title: 'Wallet',
         icon: <Wallet2Icon size={18} />,
         href: '/user-dashboard/user-wallet',
     },
-    {
-        title: 'My Works',
-        icon: <WorkflowIcon size={18} />,
-        href: '/user-dashboard/works',
-    },
+    // {
+    //     title: 'My Works',
+    //     icon: <WorkflowIcon size={18} />,
+    //     href: '/user-dashboard/works',
+    // },
     {
         title: 'Active Works',
         icon: <LucideWorkflow size={18} />,

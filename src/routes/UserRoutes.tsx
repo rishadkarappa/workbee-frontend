@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { ProtectedRoute } from "@/components/common/ProtectedRoute";
 
 import { UserRole } from "workbee-common";
@@ -14,7 +14,6 @@ import TaskBookForm from "@/pages/user/TaskBookForm";
 import Dashboard from "@/pages/user/UserDashboard";
 
 // inner dashboard components
-import DashboardHome from "@/components/user/dashboard/DashboardHome";
 import MyWorks from "@/components/user/dashboard/my-works/components/work-content";
 import WorkerMessages from "@/components/user/dashboard/messages/page";
 import ActiveWorks from "@/components/user/dashboard/live-works/page";
@@ -50,7 +49,7 @@ const UserRoute = () => {
           </ProtectedRoute>
         }
       >
-        <Route index element={<DashboardHome />} />
+        <Route index element={<Navigate to={RouteSegments.USER.WORKS} replace />} />
         <Route path={RouteSegments.USER.WORKS} element={<MyWorks />} />
         <Route path={RouteSegments.USER.ACTIVE_WORKS} element={<ActiveWorks />} />
         <Route path={RouteSegments.USER.MESSAGES} element={<WorkerMessages />} />

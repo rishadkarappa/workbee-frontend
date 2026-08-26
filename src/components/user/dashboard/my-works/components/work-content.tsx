@@ -511,12 +511,12 @@ export default function WorkContent() {
 
     return (
         <div className="space-y-6 w-full">
-            <div>
+            {/* <div>
                 <h1 className="text-3xl font-bold tracking-tight">My Works</h1>
                 <p className="text-muted-foreground mt-2">
                     Total Works: {works.length}
                 </p>
-            </div>
+            </div> */}
 
             <Tabs defaultValue="all" className="space-y-6 w-full">
                 <TabsList className="grid w-full grid-cols-4">
