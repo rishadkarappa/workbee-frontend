@@ -321,12 +321,14 @@ export default function LiveWorks() {
 
   return (
     <div className="space-y-6 p-6 w-full">
-      <div>
+
+      {/* active work heading */}
+      {/* <div>
         <h1 className="text-3xl font-bold tracking-tight">Live Works</h1>
         <p className="text-muted-foreground mt-2">
           {works.length} work{works.length !== 1 ? 's' : ''} in progress — progress updates in real-time
         </p>
-      </div>
+      </div> */}
 
       <div className="grid gap-4 w-full">
         {works.map(work => (
