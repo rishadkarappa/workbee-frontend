@@ -328,14 +328,14 @@ export default function WorkerWallet() {
 
       {/* Pending payout info banner */}
       {pendingCount > 0 && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 flex items-start gap-3">
-          <Info className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
-          <div className="text-sm text-amber-800">
+        <div className="rounded-xl border border-gray-200 bg-gray-100 px-4 py-3 flex items-start gap-3">
+          <Info className="w-4 h-4 text-gray-600 mt-0.5 flex-shrink-0" />
+          <div className="text-sm text-gray-800">
             <p className="font-medium">
               {formatAmount(pendingAmount)} is held for{" "}
               {pendingCount} active work{pendingCount > 1 ? "s" : ""}
             </p>
-            <p className="text-amber-700 mt-0.5">
+            <p className="text-gray-700 mt-0.5">
               Funds are released 1 hour after you mark work as completed.
               A 1% platform fee is deducted before crediting your wallet.
             </p>
