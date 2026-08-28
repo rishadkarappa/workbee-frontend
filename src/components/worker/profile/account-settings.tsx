@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+
 import axios from "axios";
 import { Camera, Mail, MapPin, Calendar, Briefcase } from "lucide-react";
 import { toast } from "sonner";
@@ -26,6 +27,11 @@ export default function WorkerAccountSettings() {
     bio: "",
   });
 
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const phoneInputRef = useRef<HTMLInputElement>(null);
+  const locationInputRef = useRef<HTMLInputElement>(null);
+  const bioInputRef = useRef<HTMLTextAreaElement>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -44,6 +50,12 @@ export default function WorkerAccountSettings() {
 
     getWorkerProfile();
   }, []);
+
+  useEffect(() => {
+    if (isEditing) {
+      nameInputRef.current?.focus();
+    }
+  }, [isEditing]);
 
   const handleProfileImageClick = () => {
     fileInputRef.current?.click();
@@ -88,31 +100,37 @@ export default function WorkerAccountSettings() {
   const handleUpdateProfile = async () => {
     if (!editForm.name.trim()) {
       toast.error("Name is required");
+      nameInputRef.current?.focus();
       return;
     }
 
     if (editForm.name.trim().length < 3) {
       toast.error("Name must be at least 3 characters");
+      nameInputRef.current?.focus();
       return;
     }
 
     if (!editForm.phone.trim()) {
       toast.error("Phone number is required");
+      phoneInputRef.current?.focus();
       return;
     }
 
     if (!/^[6-9]\d{9}$/.test(editForm.phone)) {
       toast.error("Enter a valid 10-digit phone number");
+      phoneInputRef.current?.focus();
       return;
     }
 
     if (!editForm.location.trim()) {
       toast.error("Location is required");
+      locationInputRef.current?.focus();
       return;
     }
 
     if (editForm.bio.length > 500) {
       toast.error("Bio must be less than 500 characters");
+      bioInputRef.current?.focus();
       return;
     }
 
@@ -347,6 +365,7 @@ export default function WorkerAccountSettings() {
             <button
               type="button"
               onClick={handleUpdateProfile}
+
               disabled={isUpdating}
               className="h-fit rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
             >
@@ -391,6 +410,8 @@ export default function WorkerAccountSettings() {
               name="name"
               disabled={!isEditing}
               onChange={handleEditChange}
+              inputRef={nameInputRef}
+              isEditing={isEditing}
             />
 
             <Field
@@ -405,6 +426,8 @@ export default function WorkerAccountSettings() {
               name="phone"
               disabled={!isEditing}
               onChange={handleEditChange}
+              inputRef={phoneInputRef}
+              isEditing={isEditing}
             />
 
             <Field
@@ -413,6 +436,8 @@ export default function WorkerAccountSettings() {
               name="location"
               disabled={!isEditing}
               onChange={handleEditChange}
+              inputRef={locationInputRef}
+              isEditing={isEditing}
             />
 
             {/* Bio */}
@@ -422,14 +447,18 @@ export default function WorkerAccountSettings() {
               </label>
 
               <textarea
+                ref={bioInputRef}
                 name="bio"
                 value={isEditing ? editForm.bio : worker.bio ?? ""}
                 onChange={handleEditChange}
                 disabled={!isEditing}
                 rows={4}
                 maxLength={500}
-                className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none focus:border-gray-400 disabled:bg-gray-50 disabled:text-gray-500"
-                placeholder="Tell something about yourself..."
+                className={`w-full resize-none rounded-lg border px-3 py-2 text-sm text-gray-800 outline-none
+    ${isEditing
+                    ? "border-gray-400 ring-2 ring-gray-200"
+                    : "border-gray-200 disabled:bg-gray-50 disabled:text-gray-500"
+                  }`}
               />
 
               {isEditing && (
@@ -509,12 +538,16 @@ function Field({
   name,
   onChange,
   disabled,
+  inputRef,
+  isEditing,
 }: {
   label: string;
   value: string;
   name?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   disabled?: boolean;
+  inputRef?: React.RefObject<HTMLInputElement | null>;
+  isEditing?: boolean;
 }) {
   return (
     <div>
@@ -523,12 +556,17 @@ function Field({
       </label>
 
       <input
+        ref={inputRef}
         type="text"
         name={name}
         value={value}
         disabled={disabled}
         onChange={onChange}
-        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none focus:border-gray-400 disabled:bg-gray-50 disabled:text-gray-500"
+        className={`w-full rounded-lg border px-3 py-2 text-sm text-gray-800 outline-none
+          ${isEditing
+            ? "border-gray-400 ring-2 ring-gray-200"
+            : "border-gray-200 disabled:bg-gray-50 disabled:text-gray-500"
+          }`}
       />
     </div>
   );
