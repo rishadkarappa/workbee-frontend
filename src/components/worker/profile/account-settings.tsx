@@ -7,7 +7,7 @@ import { WorkService } from "@/services/work-service";
 import ChangePasswordModal from "./modals/change-password-modal";
 import type { WorkerProfileData } from "./types/types";
 
-const TABS = ["Personal", "Work Info", "Security", "Notifications"] as const;
+const TABS = ["Personal", "Work Info", "Security"] as const;
 type Tab = (typeof TABS)[number];
 
 export default function WorkerAccountSettings() {
@@ -95,10 +95,10 @@ export default function WorkerAccountSettings() {
         setWorker((prev) =>
           prev
             ? {
-                ...prev,
-                workerProfileImage: secure_url,
-                workerProfileImagePublicId: public_id,
-              }
+              ...prev,
+              workerProfileImage: secure_url,
+              workerProfileImagePublicId: public_id,
+            }
             : prev
         );
 
@@ -135,9 +135,9 @@ export default function WorkerAccountSettings() {
 
   const joinedDate = worker.createdAt
     ? new Date(worker.createdAt).toLocaleDateString("en-US", {
-        month: "long",
-        year: "numeric",
-      })
+      month: "long",
+      year: "numeric",
+    })
     : "—";
 
   return (
@@ -226,11 +226,10 @@ export default function WorkerAccountSettings() {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${
-              activeTab === tab
-                ? "bg-white text-gray-900 shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
+            className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${activeTab === tab
+              ? "bg-white text-gray-900 shadow-sm"
+              : "text-gray-500 hover:text-gray-700"
+              }`}
           >
             {tab}
           </button>
@@ -254,17 +253,6 @@ export default function WorkerAccountSettings() {
             <Field label="Location" value={worker.location} disabled />
           </div>
 
-          <div className="mt-6 border-t border-gray-100 pt-6">
-            <h3 className="text-sm font-semibold text-gray-900">
-              Change Password
-            </h3>
-            <button
-              onClick={() => setIsPasswordModalOpen(true)}
-              className="mt-3 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
-            >
-              Change Password
-            </button>
-          </div>
         </div>
       )}
 
@@ -289,9 +277,36 @@ export default function WorkerAccountSettings() {
         </div>
       )}
 
-      {activeTab === "Security" && <PlaceholderPanel title="Security" />}
-      {activeTab === "Notifications" && (
-        <PlaceholderPanel title="Notifications" />
+      {activeTab === "Security" && (
+        <div className="rounded-xl border border-gray-200 bg-white p-6">
+          <h2 className="text-lg font-bold text-gray-900">
+            Security
+          </h2>
+
+          <p className="mt-1 text-sm text-gray-500">
+            Manage your account security and password.
+          </p>
+
+          <div className="mt-6 border-t border-gray-100 pt-6">
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900">
+                Password
+              </h3>
+
+              <p className="mt-1 text-sm text-gray-500">
+                Keep your account secure by regularly updating your password.
+              </p>
+
+              <button
+                type="button"
+                onClick={() => setIsPasswordModalOpen(true)}
+                className="mt-4 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+              >
+                Change Password
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <ChangePasswordModal

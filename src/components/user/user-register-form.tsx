@@ -24,6 +24,7 @@ import { getErrorMessage } from "@/utils/error-helper"
 import { AppRoutes } from "@/constants/routes/app-routes"
 import { toast } from "sonner"
 import { emailRegex } from "@/constants/regex/regex"
+import { PhoneInput } from "../ui/phone-input"
 
 export function RegisterForm({
     className,
@@ -47,6 +48,18 @@ export function RegisterForm({
         password: "",
         confirmPassword: ""
     })
+
+    const handlePhoneChange = (value: string) => {
+        setForm((prev) => ({
+            ...prev,
+            phone: value,
+        }));
+
+        setErrors((prev) => ({
+            ...prev,
+            phone: "",
+        }));
+    };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target
@@ -90,8 +103,8 @@ export function RegisterForm({
         if (!form.phone.trim()) {
             newErrors.phone = "Phone number is required";
             isValid = false;
-        } else if (!/^[6-9]\d{9}$/.test(form.phone)) {
-            newErrors.phone = "Enter a valid 10-digit phone number";
+        } else if (!/^\+91[6-9]\d{9}$/.test(form.phone)) {
+            newErrors.phone = "Enter a valid Indian phone number";
             isValid = false;
         }
 
@@ -124,7 +137,7 @@ export function RegisterForm({
 
         setIsLoading(true)
         try {
-            const registrationData = { name: form.name, email: form.email, phone:form.phone, password: form.password, };
+            const registrationData = { name: form.name, email: form.email, phone: form.phone, password: form.password, };
             const res = await AuthService.register(registrationData);
             if (res.data.success) {
                 AuthHelper.setUserId(res.data.data.userId);
@@ -221,27 +234,24 @@ export function RegisterForm({
                                 )}
                             </Field>
 
+
                             <Field>
                                 <FieldLabel htmlFor="phone">Phone Number</FieldLabel>
-
-                                <Input
+                                <PhoneInput
                                     id="phone"
-                                    name="phone"
-                                    type="tel"
+                                    variant="lg"
+                                    placeholder="Enter phone number"
+                                    defaultCountry="IN"
                                     value={form.phone}
-                                    onChange={handleChange}
-                                    placeholder="Enter your phone number"
-                                    maxLength={10}
+                                    onChange={handlePhoneChange}
+                                    aria-invalid={!!errors.phone}
                                 />
-
                                 {errors.phone && (
                                     <p className="text-xs text-red-700">
                                         {errors.phone}
                                     </p>
                                 )}
                             </Field>
-
-
 
                             <Field>
                                 <FieldLabel htmlFor="password">Password</FieldLabel>
