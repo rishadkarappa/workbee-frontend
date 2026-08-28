@@ -19,11 +19,8 @@ export default function ProfileSettings() {
   //  dummy data until these fields have real backing endpoints ----
   const [extra, setExtra] = useState<ExtraProfileData>({
     firstName: "John",
-    lastName: "Doe",
-    jobTitle: "Senior Product Designer",
-    company: "Acme Inc.",
-    bio: "Passionate product designer with 8+ years of experience creating user-centered digital experiences. I love solving complex problems and turning ideas into beautiful, functional products.",
-    location: "San Francisco, CA",
+    location: "",
+    bio: "",
     badge: "Pro Member",
   });
 
@@ -162,23 +159,24 @@ export default function ProfileSettings() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-bold text-gray-900">
-                {userProfileData?.name ?? `${extra.firstName} ${extra.lastName}`}
+                {userProfileData?.name ?? `${extra.firstName}`}
               </h1>
               <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
                 {extra.badge}
               </span>
             </div>
-            <p className="mt-0.5 text-sm text-gray-500">{extra.jobTitle}</p>
 
             <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-gray-500">
               <span className="flex items-center gap-1.5">
                 <Mail className="h-3.5 w-3.5" />
                 {userProfileData?.email ?? "—"}
               </span>
+
               <span className="flex items-center gap-1.5">
                 <MapPin className="h-3.5 w-3.5" />
-                {extra.location}
+                {userProfileData?.location || "Not added"}
               </span>
+
               <span className="flex items-center gap-1.5">
                 <Calendar className="h-3.5 w-3.5" />
                 Joined {joinedDate}
@@ -202,8 +200,8 @@ export default function ProfileSettings() {
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${activeTab === tab
-                ? "bg-white text-gray-900 shadow-sm"
-                : "text-gray-500 hover:text-gray-700"
+              ? "bg-white text-gray-900 shadow-sm"
+              : "text-gray-500 hover:text-gray-700"
               }`}
           >
             {tab}
@@ -225,25 +223,17 @@ export default function ProfileSettings() {
               value={extra.firstName}
               onChange={(v) => setExtra((p) => ({ ...p, firstName: v }))}
             />
-            <Field
-              label="Last Name"
-              value={extra.lastName}
-              onChange={(v) => setExtra((p) => ({ ...p, lastName: v }))}
-            />
             <Field label="Email" value={userProfileData?.email ?? ""} disabled />
             <Field
               label="Phone"
               value={userProfileData?.phone ? String(userProfileData.phone) : "+1 (555) 123-4567"}
               disabled
             />
+
             <Field
-              label="Job Title"
-              value={extra.jobTitle}
-              onChange={(v) => setExtra((p) => ({ ...p, jobTitle: v }))}
-            />
-            <Field
-              label="Company"
-              value={extra.company}
+              label="Location"
+              
+              value={extra.location?extra.location:"Add Location"}
               onChange={(v) => setExtra((p) => ({ ...p, company: v }))}
             />
           </div>
@@ -251,35 +241,46 @@ export default function ProfileSettings() {
           <div className="mt-5">
             <label className="mb-1.5 block text-sm font-medium text-gray-700">Bio</label>
             <textarea
-              value={extra.bio}
+              value={extra.bio?extra.bio:"Add Bio...."}
               onChange={(e) => setExtra((p) => ({ ...p, bio: e.target.value }))}
               rows={3}
               className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none focus:border-gray-400"
             />
           </div>
 
-          <div className="mt-5">
-            <Field
-              label="Location"
-              value={extra.location}
-              onChange={(v) => setExtra((p) => ({ ...p, location: v }))}
-            />
-          </div>
+        </div>
+      )}
+
+      {activeTab === "Account" && <PlaceholderPanel title="Account" />}
+      {activeTab === "Security" && (
+        <div className="rounded-xl border border-gray-200 bg-white p-6">
+          <h2 className="text-lg font-bold text-gray-900">
+            Security
+          </h2>
+
+          <p className="mt-1 text-sm text-gray-500">
+            Manage your account security and password.
+          </p>
 
           <div className="mt-6 border-t border-gray-100 pt-6">
-            <h3 className="text-sm font-semibold text-gray-900">Change Password</h3>
+            <h3 className="text-sm font-semibold text-gray-900">
+              Password
+            </h3>
+
+            <p className="mt-1 text-sm text-gray-500">
+              Keep your account secure by regularly updating your password.
+            </p>
+
             <button
+              type="button"
               onClick={() => setIsOpen(true)}
-              className="mt-3 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+              className="mt-4 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
             >
               Change Password
             </button>
           </div>
         </div>
       )}
-
-      {activeTab === "Account" && <PlaceholderPanel title="Account" />}
-      {activeTab === "Security" && <PlaceholderPanel title="Security" />}
       {activeTab === "Notifications" && <PlaceholderPanel title="Notifications" />}
 
       <ChangePasswordModal isOpen={isOpen} setIsOpen={setIsOpen} />

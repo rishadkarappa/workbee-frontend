@@ -5,16 +5,14 @@ export interface UserProfileData {
   email: string;
   phone?: number;
   createdAt?: Date;
+  location?:string;
   userProfileImage?: string;
 }
 
 // Fields we don't have real endpoints for yet — dummy/local only
 export interface ExtraProfileData {
   firstName: string;
-  lastName: string;
-  jobTitle: string;
-  company: string;
+  location:string;
   bio: string;
-  location: string;
   badge: string;
 }
