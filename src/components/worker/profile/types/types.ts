@@ -6,6 +6,7 @@ export interface WorkerProfileData {
   phone: string;
   location: string;
   workType: string;
+  bio?:string;
   preferredWorks: string[];
   workerProfileImage?: string;
   workerProfileImagePublicId?: string;
