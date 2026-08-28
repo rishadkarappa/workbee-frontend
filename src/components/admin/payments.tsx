@@ -226,12 +226,12 @@ function PaymentTimeline({ payment }: { payment: PaymentRecord }) {
         <div key={i} className="flex-1 flex flex-col items-center">
           <div className="flex items-center w-full">
             {i > 0 && (
-              <div className={`flex-1 h-0.5 ${step.done ? "bg-green-400" : "bg-gray-200"}`} />
+              <div className={`flex-1 h-0.5 ${step.done ? "bg-gray-800" : "bg-gray-300"}`} />
             )}
             <div
               className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${step.done
-                ? "bg-green-500 text-white"
-                : "bg-gray-200 text-gray-400"
+                ? "bg-gray-800 text-white"
+                : "bg-gray-300 text-gray-400"
                 }`}
             >
               {step.done ? (
@@ -241,14 +241,14 @@ function PaymentTimeline({ payment }: { payment: PaymentRecord }) {
               )}
             </div>
             {i < steps.length - 1 && (
-              <div className={`flex-1 h-0.5 ${steps[i + 1].done ? "bg-green-400" : "bg-gray-200"}`} />
+              <div className={`flex-1 h-0.5 ${steps[i + 1].done ? "bg-gray-500" : "bg-gray-300"}`} />
             )}
           </div>
-          <p className="text-[10px] text-gray-500 mt-1 text-center leading-tight px-1">
+          <p className="text-[10px] text-gray-600 mt-1 text-center leading-tight px-1">
             {step.label}
           </p>
           {step.time && (
-            <p className="text-[9px] text-gray-400 text-center">
+            <p className="text-[9px] text-gray-600 text-center">
               {formatDate(step.time)}
             </p>
           )}
@@ -401,7 +401,7 @@ export default function Payments() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Fully Settled</p>
-                <p className="text-xl font-bold text-green-600">{settledCount}</p>
+                <p className="text-xl font-bold text-gray-600">{settledCount}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">Worker credited & closed</p>
               </div>
               <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center">
@@ -416,7 +416,7 @@ export default function Payments() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Active Jobs</p>
-                <p className="text-xl font-bold text-blue-600">{pendingPayoutCount}</p>
+                <p className="text-xl font-bold text-gray-800">{pendingPayoutCount}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">Payment made, work ongoing</p>
               </div>
               <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
@@ -534,7 +534,7 @@ export default function Payments() {
                         <td className="px-4 py-3 text-right font-semibold text-gray-900">
                           {formatAmount(payment.amount)}
                         </td>
-                        <td className="px-4 py-3 text-right text-green-600 font-medium">
+                        <td className="px-4 py-3 text-right text-gray-800 font-medium">
                           +{formatAmount(payment.platformFee)}
                         </td>
                         <td className="px-4 py-3 text-right text-gray-600">
@@ -630,20 +630,31 @@ export default function Payments() {
                                 <p className="font-medium text-gray-500 uppercase tracking-wide mb-2">
                                   Fee Breakdown
                                 </p>
+
                                 <div className="flex items-center gap-3 flex-wrap">
                                   <div className="flex items-center gap-2 bg-white border rounded-lg px-3 py-2">
                                     <span className="text-gray-500">Client paid</span>
-                                    <span className="font-semibold text-gray-900">{formatAmount(payment.amount)}</span>
+                                    <span className="font-semibold text-gray-900">
+                                      {formatAmount(payment.amount)}
+                                    </span>
                                   </div>
+
                                   <span className="text-gray-400">→</span>
-                                  <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-                                    <span className="text-green-700">Platform earns</span>
-                                    <span className="font-semibold text-green-700">{formatAmount(payment.platformFee)}</span>
+
+                                  <div className="flex items-center gap-2 bg-gray-100 border border-gray-200 rounded-lg px-3 py-2">
+                                    <span className="text-gray-800">Platform earns</span>
+                                    <span className="font-semibold text-gray-800">
+                                      {formatAmount(payment.platformFee)}
+                                    </span>
                                   </div>
+
                                   <span className="text-gray-400">+</span>
-                                  <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
-                                    <span className="text-blue-700">Worker receives</span>
-                                    <span className="font-semibold text-blue-700">{formatAmount(payment.workerPayout)}</span>
+
+                                  <div className="flex items-center gap-2 bg-gray-100 border border-gray-200 rounded-lg px-3 py-2">
+                                    <span className="text-gray-800">Worker receives</span>
+                                    <span className="font-semibold text-gray-800">
+                                      {formatAmount(payment.workerPayout)}
+                                    </span>
                                   </div>
                                 </div>
                               </div>

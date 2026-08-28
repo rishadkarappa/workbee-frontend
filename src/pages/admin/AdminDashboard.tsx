@@ -185,7 +185,7 @@ const AdminDashboard = () => {
     }, [paymentStats]);
 
     return (
-        <div className="w-full space-y-6 p-6">
+        <div className="w-full space-y-6">
 
             {/* Primary KPI row — gradient-tinted cards, shadcn dashboard-01 pattern */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs dark:*:data-[slot=card]:bg-card">
