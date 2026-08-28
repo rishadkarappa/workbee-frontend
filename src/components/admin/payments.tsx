@@ -10,11 +10,11 @@ import {
   Banknote,
   ChevronLeft,
   ChevronRight,
-  ArrowUpRight,
   BarChart3,
   Users,
+  type LucideIcon,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PaymentService } from "@/services/payment-service";
 import { getErrorMessage } from "@/utils/error-helper";
@@ -148,50 +148,44 @@ function StagePill({ payment }: { payment: PaymentRecord }) {
   return null;
 }
 
+interface StatCardProps {
+  title: string;
+  value: string;
+  subtitle: string;
+  icon: LucideIcon;
+  accent?: "gray" | "green" | "yellow" | "red";
+}
+
 function StatCard({
   title,
   value,
   subtitle,
   icon: Icon,
-  accent = "gray",
-  trend,
-}: {
-  title: string;
-  value: string;
-  subtitle: string;
-  icon: React.ElementType;
-  accent?: "gray" | "green" | "blue" | "yellow" | "red";
-  trend?: string;
-}) {
-  const accentMap = {
-    gray:   { bg: "bg-gray-900",   text: "text-white",       sub: "text-gray-400",  iconBg: "bg-gray-800"   },
-    green:  { bg: "bg-green-600",  text: "text-white",       sub: "text-green-200", iconBg: "bg-green-700"  },
-    blue:   { bg: "bg-blue-600",   text: "text-white",       sub: "text-blue-200",  iconBg: "bg-blue-700"   },
-    yellow: { bg: "bg-amber-500",  text: "text-white",       sub: "text-amber-100", iconBg: "bg-amber-600"  },
-    red:    { bg: "bg-red-600",    text: "text-white",       sub: "text-red-200",   iconBg: "bg-red-700"    },
-  };
-  const c = accentMap[accent];
-
+}: StatCardProps) {
   return (
-    <Card className={`border-0 shadow-sm ${c.bg}`}>
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between mb-4">
-          <p className={`text-xs font-medium uppercase tracking-wide ${c.sub}`}>{title}</p>
-          <div className={`w-8 h-8 rounded-lg ${c.iconBg} flex items-center justify-center`}>
-            <Icon className={`w-4 h-4 ${c.text}`} />
+    <Card
+      data-slot="card"
+      className="@container/card bg-gradient-to-t from-primary/5 to-card shadow-xs dark:bg-card"
+    >
+      <CardHeader>
+        <CardDescription>{title}</CardDescription>
+
+        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+          {value}
+        </CardTitle>
+
+        <CardAction>
+          <div className="rounded-md bg-muted p-2">
+            <Icon className="size-4 text-muted-foreground" />
           </div>
+        </CardAction>
+      </CardHeader>
+
+      <CardFooter className="flex-col items-start gap-1.5 text-sm">
+        <div className="text-muted-foreground">
+          {subtitle}
         </div>
-        <p className={`text-2xl font-bold ${c.text}`}>{value}</p>
-        <div className="flex items-center justify-between mt-1">
-          <p className={`text-xs ${c.sub}`}>{subtitle}</p>
-          {trend && (
-            <span className={`text-xs flex items-center gap-0.5 ${c.sub}`}>
-              <ArrowUpRight className="w-3 h-3" />
-              {trend}
-            </span>
-          )}
-        </div>
-      </CardContent>
+      </CardFooter>
     </Card>
   );
 }
@@ -235,11 +229,10 @@ function PaymentTimeline({ payment }: { payment: PaymentRecord }) {
               <div className={`flex-1 h-0.5 ${step.done ? "bg-green-400" : "bg-gray-200"}`} />
             )}
             <div
-              className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
-                step.done
-                  ? "bg-green-500 text-white"
-                  : "bg-gray-200 text-gray-400"
-              }`}
+              className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${step.done
+                ? "bg-green-500 text-white"
+                : "bg-gray-200 text-gray-400"
+                }`}
             >
               {step.done ? (
                 <CheckCircle2 className="w-3 h-3" />
@@ -266,16 +259,16 @@ function PaymentTimeline({ payment }: { payment: PaymentRecord }) {
 }
 
 export default function Payments() {
-  const [summary, setSummary]           = useState<AdminSummary | null>(null);
-  const [payments, setPayments]         = useState<PaymentRecord[]>([]);
-  const [loading, setLoading]           = useState(true);
+  const [summary, setSummary] = useState<AdminSummary | null>(null);
+  const [payments, setPayments] = useState<PaymentRecord[]>([]);
+  const [loading, setLoading] = useState(true);
   const [tableLoading, setTableLoading] = useState(false);
-  const [error, setError]               = useState<string | null>(null);
-  const [page, setPage]                 = useState(1);
-  const [totalPages, setTotalPages]     = useState(1);
-  const [total, setTotal]               = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
   const [statusFilter, setStatusFilter] = useState("all");
-  const [expandedRow, setExpandedRow]   = useState<string | null>(null);
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const LIMIT = 15;
 
   const fetchSummary = async () => {
@@ -365,7 +358,8 @@ export default function Payments() {
       </div>
 
       {/* Primary Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Gross Revenue"
           value={formatAmount(summary?.totalRevenue ?? 0)}
@@ -373,6 +367,7 @@ export default function Payments() {
           icon={TrendingUp}
           accent="gray"
         />
+
         <StatCard
           title="Platform Earnings"
           value={formatAmount(summary?.totalPlatformFees ?? 0)}
@@ -380,13 +375,16 @@ export default function Payments() {
           icon={Banknote}
           accent="green"
         />
+
         <StatCard
           title="Pending Payouts"
           value={formatAmount(summary?.pendingPayouts ?? 0)}
-          subtitle={`${pendingPayoutCount} worker payment${pendingPayoutCount !== 1 ? "s" : ""} queued`}
+          subtitle={`${pendingPayoutCount} worker payment${pendingPayoutCount !== 1 ? "s" : ""
+            } queued`}
           icon={Clock}
           accent="yellow"
         />
+
         <StatCard
           title="Total Refunded"
           value={formatAmount(summary?.refundedAmount ?? 0)}
@@ -460,11 +458,10 @@ export default function Payments() {
                 <button
                   key={s}
                   onClick={() => setStatusFilter(s)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                    statusFilter === s
-                      ? "bg-gray-900 text-white"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${statusFilter === s
+                    ? "bg-gray-900 text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    }`}
                 >
                   {s === "worker_credited" ? "settled" : s}
                   {counts[s] > 0 && (
@@ -520,9 +517,8 @@ export default function Payments() {
                     <>
                       <tr
                         key={payment.id}
-                        className={`hover:bg-gray-50 cursor-pointer transition-colors ${
-                          expandedRow === payment.id ? "bg-gray-50" : ""
-                        }`}
+                        className={`hover:bg-gray-50 cursor-pointer transition-colors ${expandedRow === payment.id ? "bg-gray-50" : ""
+                          }`}
                         onClick={() =>
                           setExpandedRow(expandedRow === payment.id ? null : payment.id)
                         }
@@ -589,8 +585,8 @@ export default function Payments() {
                                   {payment.payoutCompletedAt
                                     ? formatDateTime(payment.payoutCompletedAt)
                                     : payment.status === "paid"
-                                    ? <span className="text-amber-600 flex items-center gap-1"><Clock className="w-3 h-3 inline" /> Within 1 hour of completion</span>
-                                    : "—"
+                                      ? <span className="text-amber-600 flex items-center gap-1"><Clock className="w-3 h-3 inline" /> Within 1 hour of completion</span>
+                                      : "—"
                                   }
                                 </p>
                               </div>
