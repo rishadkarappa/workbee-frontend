@@ -43,16 +43,16 @@ export default function Login() {
               onClick={handleNavigate}
               className="bg-primary rounded-full text-primary-foreground hover:bg-primary/90 px-6 py-3 text-base"
             >
-              Post Work
+              Post your work
             </Button>
 
             {/* Find a Worker button */}
-            <Button
+            {/* <Button
               onClick={handleNavigate}
               className="bg-white text-black rounded-full ml-2 hover:bg-gray-100 border border-gray-300 px-6 py-3 text-base"
             >
               Find a Worker
-            </Button>
+            </Button> */}
           </div>
         </div>
 

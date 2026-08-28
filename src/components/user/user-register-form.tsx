@@ -13,7 +13,7 @@ import {
     FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff, Phone } from "lucide-react"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import BackButton from "../common/back-button"
@@ -32,6 +32,7 @@ export function RegisterForm({
     const [form, setForm] = useState({
         name: "",
         email: "",
+        phone: "",
         password: "",
         confirmPassword: "",
     })
@@ -42,6 +43,7 @@ export function RegisterForm({
     const [errors, setErrors] = useState({
         name: "",
         email: "",
+        phone: "",
         password: "",
         confirmPassword: ""
     })
@@ -62,6 +64,7 @@ export function RegisterForm({
         const newErrors = {
             name: "",
             email: "",
+            phone: "",
             password: "",
             confirmPassword: "",
         };
@@ -81,6 +84,14 @@ export function RegisterForm({
             isValid = false;
         } else if (!emailRegex.validEmail.test(form.email)) {
             newErrors.email = "Enter a valid email address";
+            isValid = false;
+        }
+
+        if (!form.phone.trim()) {
+            newErrors.phone = "Phone number is required";
+            isValid = false;
+        } else if (!/^[6-9]\d{9}$/.test(form.phone)) {
+            newErrors.phone = "Enter a valid 10-digit phone number";
             isValid = false;
         }
 
@@ -113,14 +124,14 @@ export function RegisterForm({
 
         setIsLoading(true)
         try {
-            const registrationData = { name: form.name, email: form.email, password: form.password, };
+            const registrationData = { name: form.name, email: form.email, phone:form.phone, password: form.password, };
             const res = await AuthService.register(registrationData);
             if (res.data.success) {
                 AuthHelper.setUserId(res.data.data.userId);
                 toast.success(res.data.message);
                 navigate(AppRoutes.USER.OTP);
             } else {
-                toast.error( "Registration failed");
+                toast.error("Registration failed");
             }
         } catch (err) {
             console.error(err);
@@ -211,6 +222,28 @@ export function RegisterForm({
                             </Field>
 
                             <Field>
+                                <FieldLabel htmlFor="phone">Phone Number</FieldLabel>
+
+                                <Input
+                                    id="phone"
+                                    name="phone"
+                                    type="tel"
+                                    value={form.phone}
+                                    onChange={handleChange}
+                                    placeholder="Enter your phone number"
+                                    maxLength={10}
+                                />
+
+                                {errors.phone && (
+                                    <p className="text-xs text-red-700">
+                                        {errors.phone}
+                                    </p>
+                                )}
+                            </Field>
+
+
+
+                            <Field>
                                 <FieldLabel htmlFor="password">Password</FieldLabel>
                                 <div className="relative">
                                     <Input
@@ -285,7 +318,7 @@ export function RegisterForm({
                                 />
                             </GoogleOAuthProvider>
 
-                            <div className="mt-4 text-center text-sm">
+                            <div className="text-center text-sm">
                                 Already have any account?{' '}
                                 <a
                                     className="underline underline-offset-4 cursor-pointer"
@@ -293,7 +326,7 @@ export function RegisterForm({
                                 >
                                     Login
                                 </a>
-                                <div className="mt-4 text-center text-sm">
+                                <div className="mt-1 text-center text-sm">
                                     Apply to become a worker?{" "}
                                     <a
                                         className="underline underline-offset-4 cursor-pointer"

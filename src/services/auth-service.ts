@@ -6,7 +6,7 @@ export const AuthService = {
     // User Api's
 
     // register
-    register: (data: { name: string, email: string, password: string }) => {
+    register: (data: { name: string, email: string,phone:string, password: string }) => {
         return api.post(AUTH_ENDPOINTS.AUTH.REGISTER, data)
     },
 
