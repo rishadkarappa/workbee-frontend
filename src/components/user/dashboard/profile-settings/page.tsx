@@ -3,21 +3,25 @@ import ChangePasswordModal from "./models/change-password-modal";
 import { toast } from "sonner";
 import axios from "axios";
 import { Camera, Mail, MapPin, Calendar } from "lucide-react";
-import type { ExtraProfileData, UserProfileData } from "./types/types";
+import type { UserProfileData } from "./types/types";
 import { AuthService } from "@/services/auth-service";
 
 const TABS = ["Personal", "Account", "Security", "Notifications"] as const;
 type Tab = (typeof TABS)[number];
 
 export default function ProfileSettings() {
-  const [userProfileData, setUserProfileData] = useState<UserProfileData | null>(null);
+  const [userProfileData, setUserProfileData] =
+    useState<UserProfileData | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [uploading, setUploading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("Personal");
 
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+
   const [editData, setEditData] = useState({
     name: "",
     phone: "",
@@ -25,14 +29,16 @@ export default function ProfileSettings() {
     bio: "",
   });
 
-  // get user profile data api
+
+  // Get user profile
+
   useEffect(() => {
     const userDetails = async () => {
       try {
-        const resp = await AuthService.getUserProfileData();
+        const response = await AuthService.getUserProfileData();
 
-        if (resp.data.success) {
-          const data = resp.data.data;
+        if (response.data.success) {
+          const data = response.data.data;
 
           setUserProfileData(data);
 
@@ -44,12 +50,48 @@ export default function ProfileSettings() {
           });
         }
       } catch (error) {
-        console.log(error);
+        console.error(error);
+        toast.error("Failed to load profile");
       }
     };
 
     userDetails();
   }, []);
+
+
+  // Start editing
+
+  const handleEditProfile = () => {
+    if (!userProfileData) return;
+
+    setEditData({
+      name: userProfileData.name ?? "",
+      phone: userProfileData.phone ?? "",
+      location: userProfileData.location ?? "",
+      bio: userProfileData.bio ?? "",
+    });
+
+    setIsEditing(true);
+  };
+
+
+  // Cancel editing
+
+  const handleCancelEdit = () => {
+    if (!userProfileData) return;
+
+    setEditData({
+      name: userProfileData.name ?? "",
+      phone: userProfileData.phone ?? "",
+      location: userProfileData.location ?? "",
+      bio: userProfileData.bio ?? "",
+    });
+
+    setIsEditing(false);
+  };
+
+
+  // Update profile
 
   const handleUpdateProfile = async () => {
     try {
@@ -73,20 +115,23 @@ export default function ProfileSettings() {
       });
 
       if (response.data.success) {
-        setUserProfileData(response.data.data);
+        const updatedData = response.data.data;
+
+        setUserProfileData(updatedData);
 
         setEditData({
-          name: response.data.data.name ?? "",
-          phone: response.data.data.phone ?? "",
-          location: response.data.data.location ?? "",
-          bio: response.data.data.bio ?? "",
+          name: updatedData.name ?? "",
+          phone: updatedData.phone ?? "",
+          location: updatedData.location ?? "",
+          bio: updatedData.bio ?? "",
         });
 
         setIsEditing(false);
 
-        toast.success("Profile updated successfully");
+        toast.success(
+          response.data.message || "Profile updated successfully"
+        );
       }
-
     } catch (error) {
       console.error(error);
       toast.error("Failed to update profile");
@@ -95,6 +140,9 @@ export default function ProfileSettings() {
     }
   };
 
+
+  // Joined date
+
   const joinedDate = userProfileData?.createdAt
     ? new Date(userProfileData.createdAt).toLocaleDateString("en-US", {
       month: "long",
@@ -102,42 +150,79 @@ export default function ProfileSettings() {
     })
     : "—";
 
+
+  // Initials
+
   const initials = userProfileData?.name
     ? userProfileData.name
       .split(" ")
-      .map((n) => n[0])
+      .map((name) => name[0])
       .slice(0, 2)
       .join("")
       .toUpperCase()
     : "U";
 
+
+  // Profile image
+
   const handleAddProfileImage = () => {
+    if (uploading) return;
+
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0];
+
     if (!file) return;
 
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ];
+
     if (!allowedTypes.includes(file.type)) {
       toast.warning("Only JPG, PNG and WEBP images are allowed");
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+
       return;
     }
 
     const maxSize = 5 * 1024 * 1024;
+
     if (file.size > maxSize) {
       toast.error("Image must be smaller than 5MB");
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+
       return;
     }
 
     try {
       setUploading(true);
 
+      // 1. Get signed Cloudinary upload data
       const signatureResponse = await AuthService.getUploadSign();
-      const { signature, timestamp, apiKey, cloudeName, folder } = signatureResponse.data.data;
 
+      const {
+        signature,
+        timestamp,
+        apiKey,
+        cloudeName,
+        folder,
+      } = signatureResponse.data.data;
+
+      // 2. Prepare Cloudinary upload
       const formData = new FormData();
+
       formData.append("file", file);
       formData.append("api_key", apiKey);
       formData.append("timestamp", String(timestamp));
@@ -145,23 +230,43 @@ export default function ProfileSettings() {
       formData.append("folder", folder);
 
       const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloudeName}/image/upload`;
-      const cloudinaryReponse = await axios.post(cloudinaryUrl, formData);
-      const { secure_url, public_id } = cloudinaryReponse.data;
 
-      const saveResponse = await AuthService.saveImageUrlFromCloud({
-        imageUrl: secure_url,
-        publicId: public_id,
-      });
+      // 3. Upload to Cloudinary
+      const cloudinaryResponse = await axios.post(
+        cloudinaryUrl,
+        formData
+      );
+
+      const {
+        secure_url,
+        public_id,
+      } = cloudinaryResponse.data;
+
+      // 4. Save image URL in backend
+      const saveResponse =
+        await AuthService.saveImageUrlFromCloud({
+          imageUrl: secure_url,
+          publicId: public_id,
+        });
 
       if (saveResponse.data.success) {
-        setUserProfileData((prev) => (prev ? { ...prev, userProfileImage: secure_url } : prev));
+        setUserProfileData((prev) =>
+          prev
+            ? {
+              ...prev,
+              userProfileImage: secure_url,
+            }
+            : prev
+        );
+
         toast.success("Profile image updated successfully");
       }
     } catch (error) {
-      console.log(error);
-      toast.error("Failed to upload profile image.");
+      console.error(error);
+      toast.error("Failed to upload profile image");
     } finally {
       setUploading(false);
+
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -169,13 +274,21 @@ export default function ProfileSettings() {
   };
 
   return (
-    <div className="mx-auto w-full space-y-6 p-4">
-      {/* ---------- header card ---------- */}
+    <div className="mx-auto w-full space-y-6">
+
+      {/* 
+          HEADER CARD
+       */}
       <div className="flex flex-col gap-6 rounded-xl border border-gray-200 bg-white p-6 sm:flex-row sm:items-center sm:justify-between">
+
+        {/* LEFT SIDE */}
         <div className="flex items-center gap-5">
-          {/* avatar */}
+
+          {/* Avatar */}
           <div className="relative h-20 w-20 flex-shrink-0">
+
             <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gray-100 text-xl font-medium text-gray-500">
+
               {userProfileData?.userProfileImage ? (
                 <img
                   src={userProfileData.userProfileImage}
@@ -185,16 +298,20 @@ export default function ProfileSettings() {
               ) : (
                 <span>{initials}</span>
               )}
+
             </div>
 
+            {/* Camera button */}
             <button
               type="button"
               onClick={handleAddProfileImage}
-              className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50"
+              disabled={uploading}
+              className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Camera className="h-3.5 w-3.5 text-gray-600" />
             </button>
 
+            {/* Upload overlay */}
             {uploading && (
               <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 text-[10px] text-white">
                 Uploading...
@@ -204,14 +321,15 @@ export default function ProfileSettings() {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/jpeg, image/png, image/webp"
+              accept="image/jpeg,image/png,image/webp"
               onChange={handleFileChange}
               className="hidden"
             />
           </div>
 
-          {/* name + meta */}
+          {/* Name + Meta */}
           <div>
+
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-bold text-gray-900">
                 {userProfileData?.name ?? "User"}
@@ -223,6 +341,7 @@ export default function ProfileSettings() {
             </div>
 
             <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-gray-500">
+
               <span className="flex items-center gap-1.5">
                 <Mail className="h-3.5 w-3.5" />
                 {userProfileData?.email ?? "—"}
@@ -237,24 +356,64 @@ export default function ProfileSettings() {
                 <Calendar className="h-3.5 w-3.5" />
                 Joined {joinedDate}
               </span>
+
             </div>
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setIsEditing(true)}
-          className="h-fit rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
-        >
-          Edit Profile
-        </button>
+        {/* 
+            RIGHT SIDE ACTIONS
+
+            NORMAL:
+            [ Edit Profile ]
+
+            EDITING:
+            [ Cancel ] [ Save Changes ]
+         */}
+        <div className="flex items-center justify-end gap-3">
+
+          {!isEditing ? (
+            <button
+              type="button"
+              onClick={handleEditProfile}
+              className="h-fit rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+            >
+              Edit Profile
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={handleCancelEdit}
+                disabled={saving}
+                className="h-fit rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={handleUpdateProfile}
+                disabled={saving}
+                className="h-fit rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {saving ? "Saving..." : "Save Changes"}
+              </button>
+            </>
+          )}
+
+        </div>
       </div>
 
-      {/* ---------- tabs ---------- */}
+      {/* 
+          TABS
+       */}
       <div className="flex gap-1 rounded-lg bg-gray-100 p-1">
+
         {TABS.map((tab) => (
           <button
             key={tab}
+            type="button"
             onClick={() => setActiveTab(tab)}
             className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${activeTab === tab
               ? "bg-white text-gray-900 shadow-sm"
@@ -264,21 +423,33 @@ export default function ProfileSettings() {
             {tab}
           </button>
         ))}
+
       </div>
 
-      {/* ---------- tab content ---------- */}
+      {/* 
+          PERSONAL TAB
+       */}
       {activeTab === "Personal" && (
         <div className="rounded-xl border border-gray-200 bg-white p-6">
-          <h2 className="text-lg font-bold text-gray-900">Personal Information</h2>
+
+          <h2 className="text-lg font-bold text-gray-900">
+            Personal Information
+          </h2>
+
           <p className="mt-1 text-sm text-gray-500">
             Update your personal details and profile information.
           </p>
 
           <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
 
+            {/* Name */}
             <Field
               label="Name"
-              value={isEditing ? editData.name : userProfileData?.name ?? ""}
+              value={
+                isEditing
+                  ? editData.name
+                  : userProfileData?.name ?? ""
+              }
               disabled={!isEditing}
               onChange={(value) =>
                 setEditData((prev) => ({
@@ -288,15 +459,21 @@ export default function ProfileSettings() {
               }
             />
 
+            {/* Email */}
             <Field
               label="Email"
               value={userProfileData?.email ?? ""}
               disabled
             />
 
+            {/* Phone */}
             <Field
               label="Phone"
-              value={isEditing ? editData.phone : userProfileData?.phone ?? ""}
+              value={
+                isEditing
+                  ? editData.phone
+                  : userProfileData?.phone ?? ""
+              }
               disabled={!isEditing}
               onChange={(value) =>
                 setEditData((prev) => ({
@@ -306,6 +483,7 @@ export default function ProfileSettings() {
               }
             />
 
+            {/* Location */}
             <Field
               label="Location"
               value={
@@ -324,13 +502,19 @@ export default function ProfileSettings() {
 
           </div>
 
+          {/* Bio */}
           <div className="mt-5">
+
             <label className="mb-1.5 block text-sm font-medium text-gray-700">
               Bio
             </label>
 
             <textarea
-              value={isEditing ? editData.bio : userProfileData?.bio ?? ""}
+              value={
+                isEditing
+                  ? editData.bio
+                  : userProfileData?.bio ?? ""
+              }
               disabled={!isEditing}
               onChange={(e) =>
                 setEditData((prev) => ({
@@ -349,46 +533,25 @@ export default function ProfileSettings() {
                 {editData.bio.length}/500
               </p>
             )}
+
           </div>
-
-          {/* Save / Cancel */}
-          {isEditing && (
-            <div className="mt-6 flex justify-end gap-3 border-t border-gray-100 pt-5">
-              <button
-                type="button"
-                onClick={() => {
-                  setEditData({
-                    name: userProfileData?.name ?? "",
-                    phone: userProfileData?.phone ?? "",
-                    location: userProfileData?.location ?? "",
-                    bio: userProfileData?.bio ?? "",
-                  });
-
-                  setIsEditing(false);
-                }}
-                disabled={saving}
-                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-              >
-                Cancel
-              </button>
-
-              <button
-                type="button"
-                onClick={handleUpdateProfile}
-                disabled={saving}
-                className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
-              >
-                {saving ? "Saving..." : "Save Changes"}
-              </button>
-            </div>
-          )}
 
         </div>
       )}
 
-      {activeTab === "Account" && <PlaceholderPanel title="Account" />}
+      {/* 
+          ACCOUNT TAB
+       */}
+      {activeTab === "Account" && (
+        <PlaceholderPanel title="Account" />
+      )}
+
+      {/* 
+          SECURITY TAB
+       */}
       {activeTab === "Security" && (
         <div className="rounded-xl border border-gray-200 bg-white p-6">
+
           <h2 className="text-lg font-bold text-gray-900">
             Security
           </h2>
@@ -398,6 +561,7 @@ export default function ProfileSettings() {
           </p>
 
           <div className="mt-6 border-t border-gray-100 pt-6">
+
             <h3 className="text-sm font-semibold text-gray-900">
               Password
             </h3>
@@ -413,15 +577,28 @@ export default function ProfileSettings() {
             >
               Change Password
             </button>
+
           </div>
         </div>
       )}
-      {activeTab === "Notifications" && <PlaceholderPanel title="Notifications" />}
 
-      <ChangePasswordModal isOpen={isOpen} setIsOpen={setIsOpen} />
+      {activeTab === "Notifications" && (
+        <PlaceholderPanel title="Notifications" />
+      )}
+
+      {/* Password modal */}
+      <ChangePasswordModal
+        isOpen={isOpen}
+        setIsOpen={setIsOpen}
+      />
+
     </div>
   );
 }
+
+/* 
+   FIELD COMPONENT
+ */
 
 function Field({
   label,
@@ -431,12 +608,16 @@ function Field({
 }: {
   label: string;
   value: string;
-  onChange?: (v: string) => void;
+  onChange?: (value: string) => void;
   disabled?: boolean;
 }) {
   return (
     <div>
-      <label className="mb-1.5 block text-sm font-medium text-gray-700">{label}</label>
+
+      <label className="mb-1.5 block text-sm font-medium text-gray-700">
+        {label}
+      </label>
+
       <input
         type="text"
         value={value}
@@ -444,15 +625,31 @@ function Field({
         onChange={(e) => onChange?.(e.target.value)}
         className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none focus:border-gray-400 disabled:bg-gray-50 disabled:text-gray-500"
       />
+
     </div>
   );
 }
 
-function PlaceholderPanel({ title }: { title: string }) {
+/* 
+   PLACEHOLDER COMPONENT
+ */
+
+function PlaceholderPanel({
+  title,
+}: {
+  title: string;
+}) {
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-6">
-      <h2 className="text-lg font-bold text-gray-900">{title}</h2>
-      <p className="mt-1 text-sm text-gray-500">This section isn't wired up yet — coming soon.</p>
+
+      <h2 className="text-lg font-bold text-gray-900">
+        {title}
+      </h2>
+
+      <p className="mt-1 text-sm text-gray-500">
+        This section isn't wired up yet — coming soon.
+      </p>
+
     </div>
   );
 }
