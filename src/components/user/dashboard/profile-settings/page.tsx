@@ -16,21 +16,32 @@ export default function ProfileSettings() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("Personal");
 
-  //  dummy data until these fields have real backing endpoints ----
-  const [extra, setExtra] = useState<ExtraProfileData>({
-    firstName: "John",
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editData, setEditData] = useState({
+    name: "",
+    phone: "",
     location: "",
     bio: "",
-    badge: "Pro Member",
   });
 
   // get user profile data api
   useEffect(() => {
     const userDetails = async () => {
       try {
-        const resp = await AuthService.getUserProfileData()
+        const resp = await AuthService.getUserProfileData();
+
         if (resp.data.success) {
-          setUserProfileData(resp.data.data);
+          const data = resp.data.data;
+
+          setUserProfileData(data);
+
+          setEditData({
+            name: data.name ?? "",
+            phone: data.phone ?? "",
+            location: data.location ?? "",
+            bio: data.bio ?? "",
+          });
         }
       } catch (error) {
         console.log(error);
@@ -39,6 +50,50 @@ export default function ProfileSettings() {
 
     userDetails();
   }, []);
+
+  const handleUpdateProfile = async () => {
+    try {
+      if (!editData.name.trim()) {
+        toast.error("Name is required");
+        return;
+      }
+
+      if (!editData.phone.trim()) {
+        toast.error("Phone number is required");
+        return;
+      }
+
+      setSaving(true);
+
+      const response = await AuthService.updateUserProfile({
+        name: editData.name.trim(),
+        phone: editData.phone.trim(),
+        location: editData.location.trim(),
+        bio: editData.bio.trim(),
+      });
+
+      if (response.data.success) {
+        setUserProfileData(response.data.data);
+
+        setEditData({
+          name: response.data.data.name ?? "",
+          phone: response.data.data.phone ?? "",
+          location: response.data.data.location ?? "",
+          bio: response.data.data.bio ?? "",
+        });
+
+        setIsEditing(false);
+
+        toast.success("Profile updated successfully");
+      }
+
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update profile");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const joinedDate = userProfileData?.createdAt
     ? new Date(userProfileData.createdAt).toLocaleDateString("en-US", {
@@ -159,10 +214,11 @@ export default function ProfileSettings() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-bold text-gray-900">
-                {userProfileData?.name ?? `${extra.firstName}`}
+                {userProfileData?.name ?? "User"}
               </h1>
+
               <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
-                {extra.badge}
+                Pro Member
               </span>
             </div>
 
@@ -187,6 +243,7 @@ export default function ProfileSettings() {
 
         <button
           type="button"
+          onClick={() => setIsEditing(true)}
           className="h-fit rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
         >
           Edit Profile
@@ -218,35 +275,113 @@ export default function ProfileSettings() {
           </p>
 
           <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
+
             <Field
-              label="First Name"
-              value={extra.firstName}
-              onChange={(v) => setExtra((p) => ({ ...p, firstName: v }))}
+              label="Name"
+              value={isEditing ? editData.name : userProfileData?.name ?? ""}
+              disabled={!isEditing}
+              onChange={(value) =>
+                setEditData((prev) => ({
+                  ...prev,
+                  name: value,
+                }))
+              }
             />
-            <Field label="Email" value={userProfileData?.email ?? ""} disabled />
+
             <Field
-              label="Phone"
-              value={userProfileData?.phone ? String(userProfileData.phone) : "+1 (555) 123-4567"}
+              label="Email"
+              value={userProfileData?.email ?? ""}
               disabled
             />
 
             <Field
-              label="Location"
-              
-              value={extra.location?extra.location:"Add Location"}
-              onChange={(v) => setExtra((p) => ({ ...p, company: v }))}
+              label="Phone"
+              value={isEditing ? editData.phone : userProfileData?.phone ?? ""}
+              disabled={!isEditing}
+              onChange={(value) =>
+                setEditData((prev) => ({
+                  ...prev,
+                  phone: value,
+                }))
+              }
             />
+
+            <Field
+              label="Location"
+              value={
+                isEditing
+                  ? editData.location
+                  : userProfileData?.location || "Not added"
+              }
+              disabled={!isEditing}
+              onChange={(value) =>
+                setEditData((prev) => ({
+                  ...prev,
+                  location: value,
+                }))
+              }
+            />
+
           </div>
 
           <div className="mt-5">
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">Bio</label>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700">
+              Bio
+            </label>
+
             <textarea
-              value={extra.bio?extra.bio:"Add Bio...."}
-              onChange={(e) => setExtra((p) => ({ ...p, bio: e.target.value }))}
+              value={isEditing ? editData.bio : userProfileData?.bio ?? ""}
+              disabled={!isEditing}
+              onChange={(e) =>
+                setEditData((prev) => ({
+                  ...prev,
+                  bio: e.target.value,
+                }))
+              }
+              placeholder="Add a short bio..."
+              maxLength={500}
               rows={3}
-              className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none focus:border-gray-400"
+              className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none focus:border-gray-400 disabled:bg-gray-50 disabled:text-gray-500"
             />
+
+            {isEditing && (
+              <p className="mt-1 text-right text-xs text-gray-400">
+                {editData.bio.length}/500
+              </p>
+            )}
           </div>
+
+          {/* Save / Cancel */}
+          {isEditing && (
+            <div className="mt-6 flex justify-end gap-3 border-t border-gray-100 pt-5">
+              <button
+                type="button"
+                onClick={() => {
+                  setEditData({
+                    name: userProfileData?.name ?? "",
+                    phone: userProfileData?.phone ?? "",
+                    location: userProfileData?.location ?? "",
+                    bio: userProfileData?.bio ?? "",
+                  });
+
+                  setIsEditing(false);
+                }}
+                disabled={saving}
+                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={handleUpdateProfile}
+                disabled={saving}
+                className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+              >
+                {saving ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          )}
 
         </div>
       )}

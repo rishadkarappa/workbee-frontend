@@ -18,6 +18,7 @@ export const AUTH_ENDPOINTS = {
         GET_UPLOAD_SIGN: "/auth/profile-image/upload-signature",
         SAVE_IMAGE_URL_FROM_CLOUD: "/auth/profile-image",
         CHANGE_PASSWORD: "/auth/change-user-password",
+        UPDATE_USER_PROFILE: "/auth/update-user-profile",
 
         // to show use details in worker chat comp
         GET_USER_PROFILE_BY_ID: (userId: string) => `/auth/user-profile-stat/${userId}`,

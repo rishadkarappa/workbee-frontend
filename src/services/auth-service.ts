@@ -6,7 +6,7 @@ export const AuthService = {
     // User Api's
 
     // register
-    register: (data: { name: string, email: string,phone:string, password: string }) => {
+    register: (data: { name: string, email: string, phone: string, password: string }) => {
         return api.post(AUTH_ENDPOINTS.AUTH.REGISTER, data)
     },
 
@@ -63,6 +63,9 @@ export const AuthService = {
     },
     getUserProfileById: (userId: string) => {
         return api.get(AUTH_ENDPOINTS.AUTH.GET_USER_PROFILE_BY_ID(userId));
+    },
+    updateUserProfile: (data: {name: string;phone: string;location?: string;bio?: string;}) => {
+        return api.patch(AUTH_ENDPOINTS.AUTH.UPDATE_USER_PROFILE,data);
     },
 
     // google Auth
