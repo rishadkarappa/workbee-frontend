@@ -31,7 +31,6 @@ export default function ProfileSettings() {
 
 
   // Get user profile
-
   useEffect(() => {
     const userDetails = async () => {
       try {
@@ -60,7 +59,6 @@ export default function ProfileSettings() {
 
 
   // Start editing
-
   const handleEditProfile = () => {
     if (!userProfileData) return;
 
@@ -76,7 +74,6 @@ export default function ProfileSettings() {
 
 
   // Cancel editing
-
   const handleCancelEdit = () => {
     if (!userProfileData) return;
 
@@ -92,7 +89,6 @@ export default function ProfileSettings() {
 
 
   // Update profile
-
   const handleUpdateProfile = async () => {
     try {
       if (!editData.name.trim()) {
@@ -142,7 +138,6 @@ export default function ProfileSettings() {
 
 
   // Joined date
-
   const joinedDate = userProfileData?.createdAt
     ? new Date(userProfileData.createdAt).toLocaleDateString("en-US", {
       month: "long",
@@ -152,7 +147,6 @@ export default function ProfileSettings() {
 
 
   // Initials
-
   const initials = userProfileData?.name
     ? userProfileData.name
       .split(" ")
@@ -164,7 +158,6 @@ export default function ProfileSettings() {
 
 
   // Profile image
-
   const handleAddProfileImage = () => {
     if (uploading) return;
 
@@ -178,11 +171,7 @@ export default function ProfileSettings() {
 
     if (!file) return;
 
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-    ];
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp",];
 
     if (!allowedTypes.includes(file.type)) {
       toast.warning("Only JPG, PNG and WEBP images are allowed");
@@ -209,18 +198,12 @@ export default function ProfileSettings() {
     try {
       setUploading(true);
 
-      // 1. Get signed Cloudinary upload data
+      // Get signed Cloudinary upload data
       const signatureResponse = await AuthService.getUploadSign();
 
-      const {
-        signature,
-        timestamp,
-        apiKey,
-        cloudeName,
-        folder,
-      } = signatureResponse.data.data;
+      const { signature, timestamp, apiKey, cloudeName, folder, } = signatureResponse.data.data;
 
-      // 2. Prepare Cloudinary upload
+      // Prepare Cloudinary upload
       const formData = new FormData();
 
       formData.append("file", file);
@@ -231,18 +214,12 @@ export default function ProfileSettings() {
 
       const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloudeName}/image/upload`;
 
-      // 3. Upload to Cloudinary
-      const cloudinaryResponse = await axios.post(
-        cloudinaryUrl,
-        formData
-      );
+      // Upload to Cloudinary
+      const cloudinaryResponse = await axios.post(cloudinaryUrl, formData);
 
-      const {
-        secure_url,
-        public_id,
-      } = cloudinaryResponse.data;
+      const { secure_url, public_id, } = cloudinaryResponse.data;
 
-      // 4. Save image URL in backend
+      // Save image URL in backend
       const saveResponse =
         await AuthService.saveImageUrlFromCloud({
           imageUrl: secure_url,
@@ -276,11 +253,8 @@ export default function ProfileSettings() {
   return (
     <div className="mx-auto w-full space-y-6">
 
-      {/* 
-          HEADER CARD
-       */}
-      <div className="flex flex-col gap-6 rounded-xl border border-gray-200 bg-white p-6 sm:flex-row sm:items-center sm:justify-between">
-
+      {/* HEADER CARD*/}
+      <div className="flex flex-col gap-6 rounded-xl border border-gray-200 bg-white p-6">
         {/* LEFT SIDE */}
         <div className="flex items-center gap-5">
 
@@ -361,53 +335,9 @@ export default function ProfileSettings() {
           </div>
         </div>
 
-        {/* 
-            RIGHT SIDE ACTIONS
-
-            NORMAL:
-            [ Edit Profile ]
-
-            EDITING:
-            [ Cancel ] [ Save Changes ]
-         */}
-        <div className="flex items-center justify-end gap-3">
-
-          {!isEditing ? (
-            <button
-              type="button"
-              onClick={handleEditProfile}
-              className="h-fit rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
-            >
-              Edit Profile
-            </button>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={handleCancelEdit}
-                disabled={saving}
-                className="h-fit rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Cancel
-              </button>
-
-              <button
-                type="button"
-                onClick={handleUpdateProfile}
-                disabled={saving}
-                className="h-fit rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {saving ? "Saving..." : "Save Changes"}
-              </button>
-            </>
-          )}
-
-        </div>
       </div>
 
-      {/* 
-          TABS
-       */}
+      {/*      TABS*/}
       <div className="flex gap-1 rounded-lg bg-gray-100 p-1">
 
         {TABS.map((tab) => (
@@ -432,13 +362,50 @@ export default function ProfileSettings() {
       {activeTab === "Personal" && (
         <div className="rounded-xl border border-gray-200 bg-white p-6">
 
-          <h2 className="text-lg font-bold text-gray-900">
-            Personal Information
-          </h2>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">
+                Personal Information
+              </h2>
 
-          <p className="mt-1 text-sm text-gray-500">
-            Update your personal details and profile information.
-          </p>
+              <p className="mt-1 text-sm text-gray-500">
+                Update your personal details and profile information.
+              </p>
+            </div>
+
+            {/* Profile Actions */}
+            <div className="flex shrink-0 items-center gap-3">
+              {!isEditing ? (
+                <button
+                  type="button"
+                  onClick={handleEditProfile}
+                  className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+                >
+                  Edit Profile
+                </button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleCancelEdit}
+                    disabled={saving}
+                    className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleUpdateProfile}
+                    disabled={saving}
+                    className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {saving ? "Saving..." : "Save Changes"}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
 
           <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
 
@@ -539,16 +506,12 @@ export default function ProfileSettings() {
         </div>
       )}
 
-      {/* 
-          ACCOUNT TAB
-       */}
+      {/* ACCOUNT TAB */}
       {activeTab === "Account" && (
         <PlaceholderPanel title="Account" />
       )}
 
-      {/* 
-          SECURITY TAB
-       */}
+      {/*  SECURITY TAB */}
       {activeTab === "Security" && (
         <div className="rounded-xl border border-gray-200 bg-white p-6">
 
@@ -596,9 +559,7 @@ export default function ProfileSettings() {
   );
 }
 
-/* 
-   FIELD COMPONENT
- */
+/*    FIELD COMPONENT */
 
 function Field({
   label,
@@ -630,9 +591,7 @@ function Field({
   );
 }
 
-/* 
-   PLACEHOLDER COMPONENT
- */
+/*  PLACEHOLDER COMPONENT*/
 
 function PlaceholderPanel({
   title,
