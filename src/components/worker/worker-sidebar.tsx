@@ -79,7 +79,7 @@ const WorkerSidebar = () => {
             <SidebarContent>
                 <SidebarGroup>
                     
-                    <SidebarGroupLabel className="mb-3"><span className="text-base font-semibold">WorkBee worker dashboard</span></SidebarGroupLabel>
+                    <SidebarGroupLabel className="mb-3"><span className="text-base font-semibold">WorkBee Worker Dashboard</span></SidebarGroupLabel>
                     
                     <SidebarGroupContent>
                         <SidebarMenu>
