@@ -342,37 +342,6 @@ export default function WorkerAccountSettings() {
             </div>
           </div>
         </div>
-
-        {!isEditing ? (
-          <button
-            type="button"
-            onClick={handleEditProfile}
-            className="h-fit rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
-          >
-            Edit Profile
-          </button>
-        ) : (
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={handleCancelEdit}
-              disabled={isUpdating}
-              className="h-fit rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-            >
-              Cancel
-            </button>
-
-            <button
-              type="button"
-              onClick={handleUpdateProfile}
-
-              disabled={isUpdating}
-              className="h-fit rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
-            >
-              {isUpdating ? "Updating..." : "Update Profile"}
-            </button>
-          </div>
-        )}
       </div>
 
       {/* ---------- tabs ---------- */}
@@ -394,16 +363,52 @@ export default function WorkerAccountSettings() {
       {/* ---------- tab content ---------- */}
       {activeTab === "Personal" && (
         <div className="rounded-xl border border-gray-200 bg-white p-6">
-          <h2 className="text-lg font-bold text-gray-900">
-            Personal Information
-          </h2>
+          {/* Section Header */}
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">
+                Personal Information
+              </h2>
 
-          <p className="mt-1 text-sm text-gray-500">
-            Your personal details on file.
-          </p>
+              <p className="mt-1 text-sm text-gray-500">
+                Your personal details on file.
+              </p>
+            </div>
 
+            {/* Edit / Update Actions */}
+            {!isEditing ? (
+              <button
+                type="button"
+                onClick={handleEditProfile}
+                className="shrink-0 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+              >
+                Edit Profile
+              </button>
+            ) : (
+              <div className="flex shrink-0 gap-2">
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  disabled={isUpdating}
+                  className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleUpdateProfile}
+                  disabled={isUpdating}
+                  className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isUpdating ? "Updating..." : "Update Profile"}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Personal Fields */}
           <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
-
             <Field
               label="Name"
               value={isEditing ? editForm.name : worker.name}
@@ -422,7 +427,11 @@ export default function WorkerAccountSettings() {
 
             <Field
               label="Phone"
-              value={isEditing ? editForm.phone : String(worker.phone ?? "—")}
+              value={
+                isEditing
+                  ? editForm.phone
+                  : String(worker.phone ?? "—")
+              }
               name="phone"
               disabled={!isEditing}
               onChange={handleEditChange}
@@ -432,41 +441,45 @@ export default function WorkerAccountSettings() {
 
             <Field
               label="Location"
-              value={isEditing ? editForm.location : worker.location}
+              value={
+                isEditing
+                  ? editForm.location
+                  : worker.location ?? "—"
+              }
               name="location"
               disabled={!isEditing}
               onChange={handleEditChange}
               inputRef={locationInputRef}
               isEditing={isEditing}
             />
+          </div>
 
-            {/* Bio */}
-            <div className="sm:col-span-2">
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                Bio
-              </label>
+          {/* Bio */}
+          <div className="mt-5">
+            <label className="mb-1.5 block text-sm font-medium text-gray-700">
+              Bio
+            </label>
 
-              <textarea
-                ref={bioInputRef}
-                name="bio"
-                value={isEditing ? editForm.bio : worker.bio ?? ""}
-                onChange={handleEditChange}
-                disabled={!isEditing}
-                rows={4}
-                maxLength={500}
-                className={`w-full resize-none rounded-lg border px-3 py-2 text-sm text-gray-800 outline-none
-    ${isEditing
-                    ? "border-gray-400 ring-2 ring-gray-200"
-                    : "border-gray-200 disabled:bg-gray-50 disabled:text-gray-500"
-                  }`}
-              />
+            <textarea
+              ref={bioInputRef}
+              name="bio"
+              value={isEditing ? editForm.bio : worker.bio ?? ""}
+              onChange={handleEditChange}
+              disabled={!isEditing}
+              rows={4}
+              maxLength={500}
+              className={`w-full resize-none rounded-lg border px-3 py-2 text-sm text-gray-800 outline-none
+          ${isEditing
+                  ? "border-gray-400 ring-2 ring-gray-200"
+                  : "border-gray-200 disabled:bg-gray-50 disabled:text-gray-500"
+                }`}
+            />
 
-              {isEditing && (
-                <p className="mt-1 text-right text-xs text-gray-400">
-                  {editForm.bio.length}/500
-                </p>
-              )}
-            </div>
+            {isEditing && (
+              <p className="mt-1 text-right text-xs text-gray-400">
+                {editForm.bio.length}/500
+              </p>
+            )}
           </div>
         </div>
       )}
