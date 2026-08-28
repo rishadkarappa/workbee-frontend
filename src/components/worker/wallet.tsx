@@ -12,7 +12,8 @@ import {
   ChevronUp,
   Info,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { PaymentService } from "@/services/payment-service";
@@ -262,67 +263,83 @@ export default function WorkerWallet() {
 
   return (
     <div className="space-y-6 p-4 sm:p-6 w-full max-w-6xl mx-auto">
-      {/* Header */}
-      {/* <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <Wallet className="w-6 h-6" />
-            My Wallet
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Earnings, pending payouts, and work history
-          </p>
-        </div>
-        
-      </div> */}
 
       {/* Balance Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="border-0 shadow-sm bg-gradient-to-br from-gray-900 to-gray-800 text-white">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-                Withdrawable
-              </p>
-              <Banknote className="w-4 h-4 text-gray-400" />
-            </div>
-            <p className="text-2xl font-bold">
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <Card
+          data-slot="card"
+          className="@container/card bg-gradient-to-t from-primary/5 to-card shadow-xs dark:bg-card"
+        >
+          <CardHeader>
+            <CardDescription>Withdrawable</CardDescription>
+
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
               {formatAmount(wallet?.balance ?? 0)}
-            </p>
-            <p className="text-xs text-gray-400 mt-1">Available now</p>
-          </CardContent>
+            </CardTitle>
+
+            <CardAction>
+              <div className="rounded-md bg-muted p-2">
+                <Banknote className="size-4 text-muted-foreground" />
+              </div>
+            </CardAction>
+          </CardHeader>
+
+          <CardFooter className="flex-col items-start gap-1.5 text-sm">
+            <div className="text-muted-foreground">
+              Available now
+            </div>
+          </CardFooter>
         </Card>
 
-        <Card className="border-0 shadow-sm border-amber-200 bg-amber-50">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-medium text-amber-600 uppercase tracking-wide">
-                Pending
-              </p>
-              <Clock className="w-4 h-4 text-amber-500" />
-            </div>
-            <p className="text-2xl font-bold text-amber-700">
+        <Card
+          data-slot="card"
+          className="@container/card bg-gradient-to-t from-primary/5 to-card shadow-xs dark:bg-card"
+        >
+          <CardHeader>
+            <CardDescription>Pending</CardDescription>
+
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
               {formatAmount(wallet?.pendingBalance ?? 0)}
-            </p>
-            <p className="text-xs text-amber-600 mt-1">
+            </CardTitle>
+
+            <CardAction>
+              <div className="rounded-md bg-muted p-2">
+                <Clock className="size-4 text-muted-foreground" />
+              </div>
+            </CardAction>
+          </CardHeader>
+
+          <CardFooter className="flex-col items-start gap-1.5 text-sm">
+            <div className="text-muted-foreground">
               {pendingCount} work{pendingCount !== 1 ? "s" : ""} in progress
-            </p>
-          </CardContent>
+            </div>
+          </CardFooter>
         </Card>
 
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Total Earned
-              </p>
-              <TrendingUp className="w-4 h-4 text-green-500" />
-            </div>
-            <p className="text-2xl font-bold text-green-600">
+        <Card
+          data-slot="card"
+          className="@container/card bg-gradient-to-t from-primary/5 to-card shadow-xs dark:bg-card"
+        >
+          <CardHeader>
+            <CardDescription>Total Earned</CardDescription>
+
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
               {formatAmount(wallet?.totalEarned ?? 0)}
-            </p>
-            <p className="text-xs text-gray-500 mt-1">After 1% platform fee</p>
-          </CardContent>
+            </CardTitle>
+
+            <CardAction>
+              <div className="rounded-md bg-muted p-2">
+                <TrendingUp className="size-4 text-muted-foreground" />
+              </div>
+            </CardAction>
+          </CardHeader>
+
+          <CardFooter className="flex-col items-start gap-1.5 text-sm">
+            <div className="text-muted-foreground">
+              After 1% platform fee
+            </div>
+          </CardFooter>
         </Card>
       </div>
 
