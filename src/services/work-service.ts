@@ -1,7 +1,6 @@
 import type { ApplyForWorkerDto } from "@/components/worker/worker-apply";
 import { api } from "./axios-instance/axios-instance";
 import { WORK_ENDPOINTS } from "@/constants/api-endpoints/work-endpoints";
-import { data } from "react-router-dom";
 
 interface UpdateWorkDto {
     workTitle?: string;
@@ -106,22 +105,12 @@ export const WorkService = {
         return api.get("/work/worker/profile-image/upload-signature");
     },
 
-    saveImageUrlFromCloud: (data: {
-        imageUrl: string;
-        publicId: string;
-    }) => {
-        return api.patch(
-            "/work/worker/profile-image",
-            data
-        );
+    saveImageUrlFromCloud: (data: { imageUrl: string; publicId: string; }) => {
+        return api.patch("/work/worker/profile-image", data);
     },
 
-
-    // askWorkerReview: () => {
-    //     return api.post('/work/review-of-worker',{
-    //         chat.workerId,
-    //         chat.workId,
-    //         data,
-    //     })
-    // }
+    //dashboard stat
+    getWorkerDashboardStats: () => {
+        return api.get(WORK_ENDPOINTS.GET_WORKER_DASHBOARD_STATS);
+    },
 }

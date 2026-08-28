@@ -30,4 +30,9 @@ export const PaymentService = {
   getAdminPaymentsList: (page = 1, limit = 15) => {
     return api.get(PAYMENT_ENDPOINTS.ADMIN.PAYMENTS, { params: { page, limit } });
   },
+
+  // dashboard
+  getWorkerEarningsStats: () => {
+    return api.get(PAYMENT_ENDPOINTS.WORKER_EARNINGS_STATS);
+  },
 };

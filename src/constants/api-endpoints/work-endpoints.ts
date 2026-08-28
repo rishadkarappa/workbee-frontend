@@ -10,4 +10,5 @@ export const WORK_ENDPOINTS = {
     UPDATE_WORK: (workId: string) => `/work/update-work/${workId}`,
     DELETE_MY_WORK: (workId: string) => `/work/delete-my-work/${workId}`,
     GET_WORKER_ASSIGNED_WORKS: "/work/worker-assigned-works",
+    GET_WORKER_DASHBOARD_STATS: "/work/worker/dashboard-stats",
 };

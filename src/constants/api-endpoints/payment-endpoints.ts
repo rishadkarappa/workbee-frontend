@@ -9,4 +9,5 @@ export const PAYMENT_ENDPOINTS = {
         SUMMARY: "/payment/admin/summary",
         PAYMENTS: "/payment/admin/payments",
     },
+    WORKER_EARNINGS_STATS: "/payment/worker/earnings-stats",
 };
