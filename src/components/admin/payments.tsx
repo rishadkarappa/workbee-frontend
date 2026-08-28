@@ -358,12 +358,6 @@ export default function Payments() {
     <div className="space-y-6 p-4 sm:p-6 w-full">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Payments</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Platform revenue, payouts, and transaction oversight
-          </p>
-        </div>
         <Button variant="outline" size="sm" onClick={fetchAll}>
           <RefreshCw className="w-4 h-4 mr-2" />
           Refresh
