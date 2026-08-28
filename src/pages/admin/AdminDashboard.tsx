@@ -1,10 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
-    Users,
-    UserCheck,
     UserPlus,
-    DollarSign,
-    Wallet,
     Clock,
     BriefcaseBusiness,
     CheckCircle,
@@ -12,17 +8,29 @@ import {
     TrendingDown,
 } from "lucide-react";
 import {
-    LineChart,
-    Line,
-    BarChart,
+    Area,
+    AreaChart,
     Bar,
-    XAxis,
-    YAxis,
+    BarChart,
     CartesianGrid,
-    Tooltip,
-    Legend,
-    ResponsiveContainer,
+    XAxis,
 } from "recharts";
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import {
+    ChartContainer,
+    ChartTooltip,
+    ChartTooltipContent,
+} from "@/components/ui/chart";
+import type { ChartConfig } from "@/components/ui/chart";
 import { AuthService } from "@/services/auth-service";
 import { WorkService } from "@/services/work-service";
 import { PaymentService } from "@/services/payment-service";
@@ -66,6 +74,45 @@ function formatLakh(amount: number): string {
 function pctChange(current: number, previous: number): number | null {
     if (previous <= 0) return null;
     return Math.round(((current - previous) / previous) * 100);
+}
+
+const chartConfig = {
+    revenue: {
+        label: "Revenue",
+        color: "var(--foreground)",
+    },
+    platformEarnings: {
+        label: "Platform Earnings",
+        color: "var(--muted-foreground)",
+    },
+} satisfies ChartConfig;
+
+const earningsChartConfig = {
+    amount: {
+        label: "Earnings",
+        color: "var(--foreground)",
+    },
+} satisfies ChartConfig;
+
+function TrendBadge({ pct }: { pct: number | null }) {
+    if (pct === null) return null;
+    const isUp = pct >= 0;
+    return (
+        <Badge variant="outline" className="text-xs">
+            {isUp ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
+            {isUp ? "+" : ""}{pct}%
+        </Badge>
+    );
+}
+
+function StatusBadge({ status }: { status: string }) {
+    const label = status.replace("_", " ");
+    const isSettled = status === "worker_credited" || status === "paid";
+    return (
+        <Badge variant={isSettled ? "default" : "secondary"} className="capitalize">
+            {label}
+        </Badge>
+    );
 }
 
 const AdminDashboard = () => {
@@ -128,335 +175,351 @@ const AdminDashboard = () => {
     const revenueTrend = paymentStats ? pctChange(paymentStats.revenueThisMonth, paymentStats.revenueLastMonth) : null;
     const platformTrend = paymentStats ? pctChange(paymentStats.platformEarningsThisMonth, paymentStats.platformEarningsLastMonth) : null;
 
-    const TrendBadge = ({ pct }: { pct: number | null }) => {
-        if (pct === null) return null;
-        return (
-            <div className={`mt-4 flex items-center gap-1 text-sm ${pct >= 0 ? "text-green-600" : "text-red-600"}`}>
-                {pct >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-                <span>{Math.abs(pct)}% this month</span>
-            </div>
-        );
-    };
+    const revenueOverviewData = useMemo(() => {
+        if (!paymentStats) return [];
+        return paymentStats.monthlyRevenue.map((r, i) => ({
+            month: r.month,
+            revenue: r.amount,
+            platformEarnings: paymentStats.monthlyPlatformEarnings[i]?.amount ?? 0,
+        }));
+    }, [paymentStats]);
 
     return (
         <div className="w-full space-y-6 p-6">
 
-            {/* Main Metrics */}
-            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+            {/* Primary KPI row — gradient-tinted cards, shadcn dashboard-01 pattern */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs dark:*:data-[slot=card]:bg-card">
 
-                {/* Total Users */}
-                <div className="rounded-xl border bg-card p-5 shadow-sm">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-muted-foreground">Total Users</p>
-                            <h2 className="mt-2 text-3xl font-bold">
-                                {userLoading ? "—" : (userStats?.totalUsers ?? 0).toLocaleString("en-IN")}
-                            </h2>
+                <Card data-slot="card" className="@container/card">
+                    <CardHeader>
+                        <CardDescription>Total Users</CardDescription>
+                        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+                            {userLoading ? "—" : (userStats?.totalUsers ?? 0).toLocaleString("en-IN")}
+                        </CardTitle>
+                        <CardAction>
+                            <TrendBadge pct={userTrend} />
+                        </CardAction>
+                    </CardHeader>
+                    <CardFooter className="flex-col items-start gap-1.5 text-sm">
+                        <div className="text-muted-foreground">
+                            {userLoading ? "Loading…" : `${userStats?.newUsersThisMonth ?? 0} registered this month`}
                         </div>
-                        <div className="rounded-lg bg-primary/10 p-3">
-                            <Users className="h-5 w-5 text-primary" />
-                        </div>
-                    </div>
-                    <TrendBadge pct={userTrend} />
-                </div>
+                    </CardFooter>
+                </Card>
 
-                {/* Total Workers */}
-                <div className="rounded-xl border bg-card p-5 shadow-sm">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-muted-foreground">Total Workers</p>
-                            <h2 className="mt-2 text-3xl font-bold">
-                                {workLoading ? "—" : (workStats?.totalWorkers ?? 0).toLocaleString("en-IN")}
-                            </h2>
+                <Card data-slot="card" className="@container/card">
+                    <CardHeader>
+                        <CardDescription>Total Workers</CardDescription>
+                        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+                            {workLoading ? "—" : (workStats?.totalWorkers ?? 0).toLocaleString("en-IN")}
+                        </CardTitle>
+                        <CardAction>
+                            <TrendBadge pct={workerTrend} />
+                        </CardAction>
+                    </CardHeader>
+                    <CardFooter className="flex-col items-start gap-1.5 text-sm">
+                        <div className="text-muted-foreground">
+                            {workLoading ? "Loading…" : `${workStats?.newAppliersCount ?? 0} awaiting approval`}
                         </div>
-                        <div className="rounded-lg bg-primary/10 p-3">
-                            <UserCheck className="h-5 w-5 text-primary" />
-                        </div>
-                    </div>
-                    <TrendBadge pct={workerTrend} />
-                </div>
+                    </CardFooter>
+                </Card>
 
-                {/* New Appliers */}
-                <div className="rounded-xl border bg-card p-5 shadow-sm">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-muted-foreground">New Appliers</p>
-                            <h2 className="mt-2 text-3xl font-bold">
-                                {workLoading ? "—" : workStats?.newAppliersCount ?? 0}
-                            </h2>
-                        </div>
-                        <div className="rounded-lg bg-primary/10 p-3">
-                            <UserPlus className="h-5 w-5 text-primary" />
-                        </div>
-                    </div>
-                    <p className="mt-4 text-sm text-muted-foreground">Awaiting approval</p>
-                </div>
+                <Card data-slot="card" className="@container/card">
+                    <CardHeader>
+                        <CardDescription>Gross Revenue</CardDescription>
+                        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+                            {paymentLoading ? "—" : formatLakh(paymentStats?.grossRevenue ?? 0)}
+                        </CardTitle>
+                        <CardAction>
+                            <TrendBadge pct={revenueTrend} />
+                        </CardAction>
+                    </CardHeader>
+                    <CardFooter className="flex-col items-start gap-1.5 text-sm">
+                        <div className="text-muted-foreground">Across all completed payments</div>
+                    </CardFooter>
+                </Card>
 
-                {/* Gross Revenue */}
-                <div className="rounded-xl border bg-card p-5 shadow-sm">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-muted-foreground">Gross Revenue</p>
-                            <h2 className="mt-2 text-3xl font-bold">
-                                {paymentLoading ? "—" : formatLakh(paymentStats?.grossRevenue ?? 0)}
-                            </h2>
-                        </div>
-                        <div className="rounded-lg bg-primary/10 p-3">
-                            <DollarSign className="h-5 w-5 text-primary" />
-                        </div>
-                    </div>
-                    <TrendBadge pct={revenueTrend} />
-                </div>
+                <Card data-slot="card" className="@container/card">
+                    <CardHeader>
+                        <CardDescription>Platform Earnings</CardDescription>
+                        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+                            {paymentLoading ? "—" : formatLakh(paymentStats?.platformEarnings ?? 0)}
+                        </CardTitle>
+                        <CardAction>
+                            <TrendBadge pct={platformTrend} />
+                        </CardAction>
+                    </CardHeader>
+                    <CardFooter className="flex-col items-start gap-1.5 text-sm">
+                        <div className="text-muted-foreground">Platform fee collected</div>
+                    </CardFooter>
+                </Card>
+            </div>
 
-                {/* Platform Earnings */}
-                <div className="rounded-xl border bg-card p-5 shadow-sm">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-muted-foreground">Platform Earnings</p>
-                            <h2 className="mt-2 text-3xl font-bold">
-                                {paymentLoading ? "—" : formatLakh(paymentStats?.platformEarnings ?? 0)}
-                            </h2>
+            {/* Secondary KPI row — compact stat cards */}
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+                <Card>
+                    <CardContent className="flex items-center gap-3 px-4 py-4">
+                        <div className="rounded-md bg-muted p-2">
+                            <Clock className="size-4 text-muted-foreground" />
                         </div>
-                        <div className="rounded-lg bg-primary/10 p-3">
-                            <Wallet className="h-5 w-5 text-primary" />
-                        </div>
-                    </div>
-                    <TrendBadge pct={platformTrend} />
-                </div>
-
-                {/* Pending Payouts */}
-                <div className="rounded-xl border bg-card p-5 shadow-sm">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-muted-foreground">Pending Payouts</p>
-                            <h2 className="mt-2 text-3xl font-bold">
+                        <div className="min-w-0">
+                            <p className="truncate text-xs text-muted-foreground">Pending Payouts</p>
+                            <p className="text-lg font-semibold tabular-nums">
                                 {paymentLoading ? "—" : formatLakh(paymentStats?.pendingPayoutsAmount ?? 0)}
-                            </h2>
+                            </p>
                         </div>
-                        <div className="rounded-lg bg-primary/10 p-3">
-                            <Clock className="h-5 w-5 text-primary" />
-                        </div>
-                    </div>
-                    <p className="mt-4 text-sm text-muted-foreground">
-                        {paymentStats?.pendingPayoutsCount ?? 0} payouts pending
-                    </p>
-                </div>
+                    </CardContent>
+                </Card>
 
-                {/* Active Jobs */}
-                <div className="rounded-xl border bg-card p-5 shadow-sm">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-muted-foreground">Active Jobs</p>
-                            <h2 className="mt-2 text-3xl font-bold">
+                <Card>
+                    <CardContent className="flex items-center gap-3 px-4 py-4">
+                        <div className="rounded-md bg-muted p-2">
+                            <BriefcaseBusiness className="size-4 text-muted-foreground" />
+                        </div>
+                        <div className="min-w-0">
+                            <p className="truncate text-xs text-muted-foreground">Active Jobs</p>
+                            <p className="text-lg font-semibold tabular-nums">
                                 {workLoading ? "—" : workStats?.activeJobsCount ?? 0}
-                            </h2>
+                            </p>
                         </div>
-                        <div className="rounded-lg bg-primary/10 p-3">
-                            <BriefcaseBusiness className="h-5 w-5 text-primary" />
-                        </div>
-                    </div>
-                    <p className="mt-4 text-sm text-muted-foreground">Currently in progress</p>
-                </div>
+                    </CardContent>
+                </Card>
 
-                {/* Completed Transactions */}
-                <div className="rounded-xl border bg-card p-5 shadow-sm">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-muted-foreground">Completed Transactions</p>
-                            <h2 className="mt-2 text-3xl font-bold">
+                <Card>
+                    <CardContent className="flex items-center gap-3 px-4 py-4">
+                        <div className="rounded-md bg-muted p-2">
+                            <CheckCircle className="size-4 text-muted-foreground" />
+                        </div>
+                        <div className="min-w-0">
+                            <p className="truncate text-xs text-muted-foreground">Transactions</p>
+                            <p className="text-lg font-semibold tabular-nums">
                                 {paymentLoading ? "—" : (paymentStats?.completedTransactionsCount ?? 0).toLocaleString("en-IN")}
-                            </h2>
+                            </p>
                         </div>
-                        <div className="rounded-lg bg-primary/10 p-3">
-                            <CheckCircle className="h-5 w-5 text-primary" />
-                        </div>
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
 
-                {/* Works Completed */}
-                <div className="rounded-xl border bg-card p-5 shadow-sm">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-muted-foreground">Works Completed</p>
-                            <h2 className="mt-2 text-3xl font-bold">
+                <Card>
+                    <CardContent className="flex items-center gap-3 px-4 py-4">
+                        <div className="rounded-md bg-muted p-2">
+                            <BriefcaseBusiness className="size-4 text-muted-foreground" />
+                        </div>
+                        <div className="min-w-0">
+                            <p className="truncate text-xs text-muted-foreground">Works Completed</p>
+                            <p className="text-lg font-semibold tabular-nums">
                                 {workLoading ? "—" : (workStats?.worksCompletedTotal ?? 0).toLocaleString("en-IN")}
-                            </h2>
+                            </p>
                         </div>
-                        <div className="rounded-lg bg-primary/10 p-3">
-                            <BriefcaseBusiness className="h-5 w-5 text-primary" />
-                        </div>
-                    </div>
-                    <p className="mt-4 text-sm text-muted-foreground">All time completed works</p>
-                </div>
+                    </CardContent>
+                </Card>
 
-                {/* New Users */}
-                <div className="rounded-xl border bg-card p-5 shadow-sm">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-muted-foreground">New Users</p>
-                            <h2 className="mt-2 text-3xl font-bold">
-                                {userLoading ? "—" : userStats?.newUsersThisMonth ?? 0}
-                            </h2>
+                <Card>
+                    <CardContent className="flex items-center gap-3 px-4 py-4">
+                        <div className="rounded-md bg-muted p-2">
+                            <UserPlus className="size-4 text-muted-foreground" />
                         </div>
-                        <div className="rounded-lg bg-primary/10 p-3">
-                            <Users className="h-5 w-5 text-primary" />
+                        <div className="min-w-0">
+                            <p className="truncate text-xs text-muted-foreground">New Appliers</p>
+                            <p className="text-lg font-semibold tabular-nums">
+                                {workLoading ? "—" : workStats?.newAppliersCount ?? 0}
+                            </p>
                         </div>
-                    </div>
-                    <p className="mt-4 text-sm text-muted-foreground">Registered this month</p>
-                </div>
+                    </CardContent>
+                </Card>
             </div>
 
             {/* Charts */}
-            <div className="grid gap-6 lg:grid-cols-2">
+            <div className="grid gap-4 lg:grid-cols-3">
 
-                {/* Platform Earnings Chart */}
-                <div className="rounded-xl border bg-card p-6 shadow-sm">
-                    <div className="mb-6">
-                        <h2 className="text-lg font-semibold">Platform Earnings</h2>
-                        <p className="text-sm text-muted-foreground">Platform earnings over the last 6 months</p>
-                    </div>
+                {/* blaa */}
 
-                    {paymentLoading ? (
-                        <div className="flex h-72 items-center justify-center rounded-lg bg-muted/30">
-                            <p className="text-sm text-muted-foreground">Loading…</p>
+                {/* Revenue Overview — area chart, spans 2 cols */}
+                <Card className="lg:col-span-2">
+                    <CardHeader>
+                        <CardTitle>Revenue Overview</CardTitle>
+                        <CardDescription>Gross revenue vs. platform earnings — last 6 months</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {paymentLoading ? (
+                            <div className="flex h-[280px] items-center justify-center text-sm text-muted-foreground">
+                                Loading…
+                            </div>
+                        ) : (
+                            <ChartContainer config={chartConfig} className="h-[280px] w-full">
+                                <AreaChart data={revenueOverviewData}>
+                                    <defs>
+                                        <linearGradient id="fillRevenue" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="var(--color-revenue)" stopOpacity={0.8} />
+                                            <stop offset="95%" stopColor="var(--color-revenue)" stopOpacity={0.05} />
+                                        </linearGradient>
+                                        <linearGradient id="fillPlatformEarnings" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="var(--color-platformEarnings)" stopOpacity={0.8} />
+                                            <stop offset="95%" stopColor="var(--color-platformEarnings)" stopOpacity={0.05} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid vertical={false} />
+                                    <XAxis
+                                        dataKey="month"
+                                        tickLine={false}
+                                        axisLine={false}
+                                        tickMargin={8}
+                                        fontSize={12}
+                                    />
+                                    <ChartTooltip
+                                        cursor={false}
+                                        content={<ChartTooltipContent indicator="dot" />}
+                                    />
+                                    <Area
+                                        dataKey="platformEarnings"
+                                        type="natural"
+                                        fill="url(#fillPlatformEarnings)"
+                                        stroke="var(--color-platformEarnings)"
+                                        stackId="a"
+                                    />
+                                    <Area
+                                        dataKey="revenue"
+                                        type="natural"
+                                        fill="url(#fillRevenue)"
+                                        stroke="var(--color-revenue)"
+                                        stackId="b"
+                                    />
+                                </AreaChart>
+                            </ChartContainer>
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* Platform Earnings — bar chart */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Platform Earnings</CardTitle>
+                        <CardDescription>Last 6 months</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {paymentLoading ? (
+                            <div className="flex h-[280px] items-center justify-center text-sm text-muted-foreground">
+                                Loading…
+                            </div>
+                        ) : (
+                            <ChartContainer config={earningsChartConfig} className="h-[200px] w-full">
+                                <BarChart data={paymentStats?.monthlyPlatformEarnings ?? []}>
+                                    <CartesianGrid vertical={false} />
+                                    <XAxis
+                                        dataKey="month"
+                                        tickLine={false}
+                                        axisLine={false}
+                                        tickMargin={8}
+                                        fontSize={12}
+                                    />
+                                    <ChartTooltip
+                                        cursor={false}
+                                        content={<ChartTooltipContent hideLabel />}
+                                    />
+                                    <Bar dataKey="amount" fill="var(--color-amount)" radius={4} />
+                                </BarChart>
+                            </ChartContainer>
+                        )}
+                    </CardContent>
+                    <CardFooter className="flex-col items-start gap-1.5 border-t text-sm">
+                        <div className="flex items-center gap-2 font-medium">
+                            Total earnings {formatLakh(paymentStats?.platformEarnings ?? 0)}
+                            <TrendBadge pct={platformTrend} />
                         </div>
-                    ) : (
-                        <ResponsiveContainer width="100%" height={288}>
-                            <BarChart data={paymentStats?.monthlyPlatformEarnings ?? []}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                <XAxis dataKey="month" fontSize={12} />
-                                <YAxis fontSize={12} />
-                                <Tooltip formatter={(v: number) => [`₹${v.toLocaleString("en-IN")}`, "Earnings"]} />
-                                <Bar dataKey="amount" fill="#4f46e5" radius={[4, 4, 0, 0]} />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    )}
-
-                    <div className="mt-4 flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-muted-foreground">Total platform earnings</p>
-                            <p className="text-xl font-bold">
-                                {paymentLoading ? "—" : formatLakh(paymentStats?.platformEarnings ?? 0)}
-                            </p>
-                        </div>
-                        <TrendBadge pct={platformTrend} />
-                    </div>
-                </div>
-
-                {/* Revenue Chart */}
-                <div className="rounded-xl border bg-card p-6 shadow-sm">
-                    <div className="mb-6">
-                        <h2 className="text-lg font-semibold">Revenue Overview</h2>
-                        <p className="text-sm text-muted-foreground">Gross revenue and platform earnings</p>
-                    </div>
-
-                    {paymentLoading ? (
-                        <div className="flex h-72 items-center justify-center rounded-lg bg-muted/30">
-                            <p className="text-sm text-muted-foreground">Loading…</p>
-                        </div>
-                    ) : (
-                        <ResponsiveContainer width="100%" height={288}>
-                            <LineChart data={mergeMonthlySeries(paymentStats?.monthlyRevenue, paymentStats?.monthlyPlatformEarnings)}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                <XAxis dataKey="month" fontSize={12} />
-                                <YAxis fontSize={12} />
-                                <Tooltip formatter={(v: number) => [`₹${v.toLocaleString("en-IN")}`, ""]} />
-                                <Legend />
-                                <Line type="monotone" dataKey="revenue" name="Revenue" stroke="#4f46e5" strokeWidth={2} dot={false} />
-                                <Line type="monotone" dataKey="platformEarnings" name="Platform Earnings" stroke="#16a34a" strokeWidth={2} dot={false} />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    )}
-                </div>
+                    </CardFooter>
+                </Card>
             </div>
 
             {/* Recent Activity */}
-            <div className="grid gap-6 lg:grid-cols-2">
+            <div className="grid gap-4 lg:grid-cols-2">
 
                 {/* Recent Transactions */}
-                <div className="rounded-xl border bg-card p-6 shadow-sm">
-                    <div>
-                        <h2 className="text-lg font-semibold">Recent Transactions</h2>
-                        <p className="text-sm text-muted-foreground">Latest completed transactions</p>
-                    </div>
-
-                    <div className="mt-5 space-y-4">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Recent Transactions</CardTitle>
+                        <CardDescription>Latest completed payments</CardDescription>
+                    </CardHeader>
+                    <CardContent>
                         {paymentLoading ? (
                             <p className="text-sm text-muted-foreground">Loading…</p>
                         ) : paymentStats?.recentTransactions.length === 0 ? (
                             <p className="text-sm text-muted-foreground">No transactions yet.</p>
                         ) : (
-                            paymentStats?.recentTransactions.map((tx, i) => (
-                                <div
-                                    key={tx.id}
-                                    className={`flex items-center justify-between ${i !== paymentStats.recentTransactions.length - 1 ? "border-b pb-4" : ""}`}
-                                >
-                                    <div>
-                                        <p className="font-medium">Work Payment</p>
-                                        <p className="text-sm text-muted-foreground">
-                                            Transaction #{tx.id.slice(0, 8).toUpperCase()}
-                                        </p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="font-semibold">₹{tx.amount.toLocaleString("en-IN")}</p>
-                                        <p className={`text-xs capitalize ${tx.status === "worker_credited" || tx.status === "paid" ? "text-green-600" : "text-muted-foreground"}`}>
-                                            {tx.status.replace("_", " ")}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Transaction</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead className="text-right">Amount</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {paymentStats?.recentTransactions.map((tx) => (
+                                        <TableRow key={tx.id}>
+                                            <TableCell>
+                                                <div className="font-medium">Work Payment</div>
+                                                <div className="text-xs text-muted-foreground">
+                                                    #{tx.id.slice(0, 8).toUpperCase()}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <StatusBadge status={tx.status} />
+                                            </TableCell>
+                                            <TableCell className="text-right font-medium tabular-nums">
+                                                ₹{tx.amount.toLocaleString("en-IN")}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
                         )}
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
 
                 {/* Pending Payouts */}
-                <div className="rounded-xl border bg-card p-6 shadow-sm">
-                    <div>
-                        <h2 className="text-lg font-semibold">Pending Payouts</h2>
-                        <p className="text-sm text-muted-foreground">Workers waiting for payout</p>
-                    </div>
-
-                    <div className="mt-5 space-y-4">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Pending Payouts</CardTitle>
+                        <CardDescription>Workers waiting for payout</CardDescription>
+                    </CardHeader>
+                    <CardContent>
                         {paymentLoading ? (
                             <p className="text-sm text-muted-foreground">Loading…</p>
                         ) : paymentStats?.pendingPayouts.length === 0 ? (
                             <p className="text-sm text-muted-foreground">No pending payouts.</p>
                         ) : (
-                            paymentStats?.pendingPayouts.map((payout, i) => (
-                                <div
-                                    key={payout.paymentId}
-                                    className={`flex items-center justify-between ${i !== paymentStats.pendingPayouts.length - 1 ? "border-b pb-4" : ""}`}
-                                >
-                                    <div>
-                                        <p className="font-medium">Worker #{payout.workerId.slice(0, 6).toUpperCase()}</p>
-                                        <p className="text-sm text-muted-foreground">
-                                            Work #{payout.workId.slice(0, 6).toUpperCase()}
-                                        </p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="font-semibold">₹{payout.workerPayout.toLocaleString("en-IN")}</p>
-                                        <p className="text-xs text-yellow-600">Pending</p>
-                                    </div>
-                                </div>
-                            ))
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Worker</TableHead>
+                                        <TableHead>Work</TableHead>
+                                        <TableHead className="text-right">Payout</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {paymentStats?.pendingPayouts.map((payout) => (
+                                        <TableRow key={payout.paymentId}>
+                                            <TableCell className="font-medium">
+                                                #{payout.workerId.slice(0, 6).toUpperCase()}
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground">
+                                                #{payout.workId.slice(0, 6).toUpperCase()}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <div className="font-medium tabular-nums">
+                                                    ₹{payout.workerPayout.toLocaleString("en-IN")}
+                                                </div>
+                                                <Badge variant="secondary" className="mt-1">Pending</Badge>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
                         )}
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
             </div>
         </div>
     );
 };
-
-function mergeMonthlySeries(
-    revenue?: { month: string; year: number; amount: number }[],
-    platformEarnings?: { month: string; year: number; amount: number }[]
-) {
-    if (!revenue) return [];
-    return revenue.map((r, i) => ({
-        month: r.month,
-        revenue: r.amount,
-        platformEarnings: platformEarnings?.[i]?.amount ?? 0,
-    }));
-}
 
 export default AdminDashboard;
