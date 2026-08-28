@@ -113,4 +113,8 @@ export const WorkService = {
     getWorkerDashboardStats: () => {
         return api.get(WORK_ENDPOINTS.GET_WORKER_DASHBOARD_STATS);
     },
+
+    getAdminWorkStats: () => {
+        return api.get(WORK_ENDPOINTS.ADMIN_WORK_STATS);
+    },
 }

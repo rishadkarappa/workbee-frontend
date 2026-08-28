@@ -21,11 +21,12 @@ export const AUTH_ENDPOINTS = {
 
         // to show use details in worker chat comp
         GET_USER_PROFILE_BY_ID: (userId: string) => `/auth/user-profile-stat/${userId}`,
-
+        
         ADMIN: {
             LOGIN: "/auth/admin/login",
             GET_USERS: "/auth/admin/get-users",
             BLOCK_USER: (id: string) => `/auth/admin/block-user/${id}`,
+            USER_STATS: "/auth/admin/user-stats",
         },
 
         WORKER: {

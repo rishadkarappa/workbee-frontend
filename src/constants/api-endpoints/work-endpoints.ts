@@ -11,4 +11,5 @@ export const WORK_ENDPOINTS = {
     DELETE_MY_WORK: (workId: string) => `/work/delete-my-work/${workId}`,
     GET_WORKER_ASSIGNED_WORKS: "/work/worker-assigned-works",
     GET_WORKER_DASHBOARD_STATS: "/work/worker/dashboard-stats",
+    ADMIN_WORK_STATS: "/work/admin/work-stats",
 };

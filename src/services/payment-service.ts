@@ -35,4 +35,8 @@ export const PaymentService = {
   getWorkerEarningsStats: () => {
     return api.get(PAYMENT_ENDPOINTS.WORKER_EARNINGS_STATS);
   },
+
+  getAdminPaymentStats: () => {
+    return api.get(PAYMENT_ENDPOINTS.ADMIN.PAYMENT_STATS);
+  },
 };

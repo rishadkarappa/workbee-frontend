@@ -103,6 +103,9 @@ export const AuthService = {
         return api.post(AUTH_ENDPOINTS.AUTH.WORKER.CHANGE_PASSWORD, data);
     },
 
+    getAdminUserStats: () => {
+        return api.get(AUTH_ENDPOINTS.AUTH.ADMIN.USER_STATS);
+    },
 }
 
 
