@@ -309,8 +309,8 @@ export default function ProfileSettings() {
                 {userProfileData?.name ?? "User"}
               </h1>
 
-              <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
-                Pro Member
+              <span className="rounded-full bg-gray-200 px-2.5 py-0.5 text-xs font-medium text-gray-900">
+                Verified User
               </span>
             </div>
 

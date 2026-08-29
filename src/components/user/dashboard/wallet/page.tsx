@@ -120,44 +120,43 @@ function TransactionRow({ tx }: { tx: Transaction }) {
         onClick={() => setExpanded(!expanded)}
         className="w-full text-left"
       >
-        <div className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
+        <div className="flex items-center justify-between p-4 transition-colors hover:bg-muted/50">
           <div className="flex items-center gap-3">
-            <div
-              className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${isDebit ? "bg-red-50" : "bg-green-50"
-                }`}
-            >
+            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gray-100">
               {isDebit ? (
-                <ArrowUpCircle className="w-5 h-5 text-red-500" />
+                <ArrowUpCircle className="h-5 w-5 text-muted-foreground" />
               ) : (
-                <ArrowDownCircle className="w-5 h-5 text-green-500" />
+                <ArrowDownCircle className="h-5 w-5 text-muted-foreground" />
               )}
             </div>
+
             <div className="min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">
+              <p className="truncate text-sm font-medium text-foreground">
                 {label}
               </p>
-              <p className="text-xs text-gray-500 mt-0.5">
+
+              <p className="mt-0.5 text-xs text-muted-foreground">
                 {formatDate(tx.createdAt)} · {formatTime(tx.createdAt)}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3 flex-shrink-0 ml-4">
+
+          <div className="ml-4 flex flex-shrink-0 items-center gap-3">
             <div className="text-right">
-              <p
-                className={`text-sm font-semibold ${isDebit ? "text-red-600" : "text-green-600"
-                  }`}
-              >
+              <p className="text-sm font-semibold text-foreground">
                 {isDebit ? "−" : "+"}
                 {formatAmount(tx.amount)}
               </p>
+
               <div className="mt-0.5 flex justify-end">
                 <StatusBadge status={tx.status} />
               </div>
             </div>
+
             {expanded ? (
-              <ChevronUp className="w-4 h-4 text-gray-400" />
+              <ChevronUp className="h-4 w-4 text-muted-foreground" />
             ) : (
-              <ChevronDown className="w-4 h-4 text-gray-400" />
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
             )}
           </div>
         </div>
@@ -278,16 +277,6 @@ export default function UserWallet() {
     <div className="space-y-6 p-4 sm:p-6 w-full max-w-6xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
-        
-        {/* <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <Wallet className="w-6 h-6" />
-            My Wallet
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Payment history and spending overview
-          </p>
-        </div> */}
 
         <Button variant="outline" size="sm" onClick={fetchWallet}>
           <RefreshCw className="mr-5 w-4 h-4 mr-2" />
@@ -296,45 +285,61 @@ export default function UserWallet() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="border-0 shadow-sm bg-gradient-to-br from-gray-900 to-gray-800 text-white">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-                Total Spent
-              </p>
-              <CreditCard className="w-4 h-4 text-gray-400" />
-            </div>
-            <p className="text-2xl font-bold">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {/* Total Spent */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Total Spent
+            </CardTitle>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+
+          <CardContent>
+            <div className="text-2xl font-bold">
               {formatAmount(wallet?.totalSpent ?? 0)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Lifetime payments
             </p>
-            <p className="text-xs text-gray-400 mt-1">Lifetime payments</p>
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Successful
-              </p>
-              <CheckCircle2 className="w-4 h-4 text-green-500" />
+        {/* Successful */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Successful
+            </CardTitle>
+            <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {successCount}
             </div>
-            <p className="text-2xl font-bold text-green-600">{successCount}</p>
-            <p className="text-xs text-gray-500 mt-1">Payments completed</p>
+            <p className="text-xs text-muted-foreground">
+              Payments completed
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                Pending
-              </p>
-              <Clock className="w-4 h-4 text-amber-500" />
+        {/* Pending */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Pending
+            </CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {pendingCount}
             </div>
-            <p className="text-2xl font-bold text-amber-600">{pendingCount}</p>
-            <p className="text-xs text-gray-500 mt-1">Awaiting confirmation</p>
+            <p className="text-xs text-muted-foreground">
+              Awaiting confirmation
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -354,8 +359,8 @@ export default function UserWallet() {
                     key={f}
                     onClick={() => setFilter(f)}
                     className={`px-3 py-1 rounded-full text-xs font-medium transition-colors capitalize ${filter === f
-                        ? "bg-gray-900 text-white"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      ? "bg-gray-900 text-white"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                       }`}
                   >
                     {f}
