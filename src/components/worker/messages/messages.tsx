@@ -432,8 +432,8 @@ export default function WorkerMessages() {
                     <div className="flex-1 min-w-0">
                       <h3
                         className={`truncate ${unread > 0
-                            ? 'font-semibold text-gray-900'
-                            : 'font-medium text-gray-900'
+                          ? 'font-semibold text-gray-900'
+                          : 'font-medium text-gray-900'
                           }`}
                       >
                         {otherUser?.name || 'Unknown User'}
@@ -441,8 +441,8 @@ export default function WorkerMessages() {
 
                       <p
                         className={`text-sm truncate ${unread > 0
-                            ? 'font-medium text-gray-800'
-                            : 'text-gray-500'
+                          ? 'font-medium text-gray-800'
+                          : 'text-gray-500'
                           }`}
                       >
                         {chat.lastMessage || 'No messages yet'}
@@ -586,6 +586,40 @@ export default function WorkerMessages() {
 
             {/* Input */}
             <div className="bg-white border-t p-4">
+              {/* Work Actions */}
+              {hasWorkContext && (
+                <div className="mb-3 flex items-center gap-2">
+                  {/* Make Offer */}
+                  <button
+                    type="button"
+                    onClick={() => setAskNewPriceModalOpen(true)}
+                    disabled={alreadySentNewPrice || askNewPriceLoading}
+                    className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <TicketPercent className="w-4 h-4" />
+
+                    {alreadySentNewPrice
+                      ? "Offer Sent"
+                      : "Make Offer"}
+                  </button>
+
+                  {/* Ask Confirm */}
+                  <button
+                    type="button"
+                    onClick={handleAskForConfirm}
+                    disabled={alreadySentConfirm || askConfirmLoading}
+                    className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <HandshakeIcon className="w-4 h-4" />
+
+                    {askConfirmLoading
+                      ? "Sending..."
+                      : alreadySentConfirm
+                        ? "Confirmation Sent"
+                        : "Ask Confirm"}
+                  </button>
+                </div>
+              )}
               {sendError && (
                 <div className="mb-2 flex items-center justify-between bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-3 py-2">
                   <span>{sendError}</span>

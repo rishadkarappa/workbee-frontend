@@ -211,7 +211,7 @@ export default function WorkerDashboard() {
                             <BriefcaseBusiness className="size-4 text-muted-foreground" />
                         </div>
                         <div className="min-w-0">
-                            <p className="truncate text-xs text-muted-foreground">Due This Week</p>
+                            <p className="truncate text-xs text-muted-foreground">Work Due This Week</p>
                             <p className="text-lg font-semibold tabular-nums">
                                 {statsLoading ? "—" : stats?.worksDueThisWeek ?? 0}
                             </p>
