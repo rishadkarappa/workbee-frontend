@@ -28,6 +28,8 @@ interface ProfileDropDownMenuProps {
 }
 
 const ProfileDropDownMenu = ({ user, onLogout }: ProfileDropDownMenuProps) => {
+    // console.log("user:", user);
+    // console.log("prof imgage", user?.profileImage);
     const getInitials = (name: string) => {
         if (!name) return "U";
         const names = name.split(" ");
@@ -45,10 +47,17 @@ const ProfileDropDownMenu = ({ user, onLogout }: ProfileDropDownMenuProps) => {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <button className="p-2 rounded-full border hover:bg-gray-100 transition">
-                    <Avatar className="h-5 w-5">
-                        <AvatarImage alt={userName} src={profilePic} />
-                        <AvatarFallback className="text-xs">{getInitials(userName)}</AvatarFallback>
+                <button className="rounded-full hover:cursor-pointer hover:bg-gray-900 transition">
+                    <Avatar className="h-8 w-8 border-gray-800">
+                        <AvatarImage
+                            src={profilePic}
+                            alt={userName}
+                            className="h-full w-full object-cover"
+                        />
+
+                        <AvatarFallback className="text-sm">
+                            {getInitials(userName)}
+                        </AvatarFallback>
                     </Avatar>
                 </button>
             </DropdownMenuTrigger>
@@ -74,7 +83,7 @@ const ProfileDropDownMenu = ({ user, onLogout }: ProfileDropDownMenuProps) => {
                         <LayoutDashboard className="mr-2 h-4 w-4" />
                         My Dashboard
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate(AppRoutes.USER.DASHBOARD.PROFILE_SETTINGS)}>
                         <User />
                         Profile Settings
                     </DropdownMenuItem>

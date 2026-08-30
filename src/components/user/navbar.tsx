@@ -14,7 +14,6 @@ import { toast } from "sonner";
 const Navbar = () => {
   const [user, setUser] = useState<IUser | null>(null);
   const navigate = useNavigate();
-  //  Track whether we've already initiated the connection attempt this mount
   const socketConnectedRef = useRef(false);
 
   useEffect(() => {
@@ -22,45 +21,51 @@ const Navbar = () => {
       const accessToken = AuthHelper.getAccessToken();
       const storedUser = AuthHelper.getUser();
 
-      if (storedUser) {
-        setUser(storedUser);
+      if (!accessToken) return;
 
-        if (!AuthHelper.getUserId()) {
-          AuthHelper.setUserId(storedUser.id);
+      try {
+        let loggedUser: IUser;
+
+        if (storedUser) {
+          loggedUser = storedUser;
+        } else {
+          const res = await AuthService.verifyUser();
+
+          if (!res.data.success) {
+            AuthHelper.clearAuth();
+            setUser(null);
+            return;
+          }
+
+          loggedUser = res.data.data;
         }
 
-        //  Only connect once per mount cycle
-        if (accessToken && !socketConnectedRef.current) {
+        // get profile data
+        const profileResponse = await AuthService.getUserProfileData();
+
+        if (profileResponse.data.success) {
+          const profileData = profileResponse.data.data;
+
+          loggedUser = {
+            ...loggedUser,
+            profileImage: profileData.userProfileImage || "",
+          };
+        }
+
+        setUser(loggedUser);
+
+        AuthHelper.setUser(loggedUser);
+        AuthHelper.setUserId(loggedUser.id);
+
+        // Connect notification socket
+        if (!socketConnectedRef.current) {
           socketConnectedRef.current = true;
           notificationSocketService.connect(accessToken);
         }
 
-        return;
-      }
-
-      if (!accessToken) return;
-
-      try {
-        const res = await AuthService.verifyUser();
-
-        if (res.data.success) {
-          const loggedUser = res.data.data;
-
-          setUser(loggedUser);
-          AuthHelper.setUser(loggedUser);
-          AuthHelper.setUserId(loggedUser.id);
-
-          //  Only connect once per mount cycle
-          if (!socketConnectedRef.current) {
-            socketConnectedRef.current = true;
-            notificationSocketService.connect(accessToken);
-          }
-        } else {
-          AuthHelper.clearAuth();
-          setUser(null);
-        }
       } catch (error) {
         console.error("User verification failed:", error);
+
         AuthHelper.clearAuth();
         setUser(null);
       }
@@ -68,8 +73,6 @@ const Navbar = () => {
 
     verifyUser();
 
-    // On unmount (StrictMode double-invoke), reset the ref so a fresh
-    // mount can reconnect if needed
     return () => {
       socketConnectedRef.current = false;
     };

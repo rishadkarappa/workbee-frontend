@@ -12,7 +12,8 @@ export const AppRoutes = {
             DASH: "/user-dashboard",
             MESSAGES: "/user-dashboard/messages",
             MY_WORKS: "/user-dashboard/works",
-            ACTIVE_WORKS: "/user-dashboard/active-works"
+            ACTIVE_WORKS: "/user-dashboard/active-works",
+            PROFILE_SETTINGS: "/user-dashboard/profile-settings",
         },
     },
 

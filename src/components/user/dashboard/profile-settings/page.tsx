@@ -160,7 +160,6 @@ export default function ProfileSettings() {
   // Profile image
   const handleAddProfileImage = () => {
     if (uploading) return;
-
     fileInputRef.current?.click();
   };
 
@@ -559,7 +558,7 @@ export default function ProfileSettings() {
   );
 }
 
-/*    FIELD COMPONENT */
+/* FIELD COMPONENT */
 
 function Field({
   label,
@@ -593,11 +592,7 @@ function Field({
 
 /*  PLACEHOLDER COMPONENT*/
 
-function PlaceholderPanel({
-  title,
-}: {
-  title: string;
-}) {
+function PlaceholderPanel({title,}: {title: string;}) {
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-6">
 
