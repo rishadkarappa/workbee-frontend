@@ -1,6 +1,16 @@
 import { useState } from 'react';
-import { Star, X } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { ReviewService } from '@/services/review-service';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 
 interface WorkerReviewModalProps {
   open: boolean;
@@ -17,8 +27,6 @@ export default function WorkerReviewModal({ open, onClose, workId, workerId, wor
   const [testimonial, setTestimonial] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  if (!open) return null;
 
   const handleSubmit = async () => {
     if (rating === 0) {
@@ -38,16 +46,14 @@ export default function WorkerReviewModal({ open, onClose, workId, workerId, wor
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 relative">
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-          <X className="w-5 h-5" />
-        </button>
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Rate {workerName}</DialogTitle>
+          <DialogDescription>How was the work on "{workTitle}"?</DialogDescription>
+        </DialogHeader>
 
-        <h3 className="text-lg font-semibold text-gray-900">Rate {workerName}</h3>
-        <p className="text-sm text-gray-500 mb-4">How was the work on "{workTitle}"?</p>
-
-        <div className="flex justify-center gap-1 mb-4">
+        <div className="flex justify-center gap-1 py-2">
           {[1, 2, 3, 4, 5].map(star => (
             <button
               key={star}
@@ -58,37 +64,35 @@ export default function WorkerReviewModal({ open, onClose, workId, workerId, wor
             >
               <Star
                 className={`w-8 h-8 transition-colors ${
-                  star <= (hoverRating || rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                  star <= (hoverRating || rating) ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30'
                 }`}
               />
             </button>
           ))}
         </div>
 
-        <textarea
-          value={testimonial}
-          onChange={e => setTestimonial(e.target.value.slice(0, 500))}
-          placeholder="Share a testimonial about this worker (optional)"
-          rows={4}
-          className="w-full border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 resize-none"
-        />
-        <p className="text-xs text-gray-400 text-right mt-1">{testimonial.length}/500</p>
-
-        {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
-
-        <div className="flex gap-2 mt-4">
-          <button onClick={onClose} className="flex-1 py-2 rounded-xl border text-sm font-semibold text-gray-600 hover:bg-gray-50">
-            Maybe Latar
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={submitting || rating === 0}
-            className="flex-1 py-2 rounded-xl bg-black text-white text-sm font-semibold hover:bg-gray-800 disabled:opacity-50"
-          >
-            {submitting ? 'Submitting…' : 'Submit'}
-          </button>
+        <div className="space-y-1">
+          <Textarea
+            value={testimonial}
+            onChange={e => setTestimonial(e.target.value.slice(0, 500))}
+            placeholder="Share a testimonial about this worker (optional)"
+            rows={4}
+            className="resize-none"
+          />
+          <p className="text-xs text-muted-foreground text-right">{testimonial.length}/500</p>
         </div>
-      </div>
-    </div>
+
+        {error && <p className="text-xs text-destructive">{error}</p>}
+
+        <DialogFooter className="gap-2 sm:gap-2">
+          <Button variant="outline" className="flex-1" onClick={onClose}>
+            Maybe Later
+          </Button>
+          <Button className="flex-1" onClick={handleSubmit} disabled={submitting || rating === 0}>
+            {submitting ? 'Submitting…' : 'Submit'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
