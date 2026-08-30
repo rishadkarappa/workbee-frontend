@@ -1,6 +1,7 @@
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import WorkerNotificationDropdown from "./worker/WorkerNotificationDropdown";
+import { Sun } from "lucide-react";
 
 export function SiteHeader() {
   return (
@@ -11,7 +12,15 @@ export function SiteHeader() {
           orientation="vertical"
           className="mx-2 data-[orientation=vertical]:h-4"
         />
+
+
         <div className="ml-auto flex items-center gap-6">
+
+          {/* Worker side dark mode button */}
+          <button className="p-2 rounded-full border hover:bg-gray-100 transition">
+            <Sun className="w-5 h-5" />
+          </button>
+
           <WorkerNotificationDropdown />
           {/* <UserCircle className="h-7 w-7" /> */}
         </div>
