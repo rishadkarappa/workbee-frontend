@@ -25,6 +25,7 @@ import AddressAutocomplete from "./AddressAutocomplete"
 import { getErrorMessage } from "@/utils/error-helper"
 import { AppRoutes } from "@/constants/routes/app-routes"
 import { toast } from "sonner"
+import { PhoneInput } from "../ui/phone-input"
 
 export function PostWorkForm({ className, ...props }: React.ComponentProps<"div">) {
   const [form, setForm] = useState({
@@ -411,17 +412,6 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                   </Dialog>
                 </Field>
 
-                {/* <Field>
-                  <FieldLabel htmlFor="place">Place</FieldLabel>
-                  <Input
-                    id="currentLocation"
-                    name="currentLocation"
-                    value={form.currentLocation}
-                    onChange={handleChange}
-                    placeholder="E.g., Enter Your Place"
-                  />
-                </Field> */}
-
                 <Field>
                   <FieldLabel htmlFor="manualAddress">Address details</FieldLabel>
                   <Textarea
@@ -448,17 +438,20 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                 </Field>
 
                 <Field>
-                  <FieldLabel htmlFor="contactNumber">Contact Number</FieldLabel>
-                  <Input
+                  <FieldLabel htmlFor="contactNumber">Phone Number</FieldLabel>
+                  <PhoneInput
                     id="contactNumber"
-                    name="contactNumber"
-                    type="tel"
+                    variant="lg"
+                    defaultCountry="IN"
                     value={form.contactNumber}
-                    onChange={handleChange}
+                    onChange={(value) =>
+                      setForm((prev) => ({ ...prev, contactNumber: value, }))
+                    }
                     placeholder="Enter contact number"
                     required
                   />
                 </Field>
+
               </div>
             </div>
           </Step>
