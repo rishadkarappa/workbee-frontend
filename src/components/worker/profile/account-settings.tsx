@@ -584,14 +584,3 @@ function Field({
     </div>
   );
 }
-
-function PlaceholderPanel({ title }: { title: string }) {
-  return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6">
-      <h2 className="text-lg font-bold text-gray-900">{title}</h2>
-      <p className="mt-1 text-sm text-gray-500">
-        This section isn't wired up yet — coming soon.
-      </p>
-    </div>
-  );
-}

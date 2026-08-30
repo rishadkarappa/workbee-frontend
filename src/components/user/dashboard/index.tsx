@@ -1,5 +1,5 @@
 import { Separator } from "@/components/ui/separator"
-import { CalendarRange, LucideLayoutDashboard, LucideWorkflow, MessagesSquare, Notebook, User, Wallet2Icon, WorkflowIcon } from "lucide-react"
+import { CalendarRange, LucideLayoutDashboard, LucideWorkflow, MessagesSquare, Notebook, User, Wallet2Icon } from "lucide-react"
 import { Outlet, useLocation } from "react-router-dom"
 import SidebarNav from "./user-sidebar"
 import {
@@ -14,29 +14,6 @@ import {
 const UserDashboard = () => {
     const location = useLocation()
 
-    // const getBreadcrumbs = () => {
-    //     const pathSegments = location.pathname.split('/').filter(Boolean)
-    //     const breadcrumbs: { title: string; href: string; current: boolean }[] = []
-
-    //     let currentPath = ''
-
-    //     pathSegments.forEach((segment, index) => {
-    //         currentPath += `/${segment}`
-    //         const matchingItem = sidebarNavItems.find(item =>
-    //             item.href.toLowerCase() === currentPath.toLowerCase()
-    //         )
-
-    //         if (matchingItem) {
-    //             breadcrumbs.push({
-    //                 title: matchingItem.title,
-    //                 href: currentPath,
-    //                 current: index === pathSegments.length - 1
-    //             })
-    //         }
-    //     })
-
-    //     return breadcrumbs
-    // }
     const getBreadcrumbs = () => {
         const breadcrumbs: {
             title: string

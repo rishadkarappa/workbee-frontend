@@ -13,7 +13,6 @@ import {
 
 import {
   Home,
-  Users,
   MessageSquare,
   ShieldAlert,
   CreditCard,

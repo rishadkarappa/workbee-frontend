@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Loader2, XIcon } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import React, { useState } from "react";
 import { toast } from "sonner";
 

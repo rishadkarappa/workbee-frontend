@@ -86,14 +86,14 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
     }
   };
 
-  const loadUnreadCount = async () => {
-    try {
-      const response = await NotificationService.getUnreadCount();
-      setUnreadCount(response.data.data.count || 0);
-    } catch (error) {
-      console.error("Failed to load unread count:", error);
-    }
-  };
+  // const loadUnreadCount = async () => {
+  //   try {
+  //     const response = await NotificationService.getUnreadCount();
+  //     setUnreadCount(response.data.data.count || 0);
+  //   } catch (error) {
+  //     console.error("Failed to load unread count:", error);
+  //   }
+  // };
 
   const handleMarkOneAsRead = async (e: React.MouseEvent, notification: Notification) => {
     e.stopPropagation();

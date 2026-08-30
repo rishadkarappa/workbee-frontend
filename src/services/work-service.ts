@@ -118,12 +118,7 @@ export const WorkService = {
         return api.get(WORK_ENDPOINTS.ADMIN_WORK_STATS);
     },
 
-    updateWorkerProfile: (data: {
-        name: string;
-        phone: string;
-        location: string;
-        bio: string;
-    }) => {
+    updateWorkerProfile: (data: {name: string;phone: string;location: string;bio: string;}) => {
         return api.patch("/work/worker/profile", data);
     },
 }
