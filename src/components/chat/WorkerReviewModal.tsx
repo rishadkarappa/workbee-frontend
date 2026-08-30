@@ -53,7 +53,7 @@ export default function WorkerReviewModal({ open, onClose, workId, workerId, wor
           <DialogDescription>How was the work on "{workTitle}"?</DialogDescription>
         </DialogHeader>
 
-        <div className="flex justify-center gap-1 py-2">
+        <div className="flex justify-center gap-2 py-2">
           {[1, 2, 3, 4, 5].map(star => (
             <button
               key={star}
@@ -63,15 +63,15 @@ export default function WorkerReviewModal({ open, onClose, workId, workerId, wor
               onClick={() => setRating(star)}
             >
               <Star
-                className={`w-8 h-8 transition-colors ${
-                  star <= (hoverRating || rating) ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30'
+                className={`w-10 h-10 transition-colors ${
+                  star <= (hoverRating || rating) ? 'fill-foreground text-foreground' : 'text-muted-foreground/80'
                 }`}
               />
             </button>
           ))}
         </div>
 
-        <div className="space-y-1">
+        <div className="space-y-1 mt-5">
           <Textarea
             value={testimonial}
             onChange={e => setTestimonial(e.target.value.slice(0, 500))}
@@ -84,7 +84,7 @@ export default function WorkerReviewModal({ open, onClose, workId, workerId, wor
 
         {error && <p className="text-xs text-destructive">{error}</p>}
 
-        <DialogFooter className="gap-2 sm:gap-2">
+        <DialogFooter className="gap-2 sm:gap-3 mt-4">
           <Button variant="outline" className="flex-1" onClick={onClose}>
             Maybe Later
           </Button>
