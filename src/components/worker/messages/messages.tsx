@@ -17,6 +17,7 @@ import UserProfileModal from '@/components/chat/UserProfileModal';
 import type { Message, Chat } from './types/messages.types'
 import { AuthService } from '@/services/auth-service';
 
+type ConfirmStatus = 'none' | 'pending' | 'rejected' | 'accepted' | 'paid';
 
 export default function WorkerMessages() {
   const location = useLocation();
@@ -37,8 +38,8 @@ export default function WorkerMessages() {
   // Track which workIds have already had a ask new price request sent in this chat
   const [sentAskNewPriceRequests, setSentAskNewPriceRequests] = useState<Set<string>>(new Set());
 
-  // Track which workIds have already had a confirm request sent in this chat
-  const [sentConfirmRequests, setSentConfirmRequests] = useState<Set<string>>(new Set());
+  // Confirm-request lifecycle per workId (replaces the old boolean sentConfirmRequests set)
+  const [confirmStatusByWork, setConfirmStatusByWork] = useState<Record<string, ConfirmStatus>>({});
 
   const [profileModalOpen, setProfileModalOpen] = useState(false);
 
@@ -89,8 +90,6 @@ export default function WorkerMessages() {
 
     setSentAskNewPriceRequests(sentIds);
   }, [messages]);
-
-
 
   useEffect(() => {
     if (messages.length === 0) return;
@@ -167,38 +166,47 @@ export default function WorkerMessages() {
     };
   }, [selectedChat]);
 
-  // Detect already-sent confirm requests from message history
+  // Derive confirm-request lifecycle per workId from message history.
+  // Replaces the two previous (duplicated / broken) "detect sent confirm requests" effects.
   useEffect(() => {
-    const sentIds = new Set<string>();
+    const workIdToLatestType: Record<string, string> = {};
 
     messages.forEach(msg => {
-      const isSent = msg.senderId === userId;
-      if (msg.type === 'system') {
-        const payload = parseSystemMessage(msg.content);
-        if (payload) {
-          return (
-            <SystemMessage
-              key={msg.id}
-              payload={payload}
-              isSender={isSent}
-              role="worker"
-              isBidActionable={isBidCardActionable(messages, msg.id)}
-              onBidAccept={(p) =>
-                BidService.respondToBid({ bidId: p.bidId, respondedBy: 'worker', action: 'accept' })
-                  .catch(() => setSendError('Failed to accept offer. Please try again.'))
-              }
-              onBidReject={(p) =>
-                BidService.respondToBid({ bidId: p.bidId, respondedBy: 'worker', action: 'reject' })
-                  .catch(() => setSendError('Failed to reject offer. Please try again.'))
-              }
-            />
-          );
-        }
+      if (msg.type !== 'system') return;
+      const parsed = parseSystemMessage(msg.content);
+      if (!parsed || !('workId' in parsed)) return;
+
+      if ([
+        'WORK_CONFIRM_REQUEST',
+        'WORK_CONFIRM_ACCEPTED',
+        'WORK_CONFIRM_REJECTED',
+        'WORK_CONFIRM_PAID',
+      ].includes(parsed.type)) {
+        // messages are assumed chronological, so the last match wins as "latest"
+        workIdToLatestType[parsed.workId] = parsed.type;
       }
     });
-    if (sentIds.size > 0) setSentConfirmRequests(sentIds);
-  }, [messages, userId]);
 
+    const nextStatus: Record<string, ConfirmStatus> = {};
+    Object.entries(workIdToLatestType).forEach(([workId, latestType]) => {
+      switch (latestType) {
+        case 'WORK_CONFIRM_REQUEST':
+          nextStatus[workId] = 'pending';
+          break;
+        case 'WORK_CONFIRM_REJECTED':
+          nextStatus[workId] = 'rejected';
+          break;
+        case 'WORK_CONFIRM_ACCEPTED':
+          nextStatus[workId] = 'accepted';
+          break;
+        case 'WORK_CONFIRM_PAID':
+          nextStatus[workId] = 'paid';
+          break;
+      }
+    });
+
+    setConfirmStatusByWork(nextStatus);
+  }, [messages]);
 
   const loadChats = async () => {
     try {
@@ -323,8 +331,7 @@ export default function WorkerMessages() {
   const handleAskForConfirm = async () => {
     if (!selectedChat || !navWorkId || askConfirmLoading) return;
 
-    // Check if already sent a pending confirm request for this work
-    if (sentConfirmRequests.has(navWorkId)) {
+    if (confirmStatusByWork[navWorkId] === 'pending') {
       alert('You have already sent a confirmation request for this work. Please wait for the client to respond.');
       return;
     }
@@ -339,29 +346,13 @@ export default function WorkerMessages() {
         workerName: user?.name || 'Worker',
         userId: selectedChat.participants.userId,
       });
-      setSentConfirmRequests(prev => new Set(prev).add(navWorkId));
+      setConfirmStatusByWork(prev => ({ ...prev, [navWorkId]: 'pending' }));
     } catch {
       setSendError('Failed to send confirmation request. Please try again.');
     } finally {
       setAskConfirmLoading(false);
     }
   };
-
-  // send bidd new PRICE
-  // derive "already offered" state from message history, same pattern as sentConfirmRequests
-  // Detect already-sent confirm requests from message history
-  useEffect(() => {
-    const sentIds = new Set<string>();
-    messages.forEach(msg => {
-      if (msg.type === 'system') {
-        const parsed = parseSystemMessage(msg.content);
-        if (parsed?.type === 'WORK_CONFIRM_REQUEST' && msg.senderId === userId) {
-          sentIds.add(parsed.workId);
-        }
-      }
-    });
-    if (sentIds.size > 0) setSentConfirmRequests(sentIds);
-  }, [messages, userId]);
 
   const handleTyping = (value: string) => {
     setNewMessage(value);
@@ -375,9 +366,16 @@ export default function WorkerMessages() {
 
   // Determine if we have a work context (came from a work details page)
   const hasWorkContext = !!navWorkId && !!selectedChat;
-  const alreadySentConfirm = navWorkId ? sentConfirmRequests.has(navWorkId) : false;
 
+  const workConfirmStatus: ConfirmStatus = navWorkId ? (confirmStatusByWork[navWorkId] ?? 'none') : 'none';
   const alreadySentNewPrice = navWorkId ? sentAskNewPriceRequests.has(navWorkId) : false;
+  const alreadySentConfirm = workConfirmStatus === 'pending';
+
+  // Work is fully wrapped up (accepted + paid) -> hide both action buttons entirely.
+  const workCompleted = workConfirmStatus === 'paid';
+  // Make Offer only makes sense before a confirm request is pending/accepted,
+  // or again after the client has rejected the confirm request.
+  const showMakeOffer = workConfirmStatus === 'none' || workConfirmStatus === 'rejected';
 
   if (loading) {
     return (
@@ -587,27 +585,30 @@ export default function WorkerMessages() {
             {/* Input */}
             <div className="bg-white border-t p-4">
               {/* Work Actions */}
-              {hasWorkContext && (
+              {hasWorkContext && !workCompleted && (
                 <div className="mb-3 flex items-center gap-2">
-                  {/* Make Offer */}
-                  <button
-                    type="button"
-                    onClick={() => setAskNewPriceModalOpen(true)}
-                    disabled={alreadySentNewPrice || askNewPriceLoading}
-                    className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <TicketPercent className="w-4 h-4" />
+                  {/* Make Offer — hidden once a confirm request is pending or accepted,
+                      reappears if the client rejects the confirm request */}
+                  {showMakeOffer && (
+                    <button
+                      type="button"
+                      onClick={() => setAskNewPriceModalOpen(true)}
+                      disabled={alreadySentNewPrice || askNewPriceLoading}
+                      className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <TicketPercent className="w-4 h-4" />
 
-                    {alreadySentNewPrice
-                      ? "Offer Sent"
-                      : "Make Offer"}
-                  </button>
+                      {alreadySentNewPrice
+                        ? "Offer Sent"
+                        : "Make Offer"}
+                    </button>
+                  )}
 
                   {/* Ask Confirm */}
                   <button
                     type="button"
                     onClick={handleAskForConfirm}
-                    disabled={alreadySentConfirm || askConfirmLoading}
+                    disabled={alreadySentConfirm || askConfirmLoading || workConfirmStatus === 'accepted'}
                     className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <HandshakeIcon className="w-4 h-4" />
@@ -616,7 +617,9 @@ export default function WorkerMessages() {
                       ? "Sending..."
                       : alreadySentConfirm
                         ? "Confirmation Sent"
-                        : "Ask Confirm"}
+                        : workConfirmStatus === 'accepted'
+                          ? "Confirmed"
+                          : "Ask Confirm"}
                   </button>
                 </div>
               )}
