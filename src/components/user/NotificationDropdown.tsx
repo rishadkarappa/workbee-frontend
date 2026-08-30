@@ -142,6 +142,15 @@ const NotificationDropdown = ({ onNotificationClick }: NotificationDropdownProps
         },
       });
     }
+    if (notification.type === "WORK_UPDATE" && notification.data?.workId) {
+      navigate(AppRoutes.USER.DASHBOARD.ACTIVE_WORKS,{
+          state: {
+            workId:
+              notification.data.workId,
+          },
+        }
+      );
+    }
 
     setIsOpen(false);
     onNotificationClick?.(notification);

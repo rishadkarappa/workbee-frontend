@@ -11,7 +11,8 @@ export const AppRoutes = {
         DASHBOARD: {
             DASH: "/user-dashboard",
             MESSAGES: "/user-dashboard/messages",
-            MY_WORKS: "/user-dashboard/works"
+            MY_WORKS: "/user-dashboard/works",
+            ACTIVE_WORKS: "/user-dashboard/active-works"
         },
     },
 
