@@ -18,6 +18,7 @@ import type { Message, Chat } from './types/messages.types'
 import { AuthService } from '@/services/auth-service';
 
 type ConfirmStatus = 'none' | 'pending' | 'rejected' | 'accepted' | 'paid';
+type BidStatus = 'none' | 'pending' | 'rejected' | 'accepted' | 'paid';
 
 export default function WorkerMessages() {
   const location = useLocation();
@@ -40,7 +41,7 @@ export default function WorkerMessages() {
 
   // Confirm-request lifecycle per workId (replaces the old boolean sentConfirmRequests set)
   const [confirmStatusByWork, setConfirmStatusByWork] = useState<Record<string, ConfirmStatus>>({});
-
+  const [bidStatusByWork, setBidStatusByWork] = useState<Record<string, BidStatus>>({});
   const [profileModalOpen, setProfileModalOpen] = useState(false);
 
   // profile image
@@ -55,7 +56,7 @@ export default function WorkerMessages() {
   const userId = user?.id || AuthHelper.getUserId();
   const { chatId: navChatId, workTitle, workId: navWorkId, currentAmount } = location.state || {};
 
-  // ── Scroll helpers ────────────────────────────────────────────────────────
+  // ── Scroll helpers 
   const scrollToBottomInstant = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'instant' as ScrollBehavior });
   }, []);
@@ -206,6 +207,50 @@ export default function WorkerMessages() {
     });
 
     setConfirmStatusByWork(nextStatus);
+  }, [messages]);
+
+  // Derive bid lifecycle per workId from message history (parallel to confirmStatusByWork,
+  // since a work can also get closed out via the Make Offer / bid-accept-and-pay path).
+
+  useEffect(() => {
+    const workIdToLatestType: Record<string, string> = {};
+
+    messages.forEach(msg => {
+      if (msg.type !== 'system') return;
+      const parsed = parseSystemMessage(msg.content);
+      if (!parsed || !('workId' in parsed)) return;
+
+      if ([
+        'WORK_BID_OFFER',
+        'WORK_BID_COUNTER',
+        'WORK_BID_ACCEPTED',
+        'WORK_BID_REJECTED',
+        'WORK_BID_PAID',
+      ].includes(parsed.type)) {
+        workIdToLatestType[parsed.workId] = parsed.type;
+      }
+    });
+
+    const nextStatus: Record<string, BidStatus> = {};
+    Object.entries(workIdToLatestType).forEach(([workId, latestType]) => {
+      switch (latestType) {
+        case 'WORK_BID_OFFER':
+        case 'WORK_BID_COUNTER':
+          nextStatus[workId] = 'pending';
+          break;
+        case 'WORK_BID_REJECTED':
+          nextStatus[workId] = 'rejected';
+          break;
+        case 'WORK_BID_ACCEPTED':
+          nextStatus[workId] = 'accepted';
+          break;
+        case 'WORK_BID_PAID':
+          nextStatus[workId] = 'paid';
+          break;
+      }
+    });
+
+    setBidStatusByWork(nextStatus);
   }, [messages]);
 
   const loadChats = async () => {
@@ -368,14 +413,18 @@ export default function WorkerMessages() {
   const hasWorkContext = !!navWorkId && !!selectedChat;
 
   const workConfirmStatus: ConfirmStatus = navWorkId ? (confirmStatusByWork[navWorkId] ?? 'none') : 'none';
+  const workBidStatus: BidStatus = navWorkId ? (bidStatusByWork[navWorkId] ?? 'none') : 'none';
+
   const alreadySentNewPrice = navWorkId ? sentAskNewPriceRequests.has(navWorkId) : false;
   const alreadySentConfirm = workConfirmStatus === 'pending';
-
   // Work is fully wrapped up (accepted + paid) -> hide both action buttons entirely.
-  const workCompleted = workConfirmStatus === 'paid';
+  const workCompleted = workConfirmStatus === 'paid' || workBidStatus === 'paid';
+
   // Make Offer only makes sense before a confirm request is pending/accepted,
   // or again after the client has rejected the confirm request.
-  const showMakeOffer = workConfirmStatus === 'none' || workConfirmStatus === 'rejected';
+  const showMakeOffer =
+    (workConfirmStatus === 'none' || workConfirmStatus === 'rejected') &&
+    (workBidStatus === 'none' || workBidStatus === 'rejected');
 
   if (loading) {
     return (
@@ -605,10 +654,16 @@ export default function WorkerMessages() {
                   )}
 
                   {/* Ask Confirm */}
+
                   <button
                     type="button"
                     onClick={handleAskForConfirm}
-                    disabled={alreadySentConfirm || askConfirmLoading || workConfirmStatus === 'accepted'}
+                    disabled={
+                      alreadySentConfirm ||
+                      askConfirmLoading ||
+                      workConfirmStatus === 'accepted' ||
+                      workBidStatus === 'accepted'
+                    }
                     className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <HandshakeIcon className="w-4 h-4" />
@@ -617,10 +672,11 @@ export default function WorkerMessages() {
                       ? "Sending..."
                       : alreadySentConfirm
                         ? "Confirmation Sent"
-                        : workConfirmStatus === 'accepted'
+                        : workConfirmStatus === 'accepted' || workBidStatus === 'accepted'
                           ? "Confirmed"
                           : "Ask Confirm"}
                   </button>
+
                 </div>
               )}
               {sendError && (

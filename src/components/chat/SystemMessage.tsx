@@ -293,24 +293,46 @@ export function SystemMessage({
   }
 
   // ── Bid: Paid ────────────────────────────────────────────────────────────
+  // if (payload.type === 'WORK_BID_PAID') {
+  //   return (
+  //     <div className="my-2 flex justify-center">
+  //       <div className="bg-white border-2 border-green-200 rounded-2xl shadow-sm p-4 max-w-xs w-full">
+  //         <div className="flex items-center gap-2">
+  //           <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+  //             <CheckCircle className="w-4 h-4 text-green-600" />
+  //           </div>
+  //           <div>
+  //             <p className="text-xs text-green-600 font-medium uppercase tracking-wide">Payment Completed</p>
+  //             <p className="text-sm font-semibold text-gray-900">₹{payload.amount}</p>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   );
+  // }
+  // ── Bid: Paid ────────────────────────────────────────────────────────────
   if (payload.type === 'WORK_BID_PAID') {
+    const navigatePath = role === 'worker' ? '/worker/worker-dashboard/active-works' : '/user-dashboard/active-works';
     return (
       <div className="my-2 flex justify-center">
-        <div className="bg-white border-2 border-green-200 rounded-2xl shadow-sm p-4 max-w-xs w-full">
-          <div className="flex items-center gap-2">
+        <div className="bg-white border-2 border-green-200 rounded-2xl shadow-sm p-4 max-w-sm w-full">
+          <div className="flex items-center gap-2 mb-3">
             <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
               <CheckCircle className="w-4 h-4 text-green-600" />
             </div>
             <div>
               <p className="text-xs text-green-600 font-medium uppercase tracking-wide">Payment Completed</p>
-              <p className="text-sm font-semibold text-gray-900">₹{payload.amount}</p>
+              <p className="text-sm font-semibold text-gray-900">₹{payload.amount} — {payload.workTitle}</p>
             </div>
           </div>
+          <p className="text-xs text-gray-500 mb-3">The deal is confirmed. You can track the work progress from Active Works.</p>
+          <button onClick={() => navigate(navigatePath)} className="w-full flex items-center justify-center gap-1.5 bg-gray-900 hover:bg-gray-700 text-white text-sm font-semibold py-2 rounded-xl transition-colors">
+            <ExternalLink className="w-3.5 h-3.5" /> Track Work Progress
+          </button>
         </div>
       </div>
     );
   }
-
 
   return null;
 }

@@ -196,6 +196,7 @@ export default function ClientMessages() {
           workerName: payload.workerName,
           amount: payload.amount,
         });
+        
       });
     } catch (err) {
       if (getErrorMessage(err) === 'Payment cancelled') return;
