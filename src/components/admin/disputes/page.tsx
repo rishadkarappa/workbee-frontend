@@ -29,12 +29,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 
 import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
-
-import {
   Avatar,
   AvatarFallback,
   AvatarImage,
@@ -53,7 +47,6 @@ import {
 
 import {
   Loader2,
-  User,
   ShieldAlert,
   ShieldCheck,
   Briefcase,
@@ -303,18 +296,16 @@ function ActionButton({
       variant={variant}
       disabled={disabled}
       onClick={onClick}
-      className={`h-auto min-h-[58px] justify-start gap-3 px-3 py-2.5 text-left ${
-        destructive
-          ? 'border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700'
-          : ''
-      }`}
+      className={`h-auto min-h-[58px] justify-start gap-3 px-3 py-2.5 text-left ${destructive
+        ? 'border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700'
+        : ''
+        }`}
     >
       <span
-        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${
-          destructive
-            ? 'bg-red-50'
-            : 'bg-muted'
-        }`}
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${destructive
+          ? 'bg-red-50'
+          : 'bg-muted'
+          }`}
       >
         {icon}
       </span>
@@ -357,73 +348,73 @@ function buildActionOptions(
     description: 'Send an official warning email',
     icon: <MailWarning className="h-4 w-4" />,
   });
-  
+
   options.push(
     worker.isBlocked
       ? {
-          value: 'unblock_worker' as DisputeActionType,
-          label: 'Unblock Worker',
-          description: 'Restore worker account access',
-          icon: <ShieldOff className="h-4 w-4" />,
-        }
+        value: 'unblock_worker' as DisputeActionType,
+        label: 'Unblock Worker',
+        description: 'Restore worker account access',
+        icon: <ShieldOff className="h-4 w-4" />,
+      }
       : {
-          value: 'block_worker' as DisputeActionType,
-          label: 'Block Worker',
-          description: 'Temporarily restrict worker access',
-          icon: <Ban className="h-4 w-4" />,
-          destructive: true,
-        },
+        value: 'block_worker' as DisputeActionType,
+        label: 'Block Worker',
+        description: 'Temporarily restrict worker access',
+        icon: <Ban className="h-4 w-4" />,
+        destructive: true,
+      },
   );
 
   options.push(
     worker.isBlacklisted
       ? {
-          value: 'unblacklist_worker' as DisputeActionType,
-          label: 'Remove Worker Blacklist',
-          description: 'Remove permanent restriction',
-          icon: <ShieldOff className="h-4 w-4" />,
-        }
+        value: 'unblacklist_worker' as DisputeActionType,
+        label: 'Remove Worker Blacklist',
+        description: 'Remove permanent restriction',
+        icon: <ShieldOff className="h-4 w-4" />,
+      }
       : {
-          value: 'blacklist_worker' as DisputeActionType,
-          label: 'Blacklist Worker',
-          description: 'Permanently restrict worker',
-          icon: <ShieldAlert className="h-4 w-4" />,
-          destructive: true,
-        },
+        value: 'blacklist_worker' as DisputeActionType,
+        label: 'Blacklist Worker',
+        description: 'Permanently restrict worker',
+        icon: <ShieldAlert className="h-4 w-4" />,
+        destructive: true,
+      },
   );
 
   options.push(
     user.isBlocked
       ? {
-          value: 'unblock_user' as DisputeActionType,
-          label: 'Unblock Client',
-          description: 'Restore client account access',
-          icon: <ShieldOff className="h-4 w-4" />,
-        }
+        value: 'unblock_user' as DisputeActionType,
+        label: 'Unblock Client',
+        description: 'Restore client account access',
+        icon: <ShieldOff className="h-4 w-4" />,
+      }
       : {
-          value: 'block_user' as DisputeActionType,
-          label: 'Block Client',
-          description: 'Temporarily restrict client access',
-          icon: <Ban className="h-4 w-4" />,
-          destructive: true,
-        },
+        value: 'block_user' as DisputeActionType,
+        label: 'Block Client',
+        description: 'Temporarily restrict client access',
+        icon: <Ban className="h-4 w-4" />,
+        destructive: true,
+      },
   );
 
   options.push(
     user.isBlacklisted
       ? {
-          value: 'unblacklist_user' as DisputeActionType,
-          label: 'Remove Client Blacklist',
-          description: 'Remove permanent restriction',
-          icon: <ShieldOff className="h-4 w-4" />,
-        }
+        value: 'unblacklist_user' as DisputeActionType,
+        label: 'Remove Client Blacklist',
+        description: 'Remove permanent restriction',
+        icon: <ShieldOff className="h-4 w-4" />,
+      }
       : {
-          value: 'blacklist_user' as DisputeActionType,
-          label: 'Blacklist Client',
-          description: 'Permanently restrict client',
-          icon: <ShieldAlert className="h-4 w-4" />,
-          destructive: true,
-        },
+        value: 'blacklist_user' as DisputeActionType,
+        label: 'Blacklist Client',
+        description: 'Permanently restrict client',
+        icon: <ShieldAlert className="h-4 w-4" />,
+        destructive: true,
+      },
   );
 
 
@@ -532,7 +523,7 @@ export default function DisputeResolution() {
     } catch (err) {
       setError(
         getErrorMessage(err) ||
-          'Failed to apply action. Please try again.',
+        'Failed to apply action. Please try again.',
       );
     } finally {
       setSubmitting(false);
@@ -540,83 +531,50 @@ export default function DisputeResolution() {
   };
 
   const selectedAction =
-  detail && confirmAction
-    ? buildActionOptions(detail.worker, detail.user).find(
+    detail && confirmAction
+      ? buildActionOptions(detail.worker, detail.user).find(
         (action) => action.value === confirmAction,
       )
-    : undefined;
+      : undefined;
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6 p-4 md:p-6">
-      {/* Page Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        
+    <div className="mx-auto w-full space-y-6 p-4 md:p-6">
 
-        <Button
-          variant="outline"
-          onClick={loadDisputes}
-          disabled={loading}
-          className="w-fit"
-        >
-          <RefreshCw
-            className={`mr-2 h-4 w-4 ${
-              loading ? 'animate-spin' : ''
-            }`}
-          />
-          Refresh
-        </Button>
+
+      {/* Status Tabs */}
+      <div className="flex gap-1 rounded-lg bg-gray-100 p-1">
+        {[
+          { value: 'all', label: 'All' },
+          { value: 'pending', label: 'Pending' },
+          { value: 'resolved', label: 'Resolved' },
+          { value: 'dismissed', label: 'Dismissed' },
+        ].map((tab) => (
+          <button
+            key={tab.value}
+            type="button"
+            onClick={() => setStatusFilter(tab.value)}
+            className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${statusFilter === tab.value
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-600 hover:text-gray-700'
+              }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      {/* Filters */}
-      <Card className="shadow-none">
-        <CardContent className="p-2">
-          <Tabs
-            value={statusFilter}
-            onValueChange={setStatusFilter}
-          >
-            <TabsList className="h-auto w-full justify-start overflow-x-auto bg-transparent p-0">
-              <TabsTrigger
-                value="all"
-                className="px-4 py-2.5 data-[state=active]:bg-muted"
-              >
-                All
-              </TabsTrigger>
-
-              <TabsTrigger
-                value="pending"
-                className="gap-2 px-4 py-2.5 data-[state=active]:bg-muted"
-              >
-                <span className="h-2 w-2 rounded-full bg-amber-500" />
-                Pending
-              </TabsTrigger>
-
-              <TabsTrigger
-                value="in_review"
-                className="gap-2 px-4 py-2.5 data-[state=active]:bg-muted"
-              >
-                <span className="h-2 w-2 rounded-full bg-blue-500" />
-                In Review
-              </TabsTrigger>
-
-              <TabsTrigger
-                value="resolved"
-                className="gap-2 px-4 py-2.5 data-[state=active]:bg-muted"
-              >
-                <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                Resolved
-              </TabsTrigger>
-
-              <TabsTrigger
-                value="dismissed"
-                className="gap-2 px-4 py-2.5 data-[state=active]:bg-muted"
-              >
-                <span className="h-2 w-2 rounded-full bg-slate-400" />
-                Dismissed
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </CardContent>
-      </Card>
+      <Button
+        variant="outline"
+        onClick={loadDisputes}
+        disabled={loading}
+        className="w-fit"
+      >
+        <RefreshCw
+          className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''
+            }`}
+        />
+        Refresh
+      </Button>
 
       {/* Disputes */}
       {loading ? (
@@ -772,57 +730,57 @@ export default function DisputeResolution() {
                 {/* Evidence */}
                 {(detail.proofImages.length > 0 ||
                   detail.proofVideo) && (
-                  <Card className="shadow-none">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center gap-2 text-sm">
-                        <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                        Evidence
-                      </CardTitle>
-                    </CardHeader>
+                    <Card className="shadow-none">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="flex items-center gap-2 text-sm">
+                          <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                          Evidence
+                        </CardTitle>
+                      </CardHeader>
 
-                    <CardContent>
-                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                        {detail.proofImages.map(
-                          (image) => (
-                            <a
-                              key={image}
-                              href={image}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="group relative aspect-square overflow-hidden rounded-lg border bg-muted"
-                            >
-                              <img
-                                src={image}
-                                alt="Proof"
-                                className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
-                              />
-                            </a>
-                          ),
-                        )}
-
-                        {detail.proofVideo && (
-                          <div className="relative aspect-square overflow-hidden rounded-lg border bg-muted">
-                            <video
-                              src={detail.proofVideo}
-                              className="h-full w-full object-cover"
-                              controls
-                            />
-
-                            <div className="pointer-events-none absolute left-2 top-2">
-                              <Badge
-                                variant="secondary"
-                                className="gap-1 bg-background/90"
+                      <CardContent>
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                          {detail.proofImages.map(
+                            (image) => (
+                              <a
+                                key={image}
+                                href={image}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="group relative aspect-square overflow-hidden rounded-lg border bg-muted"
                               >
-                                <Video className="h-3 w-3" />
-                                Video
-                              </Badge>
+                                <img
+                                  src={image}
+                                  alt="Proof"
+                                  className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                                />
+                              </a>
+                            ),
+                          )}
+
+                          {detail.proofVideo && (
+                            <div className="relative aspect-square overflow-hidden rounded-lg border bg-muted">
+                              <video
+                                src={detail.proofVideo}
+                                className="h-full w-full object-cover"
+                                controls
+                              />
+
+                              <div className="pointer-events-none absolute left-2 top-2">
+                                <Badge
+                                  variant="secondary"
+                                  className="gap-1 bg-background/90"
+                                >
+                                  <Video className="h-3 w-3" />
+                                  Video
+                                </Badge>
+                              </div>
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
 
                 {/* Parties */}
                 <div>
@@ -907,9 +865,9 @@ export default function DisputeResolution() {
                             >
                               {index <
                                 detail.actions.length -
-                                  1 && (
-                                <div className="absolute left-[15px] top-8 h-full w-px bg-border" />
-                              )}
+                                1 && (
+                                  <div className="absolute left-[15px] top-8 h-full w-px bg-border" />
+                                )}
 
                               <div className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border bg-background">
                                 <ShieldCheck className="h-3.5 w-3.5 text-muted-foreground" />
