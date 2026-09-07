@@ -13,7 +13,8 @@ export const RouteSegments = {
     MESSAGES: "messages",
     WALLET: "user-wallet",
     PROFILE: "profile-settings",
-    POST_WORK: "task-booking"
+    POST_WORK: "task-booking",
+    DISPUTES: "disputes",
   },
   
   ADMIN: {

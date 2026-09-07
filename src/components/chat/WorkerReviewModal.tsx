@@ -47,7 +47,7 @@ export default function WorkerReviewModal({ open, onClose, workId, workerId, wor
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Rate {workerName}</DialogTitle>
           <DialogDescription>How was the work on "{workTitle}"?</DialogDescription>
@@ -87,6 +87,9 @@ export default function WorkerReviewModal({ open, onClose, workId, workerId, wor
         <DialogFooter className="gap-2 sm:gap-3 mt-4">
           <Button variant="outline" className="flex-1" onClick={onClose}>
             Maybe Later
+          </Button>
+          <Button variant="outline" className="flex-1" onClick={onClose}>
+            Raise a complaint
           </Button>
           <Button className="flex-1" onClick={handleSubmit} disabled={submitting || rating === 0}>
             {submitting ? 'Submitting…' : 'Submit'}

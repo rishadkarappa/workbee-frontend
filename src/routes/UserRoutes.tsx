@@ -20,6 +20,7 @@ import ActiveWorks from "@/components/user/dashboard/live-works/page";
 import UserWallet from "@/components/user/dashboard/wallet/page";
 import ProfileSettings from "@/components/user/dashboard/profile-settings/page";
 import DashboardPostWork from "@/components/user/dashboard/post-work/page";
+import Disputes from "@/components/user/dashboard/disputes/page";
 
 
 const UserRoute = () => {
@@ -57,6 +58,7 @@ const UserRoute = () => {
         <Route path={RouteSegments.USER.WALLET} element={<UserWallet />} />
         <Route path={RouteSegments.USER.PROFILE} element={<ProfileSettings/>}/>
         <Route path={RouteSegments.USER.POST_WORK} element={<DashboardPostWork/>}/>
+        <Route path={RouteSegments.USER.DISPUTES} element={<Disputes/>}/>
       </Route>
     </Routes>
   );

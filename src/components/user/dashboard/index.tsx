@@ -126,9 +126,9 @@ const sidebarNavItems = [
         href: '/user-dashboard/task-booking',
     },
     {
-        title: 'History',
+        title: 'Disputes',
         icon: <Notebook size={18} />,
-        href: '/user/dashboard/history',
+        href: '/user-dashboard/disputes',
     },
     {
         title: 'Account Settings',
