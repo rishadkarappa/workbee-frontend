@@ -2,15 +2,11 @@ import { useState } from 'react';
 import { Star } from 'lucide-react';
 import { ReviewService } from '@/services/review-service';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import RaiseComplaintModal from './RaiseComplaintModal';
 
 interface WorkerReviewModalProps {
   open: boolean;
@@ -27,6 +23,7 @@ export default function WorkerReviewModal({ open, onClose, workId, workerId, wor
   const [testimonial, setTestimonial] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [complaintModalOpen, setComplaintModalOpen] = useState(false);
 
   const handleSubmit = async () => {
     if (rating === 0) {
@@ -46,56 +43,67 @@ export default function WorkerReviewModal({ open, onClose, workId, workerId, wor
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Rate {workerName}</DialogTitle>
-          <DialogDescription>How was the work on "{workTitle}"?</DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Rate {workerName}</DialogTitle>
+            <DialogDescription>How was the work on "{workTitle}"?</DialogDescription>
+          </DialogHeader>
 
-        <div className="flex justify-center gap-2 py-2">
-          {[1, 2, 3, 4, 5].map(star => (
-            <button
-              key={star}
-              type="button"
-              onMouseEnter={() => setHoverRating(star)}
-              onMouseLeave={() => setHoverRating(0)}
-              onClick={() => setRating(star)}
-            >
-              <Star
-                className={`w-10 h-10 transition-colors ${
-                  star <= (hoverRating || rating) ? 'fill-foreground text-foreground' : 'text-muted-foreground/80'
-                }`}
-              />
-            </button>
-          ))}
-        </div>
+          <div className="flex justify-center gap-2 py-2">
+            {[1, 2, 3, 4, 5].map(star => (
+              <button
+                key={star}
+                type="button"
+                onMouseEnter={() => setHoverRating(star)}
+                onMouseLeave={() => setHoverRating(0)}
+                onClick={() => setRating(star)}
+              >
+                <Star
+                  className={`w-10 h-10 transition-colors ${
+                    star <= (hoverRating || rating) ? 'fill-foreground text-foreground' : 'text-muted-foreground/80'
+                  }`}
+                />
+              </button>
+            ))}
+          </div>
 
-        <div className="space-y-1 mt-5">
-          <Textarea
-            value={testimonial}
-            onChange={e => setTestimonial(e.target.value.slice(0, 500))}
-            placeholder="Share a testimonial about this worker (optional)"
-            rows={4}
-            className="resize-none"
-          />
-          <p className="text-xs text-muted-foreground text-right">{testimonial.length}/500</p>
-        </div>
+          <div className="space-y-1 mt-5">
+            <Textarea
+              value={testimonial}
+              onChange={e => setTestimonial(e.target.value.slice(0, 500))}
+              placeholder="Share a testimonial about this worker (optional)"
+              rows={4}
+              className="resize-none"
+            />
+            <p className="text-xs text-muted-foreground text-right">{testimonial.length}/500</p>
+          </div>
 
-        {error && <p className="text-xs text-destructive">{error}</p>}
+          {error && <p className="text-xs text-destructive">{error}</p>}
 
-        <DialogFooter className="gap-2 sm:gap-3 mt-4">
-          <Button variant="outline" className="flex-1" onClick={onClose}>
-            Maybe Later
-          </Button>
-          <Button variant="outline" className="flex-1" onClick={onClose}>
-            Raise a complaint
-          </Button>
-          <Button className="flex-1" onClick={handleSubmit} disabled={submitting || rating === 0}>
-            {submitting ? 'Submitting…' : 'Submit'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter className="gap-2 sm:gap-3 mt-4">
+            <Button variant="outline" className="flex-1" onClick={onClose}>
+              Maybe Later
+            </Button>
+            <Button variant="outline" className="flex-1" onClick={() => setComplaintModalOpen(true)}>
+              Raise a complaint
+            </Button>
+            <Button className="flex-1" onClick={handleSubmit} disabled={submitting || rating === 0}>
+              {submitting ? 'Submitting…' : 'Submit'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <RaiseComplaintModal
+        open={complaintModalOpen}
+        onClose={() => setComplaintModalOpen(false)}
+        workId={workId}
+        workerId={workerId}
+        workerName={workerName}
+        workTitle={workTitle}
+      />
+    </>
   );
 }
