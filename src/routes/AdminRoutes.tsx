@@ -11,6 +11,7 @@ import NewAppliersManagement from "@/pages/admin/NewAppliers";
 import Payments from "@/components/admin/payments";
 import { UserRole } from "workbee-common";
 import { RouteSegments } from "@/constants/routes/route-segments";
+import DisputeResolution from "@/components/admin/disputes/page";
 
 const AdminRoute = () => {
     return (
@@ -32,6 +33,7 @@ const AdminRoute = () => {
                 <Route path={RouteSegments.ADMIN.WORKERS} element={<WorkerManagement/>} />
                 <Route path={RouteSegments.ADMIN.NEW_APPLIERS} element={<NewAppliersManagement/>} />
                 <Route path={RouteSegments.ADMIN.PAYMENTS} element={<Payments/>} />
+                <Route path={RouteSegments.ADMIN.DISPUTE_RESOLUTION} element={<DisputeResolution/>} />
             </Route>
         </Routes>
     )

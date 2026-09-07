@@ -24,6 +24,7 @@ export const RouteSegments = {
     WORKERS: "workers",
     NEW_APPLIERS: "new-appliers",
     PAYMENTS: "payments",
+    DISPUTE_RESOLUTION: "dispute-resolution",
   },
 
   WORKER: {

@@ -57,7 +57,7 @@ const items = [
   },
   {
     title: "Disputes",
-    route: "/admin/dashboard/disputes",
+    route: "/admin/dashboard/dispute-resolution",
     icon: ShieldAlert, 
   },
   {
