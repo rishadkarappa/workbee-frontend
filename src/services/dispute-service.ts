@@ -27,6 +27,27 @@ export interface DisputeActionPayload {
   reason: string;
 }
 
+export interface WorkerSummary {
+  id: string;
+  name: string;
+  email: string;
+  profileImage?: string;
+  isBlocked: boolean;
+  isBlacklisted: boolean;
+  totalWorksCompleted: number;
+  totalActionsTaken: number;
+}
+
+export interface UserSummary {
+  id: string;
+  name: string;
+  email: string;
+  profileImage?: string;
+  isBlocked: boolean;
+  isBlacklisted: boolean;
+  totalActionsTaken: number;
+}
+
 export const DisputeService = {
   getUploadSignature: (resourceType: "image" | "video") => {
     return api.get(DISPUTE_ENDPOINTS.UPLOAD_SIGNATURE(resourceType));

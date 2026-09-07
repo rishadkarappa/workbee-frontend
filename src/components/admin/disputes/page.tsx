@@ -1,6 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
+
 import { DisputeService } from '@/services/dispute-service';
-import type { DisputeActionType } from '@/services/dispute-service';
+import type {
+  DisputeActionType,
+  WorkerSummary,
+  UserSummary,
+} from '@/services/dispute-service';
 
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -15,21 +20,55 @@ import {
 } from '@/components/ui/dialog';
 
 import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+
+import { Badge } from '@/components/ui/badge';
+
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
+
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '@/components/ui/avatar';
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+
+import {
   Loader2,
-  RefreshCw,
-  ChevronDown,
-  ChevronUp,
-  MessageSquareWarning,
-  CalendarDays,
-  ShieldCheck,
   User,
-  BriefcaseBusiness,
-  AlertTriangle,
+  ShieldAlert,
+  ShieldCheck,
+  Briefcase,
+  RefreshCw,
+  Ban,
+  ShieldOff,
+  MailWarning,
+  UserRound,
   CheckCircle2,
   XCircle,
-  Ban,
-  MailWarning,
-  FileWarning,
+  Clock3,
+  FileText,
+  Image as ImageIcon,
+  Video,
+  Gavel,
 } from 'lucide-react';
 
 import { getErrorMessage } from '@/utils/error-helper';
@@ -41,19 +80,21 @@ interface DisputeActionItem {
   takenAt: string;
 }
 
-interface Dispute {
+interface DisputeListItem {
   id: string;
-  workId: string;
   workTitle: string;
-  userId: string;
-  workerId: string;
   complaintType: string;
+  status: 'pending' | 'in_review' | 'resolved' | 'dismissed';
+  createdAt: string;
+}
+
+interface DisputeDetail extends DisputeListItem {
   description: string;
   proofImages: string[];
   proofVideo?: string;
-  status: 'pending' | 'in_review' | 'resolved' | 'dismissed';
   actions: DisputeActionItem[];
-  createdAt: string;
+  worker: WorkerSummary;
+  user: UserSummary;
 }
 
 const COMPLAINT_LABELS: Record<string, string> = {
@@ -66,188 +107,344 @@ const COMPLAINT_LABELS: Record<string, string> = {
   other: 'Other',
 };
 
-const STATUS_STYLES: Record<string, string> = {
-  pending: 'bg-amber-50 text-amber-700 border-amber-200',
-  in_review: 'bg-blue-50 text-blue-700 border-blue-200',
-  resolved: 'bg-green-50 text-green-700 border-green-200',
-  dismissed: 'bg-gray-50 text-gray-600 border-gray-200',
+const STATUS_CONFIG = {
+  pending: {
+    label: 'Pending',
+    className:
+      'border-amber-200 bg-amber-50 text-amber-700',
+    icon: Clock3,
+  },
+  in_review: {
+    label: 'In Review',
+    className:
+      'border-blue-200 bg-blue-50 text-blue-700',
+    icon: Gavel,
+  },
+  resolved: {
+    label: 'Resolved',
+    className:
+      'border-emerald-200 bg-emerald-50 text-emerald-700',
+    icon: CheckCircle2,
+  },
+  dismissed: {
+    label: 'Dismissed',
+    className:
+      'border-slate-200 bg-slate-50 text-slate-600',
+    icon: XCircle,
+  },
 };
 
-interface ActionButtonProps {
-  label: string;
+function StatusBadge({
+  status,
+}: {
+  status: DisputeDetail['status'];
+}) {
+  const config = STATUS_CONFIG[status];
+  const Icon = config.icon;
+
+  return (
+    <Badge
+      variant="outline"
+      className={`gap-1.5 font-medium ${config.className}`}
+    >
+      <Icon className="h-3.5 w-3.5" />
+      {config.label}
+    </Badge>
+  );
+}
+
+function EntityStatus({
+  isBlocked,
+  isBlacklisted,
+}: {
+  isBlocked: boolean;
+  isBlacklisted: boolean;
+}) {
+  if (isBlacklisted) {
+    return (
+      <Badge
+        variant="outline"
+        className="border-slate-800 bg-slate-900 text-white"
+      >
+        Blacklisted
+      </Badge>
+    );
+  }
+
+  if (isBlocked) {
+    return (
+      <Badge
+        variant="outline"
+        className="border-red-200 bg-red-50 text-red-700"
+      >
+        Blocked
+      </Badge>
+    );
+  }
+
+  return (
+    <Badge
+      variant="outline"
+      className="border-emerald-200 bg-emerald-50 text-emerald-700"
+    >
+      Active
+    </Badge>
+  );
+}
+
+function EntityCard({
+  icon,
+  roleLabel,
+  name,
+  email,
+  image,
+  isBlocked,
+  isBlacklisted,
+  stats,
+}: {
   icon: React.ReactNode;
-  onClick: () => void;
-  variant?: 'default' | 'outline' | 'destructive';
-  disabled?: boolean;
+  roleLabel: string;
+  name: string;
+  email: string;
+  image?: string;
+  isBlocked: boolean;
+  isBlacklisted: boolean;
+  stats: {
+    label: string;
+    value: number | string;
+  }[];
+}) {
+  const initials =
+    name
+      ?.split(' ')
+      .map((part) => part[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase() || 'U';
+
+  return (
+    <Card className="overflow-hidden shadow-none">
+      <CardHeader className="border-b bg-muted/30 px-4 py-3">
+        <div className="flex items-center gap-2">
+          {icon}
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            {roleLabel}
+          </span>
+        </div>
+      </CardHeader>
+
+      <CardContent className="p-4">
+        <div className="flex items-start gap-3">
+          <Avatar className="h-12 w-12 border">
+            <AvatarImage src={image} alt={name} />
+            <AvatarFallback className="font-medium">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-2">
+              <p className="truncate font-semibold text-foreground">
+                {name}
+              </p>
+
+              <EntityStatus
+                isBlocked={isBlocked}
+                isBlacklisted={isBlacklisted}
+              />
+            </div>
+
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">
+              {email}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-2 divide-x rounded-lg border bg-muted/20">
+          {stats.map((stat) => (
+            <div
+              key={stat.label}
+              className="px-3 py-2.5 first:pl-3 last:pl-4"
+            >
+              <p className="text-[11px] font-medium text-muted-foreground">
+                {stat.label}
+              </p>
+              <p className="mt-0.5 text-sm font-semibold">
+                {stat.value}
+              </p>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 function ActionButton({
-  label,
   icon,
-  onClick,
+  label,
+  description,
   variant = 'outline',
+  destructive = false,
+  onClick,
   disabled,
-}: ActionButtonProps) {
+}: {
+  icon: React.ReactNode;
+  label: string;
+  description: string;
+  variant?: 'outline' | 'default';
+  destructive?: boolean;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
   return (
     <Button
       type="button"
       variant={variant}
       disabled={disabled}
       onClick={onClick}
-      className="justify-start gap-2"
+      className={`h-auto min-h-[58px] justify-start gap-3 px-3 py-2.5 text-left ${
+        destructive
+          ? 'border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700'
+          : ''
+      }`}
     >
-      {icon}
-      {label}
+      <span
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${
+          destructive
+            ? 'bg-red-50'
+            : 'bg-muted'
+        }`}
+      >
+        {icon}
+      </span>
+
+      <span className="min-w-0">
+        <span className="block text-sm font-medium">
+          {label}
+        </span>
+        <span className="mt-0.5 block truncate text-[11px] font-normal text-muted-foreground">
+          {description}
+        </span>
+      </span>
     </Button>
   );
 }
 
-function DisputeRow({
-  dispute,
-  onOpen,
-}: {
-  dispute: Dispute;
-  onOpen: (dispute: Dispute) => void;
-}) {
-  const [expanded, setExpanded] = useState(false);
+function buildActionOptions(
+  worker: WorkerSummary,
+  user: UserSummary,
+): {
+  value: DisputeActionType;
+  label: string;
+  description: string;
+  icon: React.ReactNode;
+  destructive?: boolean;
+}[] {
+  const options = [];
 
-  const complaintLabel =
-    COMPLAINT_LABELS[dispute.complaintType] || dispute.complaintType;
 
-  return (
-    <div className="overflow-hidden rounded-xl border bg-white shadow-sm transition-shadow hover:shadow-md">
+  options.push({
+    value: 'warning_email_worker' as DisputeActionType,
+    label: 'Warn Worker',
+    description: 'Send an official warning email',
+    icon: <MailWarning className="h-4 w-4" />,
+  });
 
-      {/* Dispute Header */}
-      <button
-        type="button"
-        onClick={() => setExpanded(!expanded)}
-        className="w-full text-left"
-      >
-        <div className="flex items-center justify-between gap-4 p-4 transition-colors hover:bg-muted/40">
-
-          <div className="flex min-w-0 items-center gap-3">
-
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100">
-              <MessageSquareWarning className="h-5 w-5 text-gray-500" />
-            </div>
-
-            <div className="min-w-0">
-
-              <p className="truncate text-sm font-semibold text-foreground">
-                {dispute.workTitle}
-              </p>
-
-              <div className="mt-1 flex items-center gap-2">
-
-                <span className="text-xs text-muted-foreground">
-                  {complaintLabel}
-                </span>
-
-                <span className="text-xs text-muted-foreground">
-                  •
-                </span>
-
-                <span className="text-xs text-muted-foreground">
-                  {new Date(dispute.createdAt).toLocaleDateString('en-IN', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                  })}
-                </span>
-
-              </div>
-            </div>
-          </div>
-
-          <div className="flex shrink-0 items-center gap-3">
-
-            <span
-              className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium capitalize ${
-                STATUS_STYLES[dispute.status]
-              }`}
-            >
-              {dispute.status.replace('_', ' ')}
-            </span>
-
-            {expanded ? (
-              <ChevronUp className="h-4 w-4 text-muted-foreground" />
-            ) : (
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-            )}
-
-          </div>
-
-        </div>
-      </button>
-
-      {/* Expanded Preview */}
-      {expanded && (
-        <div className="border-t bg-gray-50/70 px-4 pb-4">
-
-          <div className="grid gap-3 pt-4 sm:grid-cols-3">
-
-            <div className="rounded-lg border bg-white p-3">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <BriefcaseBusiness className="h-4 w-4" />
-                <span className="text-xs font-medium">
-                  Work
-                </span>
-              </div>
-
-              <p className="mt-1 truncate text-sm font-medium">
-                {dispute.workTitle}
-              </p>
-            </div>
-
-            <div className="rounded-lg border bg-white p-3">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <AlertTriangle className="h-4 w-4" />
-                <span className="text-xs font-medium">
-                  Complaint
-                </span>
-              </div>
-
-              <p className="mt-1 text-sm font-medium">
-                {complaintLabel}
-              </p>
-            </div>
-
-            <div className="rounded-lg border bg-white p-3">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <CalendarDays className="h-4 w-4" />
-                <span className="text-xs font-medium">
-                  Filed
-                </span>
-              </div>
-
-              <p className="mt-1 text-sm font-medium">
-                {new Date(dispute.createdAt).toLocaleDateString('en-IN')}
-              </p>
-            </div>
-
-          </div>
-
-          <Button
-            type="button"
-            className="mt-4 w-full"
-            onClick={() => onOpen(dispute)}
-          >
-            <MessageSquareWarning className="mr-2 h-4 w-4" />
-            View Dispute & Take Action
-          </Button>
-
-        </div>
-      )}
-    </div>
+  options.push({
+    value: 'warning_email_user' as DisputeActionType,
+    label: 'Warn Client',
+    description: 'Send an official warning email',
+    icon: <MailWarning className="h-4 w-4" />,
+  });
+  
+  options.push(
+    worker.isBlocked
+      ? {
+          value: 'unblock_worker' as DisputeActionType,
+          label: 'Unblock Worker',
+          description: 'Restore worker account access',
+          icon: <ShieldOff className="h-4 w-4" />,
+        }
+      : {
+          value: 'block_worker' as DisputeActionType,
+          label: 'Block Worker',
+          description: 'Temporarily restrict worker access',
+          icon: <Ban className="h-4 w-4" />,
+          destructive: true,
+        },
   );
+
+  options.push(
+    worker.isBlacklisted
+      ? {
+          value: 'unblacklist_worker' as DisputeActionType,
+          label: 'Remove Worker Blacklist',
+          description: 'Remove permanent restriction',
+          icon: <ShieldOff className="h-4 w-4" />,
+        }
+      : {
+          value: 'blacklist_worker' as DisputeActionType,
+          label: 'Blacklist Worker',
+          description: 'Permanently restrict worker',
+          icon: <ShieldAlert className="h-4 w-4" />,
+          destructive: true,
+        },
+  );
+
+  options.push(
+    user.isBlocked
+      ? {
+          value: 'unblock_user' as DisputeActionType,
+          label: 'Unblock Client',
+          description: 'Restore client account access',
+          icon: <ShieldOff className="h-4 w-4" />,
+        }
+      : {
+          value: 'block_user' as DisputeActionType,
+          label: 'Block Client',
+          description: 'Temporarily restrict client access',
+          icon: <Ban className="h-4 w-4" />,
+          destructive: true,
+        },
+  );
+
+  options.push(
+    user.isBlacklisted
+      ? {
+          value: 'unblacklist_user' as DisputeActionType,
+          label: 'Remove Client Blacklist',
+          description: 'Remove permanent restriction',
+          icon: <ShieldOff className="h-4 w-4" />,
+        }
+      : {
+          value: 'blacklist_user' as DisputeActionType,
+          label: 'Blacklist Client',
+          description: 'Permanently restrict client',
+          icon: <ShieldAlert className="h-4 w-4" />,
+          destructive: true,
+        },
+  );
+
+
+  options.push({
+    value: 'no_action' as DisputeActionType,
+    label: 'Dismiss Dispute',
+    description: 'Close this dispute without action',
+    icon: <XCircle className="h-4 w-4" />,
+  });
+
+  return options;
 }
 
 export default function DisputeResolution() {
-  const [disputes, setDisputes] = useState<Dispute[]>([]);
+  const [disputes, setDisputes] = useState<DisputeListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const [selected, setSelected] = useState<Dispute | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detail, setDetail] = useState<DisputeDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const [actionType, setActionType] =
     useState<DisputeActionType | ''>('');
@@ -255,6 +452,9 @@ export default function DisputeResolution() {
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [confirmAction, setConfirmAction] =
+    useState<DisputeActionType | null>(null);
 
   const loadDisputes = useCallback(async () => {
     setLoading(true);
@@ -278,29 +478,34 @@ export default function DisputeResolution() {
     loadDisputes();
   }, [loadDisputes]);
 
-  const openDispute = (dispute: Dispute) => {
-    setSelected(dispute);
+  const openDispute = async (id: string) => {
+    setSelectedId(id);
+    setDetail(null);
+    setActionType('');
+    setReason('');
+    setError(null);
+    setDetailLoading(true);
+
+    try {
+      const res = await DisputeService.getDisputeById(id);
+      setDetail(res.data.data);
+    } catch {
+      setError('Failed to load dispute details.');
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const closeModal = () => {
+    setSelectedId(null);
+    setDetail(null);
     setActionType('');
     setReason('');
     setError(null);
   };
 
-  const closeDispute = () => {
-    if (submitting) return;
-
-    setSelected(null);
-    setActionType('');
-    setReason('');
-    setError(null);
-  };
-
-  const selectAction = (action: DisputeActionType) => {
-    setActionType(action);
-    setError(null);
-  };
-
-  const handleApplyAction = async () => {
-    if (!selected) return;
+  const executeAction = async () => {
+    if (!detail) return;
 
     if (!actionType) {
       setError('Please select an action.');
@@ -308,7 +513,7 @@ export default function DisputeResolution() {
     }
 
     if (reason.trim().length < 5) {
-      setError('Please provide a reason (minimum 5 characters).');
+      setError('Please provide a reason (min 5 characters).');
       return;
     }
 
@@ -316,509 +521,633 @@ export default function DisputeResolution() {
     setError(null);
 
     try {
-      await DisputeService.applyAction(selected.id, {
+      await DisputeService.applyAction(detail.id, {
         actionType,
         reason: reason.trim(),
       });
 
-      setSelected(null);
-      setActionType('');
-      setReason('');
-
+      setConfirmAction(null);
+      closeModal();
       await loadDisputes();
     } catch (err) {
       setError(
         getErrorMessage(err) ||
-          'Failed to apply action. Please try again.'
+          'Failed to apply action. Please try again.',
       );
     } finally {
       setSubmitting(false);
     }
   };
 
+  const selectedAction =
+  detail && confirmAction
+    ? buildActionOptions(detail.worker, detail.user).find(
+        (action) => action.value === confirmAction,
+      )
+    : undefined;
+
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-5 p-4 sm:p-6">
+    <div className="mx-auto w-full max-w-7xl space-y-6 p-4 md:p-6">
+      {/* Page Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        
 
-      {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-
-        {/* <div>
-          <h1 className="text-xl font-semibold">
-            Dispute Resolution
-          </h1>
-
-          <p className="mt-1 text-sm text-muted-foreground">
-            Review complaints and take appropriate action.
-          </p>
-        </div> */}
-
-        <div className="flex items-center gap-2">
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={loadDisputes}
-            disabled={loading}
-          >
-            <RefreshCw
-              className={`mr-2 h-4 w-4 ${
-                loading ? 'animate-spin' : ''
-              }`}
-            />
-            Refresh
-          </Button>
-
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-9 rounded-lg border bg-background px-3 text-sm"
-          >
-            <option value="all">All statuses</option>
-            <option value="pending">Pending</option>
-            <option value="in_review">In review</option>
-            <option value="resolved">Resolved</option>
-            <option value="dismissed">Dismissed</option>
-          </select>
-
-        </div>
+        <Button
+          variant="outline"
+          onClick={loadDisputes}
+          disabled={loading}
+          className="w-fit"
+        >
+          <RefreshCw
+            className={`mr-2 h-4 w-4 ${
+              loading ? 'animate-spin' : ''
+            }`}
+          />
+          Refresh
+        </Button>
       </div>
+
+      {/* Filters */}
+      <Card className="shadow-none">
+        <CardContent className="p-2">
+          <Tabs
+            value={statusFilter}
+            onValueChange={setStatusFilter}
+          >
+            <TabsList className="h-auto w-full justify-start overflow-x-auto bg-transparent p-0">
+              <TabsTrigger
+                value="all"
+                className="px-4 py-2.5 data-[state=active]:bg-muted"
+              >
+                All
+              </TabsTrigger>
+
+              <TabsTrigger
+                value="pending"
+                className="gap-2 px-4 py-2.5 data-[state=active]:bg-muted"
+              >
+                <span className="h-2 w-2 rounded-full bg-amber-500" />
+                Pending
+              </TabsTrigger>
+
+              <TabsTrigger
+                value="in_review"
+                className="gap-2 px-4 py-2.5 data-[state=active]:bg-muted"
+              >
+                <span className="h-2 w-2 rounded-full bg-blue-500" />
+                In Review
+              </TabsTrigger>
+
+              <TabsTrigger
+                value="resolved"
+                className="gap-2 px-4 py-2.5 data-[state=active]:bg-muted"
+              >
+                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                Resolved
+              </TabsTrigger>
+
+              <TabsTrigger
+                value="dismissed"
+                className="gap-2 px-4 py-2.5 data-[state=active]:bg-muted"
+              >
+                <span className="h-2 w-2 rounded-full bg-slate-400" />
+                Dismissed
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </CardContent>
+      </Card>
 
       {/* Disputes */}
       {loading ? (
-        <div className="flex items-center justify-center rounded-xl border bg-white py-16">
-          <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-        </div>
+        <Card className="shadow-none">
+          <CardContent className="flex min-h-[280px] items-center justify-center">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="h-7 w-7 animate-spin text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">
+                Loading disputes...
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       ) : disputes.length === 0 ? (
-        <div className="rounded-xl border bg-white py-16 text-center">
+        <Card className="shadow-none">
+          <CardContent className="flex min-h-[280px] flex-col items-center justify-center text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+              <ShieldCheck className="h-6 w-6 text-muted-foreground" />
+            </div>
 
-          <MessageSquareWarning className="mx-auto mb-3 h-10 w-10 text-gray-300" />
+            <h3 className="mt-4 font-semibold">
+              No disputes found
+            </h3>
 
-          <p className="text-sm text-gray-500">
-            No disputes found.
-          </p>
-
-        </div>
+            <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+              There are no disputes matching the selected status.
+            </p>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="space-y-3">
-          {disputes.map((dispute) => (
-            <DisputeRow
-              key={dispute.id}
-              dispute={dispute}
-              onOpen={openDispute}
-            />
-          ))}
-        </div>
-      )}
+        <Card className="overflow-hidden shadow-none">
 
-      {/* Dispute Modal */}
-      <Dialog
-        open={!!selected}
-        onOpenChange={(open) => {
-          if (!open) closeDispute();
-        }}
-      >
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-
-          {selected && (
-            <>
-              <DialogHeader>
-
-                <div className="flex items-start gap-3">
-
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100">
-                    <MessageSquareWarning className="h-5 w-5" />
+          <CardContent className="p-0">
+            <div className="divide-y">
+              {disputes.map((dispute) => (
+                <button
+                  key={dispute.id}
+                  type="button"
+                  onClick={() => openDispute(dispute.id)}
+                  className="group flex w-full items-center gap-4 p-4 text-left transition-colors hover:bg-muted/40"
+                >
+                  {/* Icon */}
+                  <div className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-lg border bg-background sm:flex">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
                   </div>
 
-                  <div className="min-w-0">
+                  {/* Main */}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="truncate font-medium text-foreground">
+                        {dispute.workTitle}
+                      </p>
 
-                    <DialogTitle className="truncate">
-                      {selected.workTitle}
+                      <Badge
+                        variant="secondary"
+                        className="hidden sm:inline-flex"
+                      >
+                        {COMPLAINT_LABELS[
+                          dispute.complaintType
+                        ] || dispute.complaintType}
+                      </Badge>
+                    </div>
+
+                    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                      <span>
+                        {COMPLAINT_LABELS[
+                          dispute.complaintType
+                        ] || dispute.complaintType}
+                      </span>
+
+                      <span>•</span>
+
+                      <span>
+                        {new Date(
+                          dispute.createdAt,
+                        ).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Status */}
+                  <div className="shrink-0">
+                    <StatusBadge status={dispute.status} />
+                  </div>
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Detail Dialog */}
+      <Dialog
+        open={!!selectedId}
+        onOpenChange={(open) => !open && closeModal()}
+      >
+        <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-3xl">
+          {detailLoading || !detail ? (
+            <div className="flex min-h-[400px] items-center justify-center">
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="h-7 w-7 animate-spin text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  Loading dispute...
+                </p>
+              </div>
+            </div>
+          ) : (
+            <>
+              <DialogHeader className="border-b pb-5">
+                <div className="flex flex-col gap-3 pr-6 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <DialogTitle className="truncate text-xl">
+                      {detail.workTitle}
                     </DialogTitle>
 
                     <DialogDescription className="mt-1">
-                      {COMPLAINT_LABELS[selected.complaintType] ||
-                        selected.complaintType}
+                      Filed{' '}
+                      {new Date(
+                        detail.createdAt,
+                      ).toLocaleString()}
                     </DialogDescription>
-
                   </div>
 
+                  <StatusBadge status={detail.status} />
                 </div>
-
               </DialogHeader>
 
-              <div className="space-y-5">
-
-                {/* Status */}
-                <div className="flex items-center justify-between rounded-lg border bg-gray-50 px-4 py-3">
-
-                  <span className="text-sm font-medium">
-                    Dispute Status
-                  </span>
-
-                  <span
-                    className={`rounded-full border px-2.5 py-1 text-xs font-medium capitalize ${
-                      STATUS_STYLES[selected.status]
-                    }`}
-                  >
-                    {selected.status.replace('_', ' ')}
-                  </span>
-
-                </div>
-
+              <div className="space-y-6 py-2">
                 {/* Complaint */}
-                <div className="rounded-lg border bg-white p-4">
+                <Card className="shadow-none">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-sm">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      Complaint
+                    </CardTitle>
+                  </CardHeader>
 
-                  <div className="mb-3 flex items-center gap-2">
-                    <FileWarning className="h-4 w-4 text-muted-foreground" />
+                  <CardContent className="space-y-3">
+                    <Badge variant="secondary">
+                      {COMPLAINT_LABELS[
+                        detail.complaintType
+                      ] || detail.complaintType}
+                    </Badge>
 
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Complaint Details
-                    </p>
-                  </div>
-
-                  <p className="text-sm leading-6 text-gray-700">
-                    {selected.description}
-                  </p>
-
-                </div>
-
-                {/* IDs */}
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-
-                  <div className="rounded-lg border bg-gray-50 p-3">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <BriefcaseBusiness className="h-4 w-4" />
-                      <span className="text-xs">
-                        Work ID
-                      </span>
-                    </div>
-
-                    <p className="mt-1 truncate font-mono text-xs">
-                      {selected.workId}
-                    </p>
-                  </div>
-
-                  <div className="rounded-lg border bg-gray-50 p-3">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <User className="h-4 w-4" />
-                      <span className="text-xs">
-                        User ID
-                      </span>
-                    </div>
-
-                    <p className="mt-1 truncate font-mono text-xs">
-                      {selected.userId}
-                    </p>
-                  </div>
-
-                  <div className="rounded-lg border bg-gray-50 p-3">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <User className="h-4 w-4" />
-                      <span className="text-xs">
-                        Worker ID
-                      </span>
-                    </div>
-
-                    <p className="mt-1 truncate font-mono text-xs">
-                      {selected.workerId}
-                    </p>
-                  </div>
-
-                </div>
-
-                {/* Proof */}
-                {(selected.proofImages.length > 0 ||
-                  selected.proofVideo) && (
-                  <div>
-
-                    <div className="mb-2 flex items-center gap-2">
-                      <ShieldCheck className="h-4 w-4 text-muted-foreground" />
-
-                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        Submitted Proof
+                    <div className="rounded-lg border bg-muted/30 p-4">
+                      <p className="whitespace-pre-wrap text-sm leading-6 text-foreground">
+                        {detail.description}
                       </p>
                     </div>
+                  </CardContent>
+                </Card>
 
-                    <div className="flex flex-wrap gap-3 rounded-lg border bg-gray-50 p-4">
+                {/* Evidence */}
+                {(detail.proofImages.length > 0 ||
+                  detail.proofVideo) && (
+                  <Card className="shadow-none">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-sm">
+                        <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                        Evidence
+                      </CardTitle>
+                    </CardHeader>
 
-                      {selected.proofImages.map((img, index) => (
-                        <img
-                          key={`${img}-${index}`}
-                          src={img}
-                          alt={`Proof ${index + 1}`}
-                          className="h-24 w-24 rounded-lg border object-cover"
-                        />
-                      ))}
+                    <CardContent>
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                        {detail.proofImages.map(
+                          (image) => (
+                            <a
+                              key={image}
+                              href={image}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="group relative aspect-square overflow-hidden rounded-lg border bg-muted"
+                            >
+                              <img
+                                src={image}
+                                alt="Proof"
+                                className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                              />
+                            </a>
+                          ),
+                        )}
 
-                      {selected.proofVideo && (
-                        <video
-                          src={selected.proofVideo}
-                          className="h-24 w-40 rounded-lg border object-cover"
-                          controls
-                        />
-                      )}
+                        {detail.proofVideo && (
+                          <div className="relative aspect-square overflow-hidden rounded-lg border bg-muted">
+                            <video
+                              src={detail.proofVideo}
+                              className="h-full w-full object-cover"
+                              controls
+                            />
 
-                    </div>
-                  </div>
-                )}
-
-                {/* Previous Actions */}
-                {selected.actions.length > 0 && (
-                  <div>
-
-                    <div className="mb-2 flex items-center gap-2">
-                      <ShieldCheck className="h-4 w-4 text-muted-foreground" />
-
-                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        Previous Actions
-                      </p>
-                    </div>
-
-                    <div className="space-y-2">
-
-                      {selected.actions.map((action, index) => (
-                        <div
-                          key={index}
-                          className="rounded-lg border bg-gray-50 p-3"
-                        >
-
-                          <div className="flex items-start justify-between gap-3">
-
-                            <div>
-                              <p className="text-sm font-medium capitalize">
-                                {action.actionType.replace(/_/g, ' ')}
-                              </p>
-
-                              <p className="mt-1 text-sm text-muted-foreground">
-                                {action.reason}
-                              </p>
+                            <div className="pointer-events-none absolute left-2 top-2">
+                              <Badge
+                                variant="secondary"
+                                className="gap-1 bg-background/90"
+                              >
+                                <Video className="h-3 w-3" />
+                                Video
+                              </Badge>
                             </div>
-
-                            <span className="shrink-0 rounded-full bg-white px-2 py-1 text-xs text-muted-foreground">
-                              Admin
-                            </span>
-
                           </div>
-
-                          <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <CalendarDays className="h-3.5 w-3.5" />
-
-                            {new Date(action.takenAt).toLocaleString(
-                              'en-IN',
-                              {
-                                day: 'numeric',
-                                month: 'short',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              }
-                            )}
-                          </div>
-
-                        </div>
-                      ))}
-
-                    </div>
-                  </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
                 )}
 
-                {/* Take Action */}
-                <div className="rounded-xl border bg-gray-50 p-4">
-
-                  <div className="mb-4">
-
+                {/* Parties */}
+                <div>
+                  <div className="mb-3">
                     <h3 className="text-sm font-semibold">
-                      Take Action
+                      Parties involved
                     </h3>
-
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Select an appropriate action for this dispute.
+                    <p className="text-xs text-muted-foreground">
+                      Review both accounts before taking action.
                     </p>
-
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-
-                    <ActionButton
-                      label="Block Worker"
-                      icon={<Ban className="h-4 w-4" />}
-                      onClick={() =>
-                        selectAction('block_worker')
+                  <div className="grid gap-3 sm:grid-cols-2 ">
+                    <EntityCard
+                      icon={
+                        <Briefcase className="h-4 w-4 text-muted-foreground" />
                       }
-                      disabled={submitting}
+                      roleLabel="Worker"
+                      name={detail.worker.name}
+                      email={detail.worker.email}
+                      image={detail.worker.profileImage}
+                      isBlocked={detail.worker.isBlocked}
+                      isBlacklisted={
+                        detail.worker.isBlacklisted
+                      }
+                      stats={[
+                        {
+                          label: 'Works completed',
+                          value:
+                            detail.worker
+                              .totalWorksCompleted,
+                        },
+                        {
+                          label: 'Actions',
+                          value:
+                            detail.worker
+                              .totalActionsTaken,
+                        },
+                      ]}
                     />
 
-                    <ActionButton
-                      label="Unblock Worker"
-                      icon={<CheckCircle2 className="h-4 w-4" />}
-                      onClick={() =>
-                        selectAction('unblock_worker')
+                    <EntityCard
+                      icon={
+                        <UserRound className="h-4 w-4 text-muted-foreground" />
                       }
-                      disabled={submitting}
-                    />
-
-                    <ActionButton
-                      label="Block User"
-                      icon={<Ban className="h-4 w-4" />}
-                      onClick={() =>
-                        selectAction('block_user')
+                      roleLabel="Client"
+                      name={detail.user.name}
+                      email={detail.user.email}
+                      image={detail.user.profileImage}
+                      isBlocked={detail.user.isBlocked}
+                      isBlacklisted={
+                        detail.user.isBlacklisted
                       }
-                      disabled={submitting}
+                      stats={[
+                        {
+                          label: 'Actions',
+                          value:
+                            detail.user.totalActionsTaken,
+                        },
+                      ]}
                     />
-
-                    <ActionButton
-                      label="Unblock User"
-                      icon={<CheckCircle2 className="h-4 w-4" />}
-                      onClick={() =>
-                        selectAction('unblock_user')
-                      }
-                      disabled={submitting}
-                    />
-
-                    <ActionButton
-                      label="Blacklist Worker"
-                      icon={<XCircle className="h-4 w-4" />}
-                      onClick={() =>
-                        selectAction('blacklist_worker')
-                      }
-                      disabled={submitting}
-                    />
-
-                    <ActionButton
-                      label="Unblacklist Worker"
-                      icon={<CheckCircle2 className="h-4 w-4" />}
-                      onClick={() =>
-                        selectAction('unblacklist_worker')
-                      }
-                      disabled={submitting}
-                    />
-
-                    <ActionButton
-                      label="Blacklist User"
-                      icon={<XCircle className="h-4 w-4" />}
-                      onClick={() =>
-                        selectAction('blacklist_user')
-                      }
-                      disabled={submitting}
-                    />
-
-                    <ActionButton
-                      label="Unblacklist User"
-                      icon={<CheckCircle2 className="h-4 w-4" />}
-                      onClick={() =>
-                        selectAction('unblacklist_user')
-                      }
-                      disabled={submitting}
-                    />
-
-                    <ActionButton
-                      label="Warning Email to Worker"
-                      icon={<MailWarning className="h-4 w-4" />}
-                      onClick={() =>
-                        selectAction('warning_email_worker')
-                      }
-                      disabled={submitting}
-                    />
-
-                    <ActionButton
-                      label="Warning Email to User"
-                      icon={<MailWarning className="h-4 w-4" />}
-                      onClick={() =>
-                        selectAction('warning_email_user')
-                      }
-                      disabled={submitting}
-                    />
-
-                    <ActionButton
-                      label="Dismiss — No Action"
-                      icon={<CheckCircle2 className="h-4 w-4" />}
-                      onClick={() =>
-                        selectAction('no_action')
-                      }
-                      disabled={submitting}
-                    />
-
                   </div>
+                </div>
 
-                  {/* Selected Action */}
-                  {actionType && (
-                    <div className="mt-4 rounded-lg border bg-white p-4">
+                {/* Previous actions */}
+                {detail.actions.length > 0 && (
+                  <Card className="shadow-none">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-sm">
+                        <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                        Previous actions
+                      </CardTitle>
+                    </CardHeader>
 
-                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                        Selected Action
-                      </p>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {detail.actions.map(
+                          (action, index) => (
+                            <div
+                              key={index}
+                              className="relative flex gap-3"
+                            >
+                              {index <
+                                detail.actions.length -
+                                  1 && (
+                                <div className="absolute left-[15px] top-8 h-full w-px bg-border" />
+                              )}
 
-                      <p className="mt-1 text-sm font-semibold capitalize">
-                        {actionType.replace(/_/g, ' ')}
-                      </p>
+                              <div className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border bg-background">
+                                <ShieldCheck className="h-3.5 w-3.5 text-muted-foreground" />
+                              </div>
 
-                      <div className="mt-4">
+                              <div className="min-w-0 flex-1 rounded-lg border bg-muted/20 p-3">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="text-sm font-medium capitalize">
+                                    {action.actionType.replace(
+                                      /_/g,
+                                      ' ',
+                                    )}
+                                  </span>
 
-                        <Textarea
-                          value={reason}
-                          onChange={(e) =>
-                            setReason(e.target.value)
+                                  <span className="text-xs text-muted-foreground">
+                                    {new Date(
+                                      action.takenAt,
+                                    ).toLocaleString()}
+                                  </span>
+                                </div>
+
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                  {action.reason}
+                                </p>
+
+                                <p className="mt-2 text-xs text-muted-foreground">
+                                  Taken by {action.takenBy}
+                                </p>
+                              </div>
+                            </div>
+                          ),
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Actions */}
+                <Card className="border-dashed shadow-none">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-sm">
+                      <ShieldAlert className="h-4 w-4" />
+                      Take action
+                    </CardTitle>
+
+                    <p className="text-xs text-muted-foreground">
+                      Select an action and provide a clear reason
+                      before applying it.
+                    </p>
+                  </CardHeader>
+
+                  <CardContent className="space-y-4">
+                    {/* Action Buttons */}
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {buildActionOptions(
+                        detail.worker,
+                        detail.user,
+                      ).map((action) => (
+                        <ActionButton
+                          key={action.value}
+                          icon={action.icon}
+                          label={action.label}
+                          description={
+                            action.description
                           }
-                          placeholder="Enter the reason for this action..."
-                          rows={3}
-                          className="resize-none"
+                          destructive={
+                            action.destructive
+                          }
+                          variant={
+                            actionType === action.value
+                              ? 'default'
+                              : 'outline'
+                          }
+                          disabled={submitting}
+                          onClick={() => {
+                            setActionType(
+                              action.value,
+                            );
+                            setError(null);
+                          }}
                         />
+                      ))}
+                    </div>
 
+                    {/* Selected Action */}
+                    {actionType && (
+                      <div className="rounded-lg border bg-muted/30 p-3">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+
+                          <p className="text-sm font-medium">
+                            Selected:{' '}
+                            {
+                              buildActionOptions(
+                                detail.worker,
+                                detail.user,
+                              ).find(
+                                (action) =>
+                                  action.value ===
+                                  actionType,
+                              )?.label
+                            }
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Reason */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium">
+                          Reason
+                        </label>
+
+                        <span className="text-xs text-muted-foreground">
+                          {reason.length}/500
+                        </span>
                       </div>
 
+                      <Textarea
+                        value={reason}
+                        onChange={(event) => {
+                          if (
+                            event.target.value.length <=
+                            500
+                          ) {
+                            setReason(
+                              event.target.value,
+                            );
+                          }
+                        }}
+                        placeholder="Explain why this action is being taken..."
+                        rows={4}
+                        className="resize-none"
+                      />
+
                       {error && (
-                        <p className="mt-2 text-xs text-destructive">
+                        <p className="text-sm font-medium text-destructive">
                           {error}
                         </p>
                       )}
-
                     </div>
-                  )}
-
-                  {!actionType && error && (
-                    <p className="mt-3 text-xs text-destructive">
-                      {error}
-                    </p>
-                  )}
-
-                </div>
-
+                  </CardContent>
+                </Card>
               </div>
 
-              <DialogFooter className="gap-2 pt-2">
-
+              <DialogFooter className="border-t pt-4">
                 <Button
                   variant="outline"
-                  className="flex-1"
-                  onClick={closeDispute}
+                  onClick={closeModal}
                   disabled={submitting}
                 >
                   Close
                 </Button>
 
                 <Button
-                  className="flex-1"
-                  onClick={handleApplyAction}
-                  disabled={!actionType || submitting}
-                >
-                  {submitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Applying...
-                    </>
-                  ) : (
-                    'Confirm Action'
-                  )}
-                </Button>
+                  onClick={() => {
+                    if (!actionType) {
+                      setError(
+                        'Please select an action.',
+                      );
+                      return;
+                    }
 
+                    if (reason.trim().length < 5) {
+                      setError(
+                        'Please provide a reason (min 5 characters).',
+                      );
+                      return;
+                    }
+
+                    setConfirmAction(actionType);
+                  }}
+                  disabled={
+                    submitting ||
+                    !actionType ||
+                    reason.trim().length < 5
+                  }
+                >
+                  {submitting && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Apply Action
+                </Button>
               </DialogFooter>
             </>
           )}
-
         </DialogContent>
       </Dialog>
+
+      {/* Confirmation */}
+      <AlertDialog
+        open={!!confirmAction}
+        onOpenChange={(open) =>
+          !open && setConfirmAction(null)
+        }
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Confirm action
+            </AlertDialogTitle>
+
+            <AlertDialogDescription>
+              Are you sure you want to{' '}
+              <strong>
+                {selectedAction?.label.toLowerCase()}
+              </strong>
+              ? This action will be recorded against this
+              dispute.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={submitting}>
+              Cancel
+            </AlertDialogCancel>
+
+            <AlertDialogAction
+              onClick={(event) => {
+                event.preventDefault();
+                executeAction();
+              }}
+              disabled={submitting}
+              className={
+                selectedAction?.destructive
+                  ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                  : ''
+              }
+            >
+              {submitting && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Confirm Action
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
-

@@ -65,7 +65,7 @@ function DisputeRow({ dispute }: { dispute: Dispute }) {
           {/* Left */}
           <div className="flex min-w-0 items-center gap-3">
 
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100">
               <MessageSquareWarning className="h-5 w-5 text-red-500" />
             </div>
 
