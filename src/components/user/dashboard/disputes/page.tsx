@@ -58,8 +58,7 @@ export default function Disputes() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-4 space-y-4">
-      <h1 className="text-xl font-semibold">My Disputes</h1>
+    <div className="w-full p-4 space-y-4">
 
       {disputes.length === 0 ? (
         <p className="text-gray-500 text-sm">You haven't raised any complaints yet.</p>
