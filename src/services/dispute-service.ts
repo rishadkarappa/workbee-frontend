@@ -40,11 +40,11 @@ export const DisputeService = {
   getWorkerDisputes: () => {
     return api.get(DISPUTE_ENDPOINTS.WORKER_DISPUTES);
   },
-  getAllDisputes: (params: { page: number; limit: number; status?: string; search?: string }) => {
-    return api.get(DISPUTE_ENDPOINTS.ADMIN_ALL, { params });
-  },
   getDisputeById: (id: string) => {
     return api.get(DISPUTE_ENDPOINTS.ADMIN_DETAIL(id));
+  },
+  getAllDisputes: (params: { page: number; limit: number; status?: string; search?: string }) => {
+    return api.get(DISPUTE_ENDPOINTS.ADMIN_ALL, { params });
   },
   applyAction: (id: string, data: DisputeActionPayload) => {
     return api.patch(DISPUTE_ENDPOINTS.ADMIN_ACTION(id), data);
