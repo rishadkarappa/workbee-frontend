@@ -35,6 +35,7 @@ export const RouteSegments = {
     MESSAGES: "client-messages",
     WALLET: "wallet",
     ACCOUNT: "worker-account",
+    WORKER_DISPUTES: "disputes",
   },
 
 } as const;

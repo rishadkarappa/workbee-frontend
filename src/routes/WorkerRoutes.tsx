@@ -13,6 +13,7 @@ import ClientMessages from "@/components/worker/messages/messages";
 import ActiveWorks from "@/components/worker/active-works";
 import WorkerWallet from "@/components/worker/wallet";
 import WorkerAccountSettings from "@/components/worker/profile/account-settings";
+import WorkerDisputes from "@/components/worker/disputes/page";
 
 const WorkerRoutes = () => {
     return (
@@ -36,6 +37,7 @@ const WorkerRoutes = () => {
                 <Route path={RouteSegments.WORKER.MESSAGES} element={<ClientMessages/>} />
                 <Route path={RouteSegments.WORKER.WALLET} element={<WorkerWallet/>} />
                 <Route path={RouteSegments.WORKER.ACCOUNT} element={<WorkerAccountSettings/>} />
+                <Route path={RouteSegments.WORKER.WORKER_DISPUTES} element={<WorkerDisputes/>} />
             </Route>
         </Routes>
     )

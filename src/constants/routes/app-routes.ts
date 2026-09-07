@@ -33,6 +33,7 @@ export const AppRoutes = {
             DASH: "/worker/worker-dashboard",
             CLIENT_MESSAGES:"/worker/worker-dashboard/client-messages",
             ACCOUNT:"/worker/worker-dashboard/worker-account",
+            WORKER_DISPUTES:"/worker/worker-dashboard/disputes",
         },
     },
 
