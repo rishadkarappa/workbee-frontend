@@ -102,11 +102,11 @@ export const WorkService = {
     },
 
     getUploadSign: () => {
-        return api.get("/work/worker/profile-image/upload-signature");
+        return api.get(WORK_ENDPOINTS.GET_UPLOAD_SIGN);
     },
 
     saveImageUrlFromCloud: (data: { imageUrl: string; publicId: string; }) => {
-        return api.patch("/work/worker/profile-image", data);
+        return api.patch(WORK_ENDPOINTS.SAVE_WORKER_PROF_URI_FROM_CLOUD, data);
     },
 
     //dashboard stat
@@ -119,6 +119,6 @@ export const WorkService = {
     },
 
     updateWorkerProfile: (data: {name: string;phone: string;location: string;bio: string;}) => {
-        return api.patch("/work/worker/profile", data);
+        return api.patch(WORK_ENDPOINTS.UPDATE_WORKER_PROFILE, data);
     },
 }

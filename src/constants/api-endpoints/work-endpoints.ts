@@ -13,4 +13,7 @@ export const WORK_ENDPOINTS = {
     GET_WORKER_DASHBOARD_STATS: "/work/worker/dashboard-stats",
     ADMIN_WORK_STATS: "/work/admin/work-stats",
     GET_WORKER_PROFILE: "/work/worker/profile",
+    GET_UPLOAD_SIGN: "/work/worker/profile-image/upload-signature",
+    SAVE_WORKER_PROF_URI_FROM_CLOUD: "/work/worker/profile-image",
+    UPDATE_WORKER_PROFILE: "/work/worker/profile",
 };
