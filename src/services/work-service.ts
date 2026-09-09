@@ -98,7 +98,7 @@ export const WorkService = {
     },
 
     getWorkerProfile: () => {
-        return api.get("/work/worker/profile");
+        return api.get(WORK_ENDPOINTS.GET_WORKER_PROFILE);
     },
 
     getUploadSign: () => {
