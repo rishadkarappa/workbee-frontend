@@ -5,8 +5,12 @@ import AdminRoutes from "./routes/AdminRoutes";
 import WorkerRoutes from "./routes/WorkerRoutes";
 import { Toaster } from "./components/ui/sonner";
 
+// theme provider
+import { ThemeProvider } from "./components/theme-provider";
+
 const App = () => {
   return (
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
     <Router>
       <Toaster position="top-center" closeButton />
       <Routes>
@@ -20,6 +24,7 @@ const App = () => {
         <Route path="/worker/*" element={<WorkerRoutes />} />
       </Routes>
     </Router>
+    </ThemeProvider>
   );
 };
 
