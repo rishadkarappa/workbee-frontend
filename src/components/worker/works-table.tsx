@@ -121,9 +121,9 @@ const Button = ({
   const baseStyles =
     "inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50"
   const variants = {
-    default: "bg-blue-600 text-white hover:bg-blue-700",
-    outline: "border border-gray-300 bg-white hover:bg-gray-50 text-gray-700",
-    ghost: "hover:bg-gray-100 text-gray-700",
+    default: "bg-primary text-primary-foreground hover:bg-primary/90",
+    outline: "border border-border bg-background hover:bg-accent text-foreground",
+    ghost: "hover:bg-accent text-foreground",
   }
   const sizes = {
     default: "h-10 px-4 py-2",
@@ -158,7 +158,7 @@ const Input = ({
       value={value}
       onChange={onChange}
       placeholder={placeholder}
-      className={`flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+      className={`flex h-10 w-full rounded-md border border-border bg-background text-foreground px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
     />
   )
 }
@@ -171,11 +171,11 @@ const Badge = ({
   variant?: "default" | "success" | "warning" | "danger" | "info"
 }) => {
   const variants = {
-    default: "bg-gray-100 text-gray-700",
-    success: "bg-green-100 text-green-700",
-    warning: "bg-yellow-100 text-yellow-700",
-    danger: "bg-red-100 text-red-700",
-    info: "bg-blue-100 text-blue-700",
+    default: "bg-muted text-muted-foreground",
+    success: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+    warning: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+    danger: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+    info: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
   }
   return (
     <span
@@ -204,7 +204,7 @@ const Select = ({
       value={value}
       onChange={onChange}
       disabled={disabled}
-      className={`flex h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+      className={`flex h-10 rounded-md border border-border bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
     >
       {children}
     </select>
@@ -282,15 +282,15 @@ const WorkDetailsModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto m-4">
-        <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between z-10">
+      <div className="relative bg-card rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto m-4">
+        <div className="sticky top-0 bg-card border-b border-border px-6 py-4 flex items-center justify-between z-10">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">{work.workTitle}</h2>
-            <p className="text-sm text-gray-500 mt-1">{work.workCategory}</p>
+            <h2 className="text-xl font-semibold text-foreground">{work.workTitle}</h2>
+            <p className="text-sm text-muted-foreground mt-1">{work.workCategory}</p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-muted-foreground hover:text-foreground transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -300,7 +300,7 @@ const WorkDetailsModal = ({
           {/* Basic Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-gray-700">Work Type</label>
+              <label className="text-sm font-medium text-muted-foreground">Work Type</label>
               <p className="mt-1">
                 <Badge variant="default">
                   {work.workType === 'oneDay' ? 'One Day Work' : 'Multiple Day Work'}
@@ -308,7 +308,7 @@ const WorkDetailsModal = ({
               </p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700">Status</label>
+              <label className="text-sm font-medium text-muted-foreground">Status</label>
               <p className="mt-1">
                 <Badge variant={getStatusVariant(work.status)}>
                   {work.status.toUpperCase()}
@@ -316,58 +316,58 @@ const WorkDetailsModal = ({
               </p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700 flex items-center gap-1">
+              <label className="text-sm font-medium text-muted-foreground flex items-center gap-1">
                 <Calendar className="w-4 h-4" />
                 {work.workType === 'oneDay' ? 'Date' : 'Start Date'}
               </label>
-              <p className="mt-1 text-sm text-gray-900">
+              <p className="mt-1 text-sm text-foreground">
                 {work.workType === 'oneDay' ? formatDate(work.date) : formatDate(work.startDate)}
               </p>
             </div>
             {work.workType === 'multipleDay' && (
               <div>
-                <label className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                <label className="text-sm font-medium text-muted-foreground flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
                   End Date
                 </label>
-                <p className="mt-1 text-sm text-gray-900">{formatDate(work.endDate)}</p>
+                <p className="mt-1 text-sm text-foreground">{formatDate(work.endDate)}</p>
               </div>
             )}
             <div>
-              <label className="text-sm font-medium text-gray-700 flex items-center gap-1">
+              <label className="text-sm font-medium text-muted-foreground flex items-center gap-1">
                 <Clock className="w-4 h-4" />
                 Time
               </label>
-              <p className="mt-1 text-sm text-gray-900">{work.time}</p>
+              <p className="mt-1 text-sm text-foreground">{work.time}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700">Duration</label>
-              <p className="mt-1 text-sm text-gray-900">{work.duration || 'Not specified'}</p>
+              <label className="text-sm font-medium text-muted-foreground">Duration</label>
+              <p className="mt-1 text-sm text-foreground">{work.duration || 'Not specified'}</p>
             </div>
           </div>
 
           {/* Description */}
-          <div className="border-t pt-4">
-            <label className="text-m font-medium text-black">Description</label>
-            <p className="mt-2 text-sm text-gray-900 whitespace-pre-wrap">{work.description}</p>
+          <div className="border-t border-border pt-4">
+            <label className="text-m font-medium text-foreground">Description</label>
+            <p className="mt-2 text-sm text-foreground whitespace-pre-wrap">{work.description}</p>
           </div>
 
           {/* Budget & Payment */}
-          <div className="border-t pt-4">
-            <h3 className="text-m font-medium text-black mb-3 flex items-center gap-1">
+          <div className="border-t border-border pt-4">
+            <h3 className="text-m font-medium text-foreground mb-3 flex items-center gap-1">
               <IndianRupee className="w-4 h-4" />
               Budget & Payment
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm text-gray-600">Budget</label>
-                <p className="mt-1 text-sm font-medium text-gray-900">
+                <label className="text-sm text-muted-foreground">Budget</label>
+                <p className="mt-1 text-sm font-medium text-foreground">
                   ₹{work.budget || 'Not specified'}
                 </p>
               </div>
               <div>
-                <label className="text-sm text-gray-600">Travel Allowance</label>
-                <p className="mt-1 text-sm font-medium text-gray-900">
+                <label className="text-sm text-muted-foreground">Travel Allowance</label>
+                <p className="mt-1 text-sm font-medium text-foreground">
                   {work.petrolAllowance ? `₹${work.petrolAllowance}` : 'Not specified'}
                 </p>
               </div>
@@ -375,20 +375,20 @@ const WorkDetailsModal = ({
           </div>
 
           {/* Location */}
-          <div className="border-t pt-4">
-            <h3 className="text-m font-medium text-black mb-3 flex items-center gap-1">
+          <div className="border-t border-border pt-4">
+            <h3 className="text-m font-medium text-foreground mb-3 flex items-center gap-1">
               <MapPin className="w-4 h-4" />
               Location Details
             </h3>
             <div className="space-y-3">
               {work.location?.coordinates && (
                 <div>
-                  <label className="text-sm text-gray-600">Map Location</label>
-                  <p className="mt-1 text-sm text-gray-900">
+                  <label className="text-sm text-muted-foreground">Map Location</label>
+                  <p className="mt-1 text-sm text-foreground">
                     {placeName || 'Loading location...'}
                   </p>
                   {distance !== null && distance !== undefined && (
-                    <p className="mt-1 text-sm text-black-600 font-medium">
+                    <p className="mt-1 text-sm text-foreground font-medium">
                       Distance : {distance.toFixed(1)} km away from you
                     </p>
                   )}
@@ -396,7 +396,7 @@ const WorkDetailsModal = ({
                     href={`https://www.google.com/maps?q=${work.location.coordinates[1]},${work.location.coordinates[0]}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-blue-600 hover:underline inline-flex items-center gap-1 mt-1"
+                    className="text-sm text-primary hover:underline inline-flex items-center gap-1 mt-1"
                   >
                     <MapPin className="w-3 h-3" />
                     View on Google Maps
@@ -406,21 +406,21 @@ const WorkDetailsModal = ({
               )}
               {work.manualAddress && (
                 <div>
-                  <label className="text-sm text-gray-600">Address</label>
-                  <p className="mt-1 text-sm text-gray-900">{work.manualAddress}</p>
+                  <label className="text-sm text-muted-foreground">Address</label>
+                  <p className="mt-1 text-sm text-foreground">{work.manualAddress}</p>
                 </div>
               )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {work.landmark && (
                   <div>
-                    <label className="text-sm text-gray-600">Landmark</label>
-                    <p className="mt-1 text-sm text-gray-900">{work.landmark}</p>
+                    <label className="text-sm text-muted-foreground">Landmark</label>
+                    <p className="mt-1 text-sm text-foreground">{work.landmark}</p>
                   </div>
                 )}
                 {work.place && (
                   <div>
-                    <label className="text-sm text-gray-600">Place Type</label>
-                    <p className="mt-1 text-sm text-gray-900">{work.place}</p>
+                    <label className="text-sm text-muted-foreground">Place Type</label>
+                    <p className="mt-1 text-sm text-foreground">{work.place}</p>
                   </div>
                 )}
               </div>
@@ -428,27 +428,27 @@ const WorkDetailsModal = ({
           </div>
 
           {/* Contact */}
-          <div className="border-t pt-4">
-            <label className="text-m font-medium text-black">Contact Number</label>
-            <p className="mt-1 text-sm text-gray-900">{work.contactNumber}</p>
+          <div className="border-t border-border pt-4">
+            <label className="text-m font-medium text-foreground">Contact Number</label>
+            <p className="mt-1 text-sm text-foreground">{work.contactNumber}</p>
           </div>
 
           {/* Additional Requirements */}
           {(work.extraRequirements || work.anythingElse) && (
-            <div className="border-t pt-4 space-y-3">
-              <h3 className="text-m font-medium text-black">Additional Information</h3>
+            <div className="border-t border-border pt-4 space-y-3">
+              <h3 className="text-m font-medium text-foreground">Additional Information</h3>
               {work.extraRequirements && (
                 <div>
-                  <label className="text-sm text-gray-600">Extra Requirements</label>
-                  <p className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">
+                  <label className="text-sm text-muted-foreground">Extra Requirements</label>
+                  <p className="mt-1 text-sm text-foreground whitespace-pre-wrap">
                     {work.extraRequirements}
                   </p>
                 </div>
               )}
               {work.anythingElse && (
                 <div>
-                  <label className="text-sm text-gray-600">Additional Notes</label>
-                  <p className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">
+                  <label className="text-sm text-muted-foreground">Additional Notes</label>
+                  <p className="mt-1 text-sm text-foreground whitespace-pre-wrap">
                     {work.anythingElse}
                   </p>
                 </div>
@@ -458,15 +458,15 @@ const WorkDetailsModal = ({
 
           {/* Media Files */}
           {(work.beforeImage || work.voiceFile || work.videoFile) && (
-            <div className="border-t pt-4">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Attachments</h3>
+            <div className="border-t border-border pt-4">
+              <h3 className="text-sm font-medium text-muted-foreground mb-3">Attachments</h3>
               <div className="flex flex-wrap gap-2">
                 {work.beforeImage && (
                   <a
                     href={`http://localhost:4002/${work.beforeImage}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-blue-600 hover:underline"
+                    className="text-sm text-primary hover:underline"
                   >
                     📷 View Image
                   </a>
@@ -476,7 +476,7 @@ const WorkDetailsModal = ({
                     href={`http://localhost:4002/${work.voiceFile}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-blue-600 hover:underline"
+                    className="text-sm text-primary hover:underline"
                   >
                     🎤 Listen Voice Note
                   </a>
@@ -486,7 +486,7 @@ const WorkDetailsModal = ({
                     href={`http://localhost:4002/${work.videoFile}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-blue-600 hover:underline"
+                    className="text-sm text-primary hover:underline"
                   >
                     🎥 Watch Video
                   </a>
@@ -497,14 +497,14 @@ const WorkDetailsModal = ({
 
 
           {/* Timestamps */}
-          <div className="border-t pt-4">
-            <label className="text-m font-medium text-black">Post Details </label>
-            <div className="grid mt-4 mb-4 grid-cols-1 md:grid-cols-2 gap-4 text-xs text-black">
+          <div className="border-t border-border pt-4">
+            <label className="text-m font-medium text-foreground">Post Details </label>
+            <div className="grid mt-4 mb-4 grid-cols-1 md:grid-cols-2 gap-4 text-xs text-muted-foreground">
               <div>
-                <span className="font-medium">Posted:</span> {formatDate(work.createdAt)}
+                <span className="font-medium text-foreground">Posted:</span> {formatDate(work.createdAt)}
               </div>
               <div>
-                <span className="font-medium">Last Updated:</span> {formatDate(work.updatedAt)}
+                <span className="font-medium text-foreground">Last Updated:</span> {formatDate(work.updatedAt)}
               </div>
             </div>
           </div>
@@ -512,7 +512,7 @@ const WorkDetailsModal = ({
 
         </div>
 
-        <div className="sticky bottom-0 bg-white border-t px-6 py-4 flex justify-end gap-3 z-10">
+        <div className="sticky bottom-0 bg-card border-t border-border px-6 py-4 flex justify-end gap-3 z-10">
           <Button variant="outline" onClick={onClose}>Close</Button>
           <Button variant="outline">Make an Offer</Button>
           <Button variant="outline" onClick={handleChatWithClient}>Chat with Client</Button>
@@ -716,17 +716,17 @@ export default function WorkerWorksTable() {
 
   if (loading && works.length === 0) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-black-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading available works...</p>
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading available works...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto">
 
         {/* <div className="mb-6">
@@ -741,10 +741,10 @@ export default function WorkerWorksTable() {
           </p>
         </div> */}
 
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-4 border-b flex items-center justify-between flex-wrap gap-4">
+        <div className="bg-card rounded-lg shadow">
+          <div className="p-4 border-b border-border flex items-center justify-between flex-wrap gap-4">
             <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 placeholder="Search by title, category, location..."
                 value={searchTerm}
@@ -753,14 +753,14 @@ export default function WorkerWorksTable() {
               />
               {loading && searchTerm && (
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  <div className="w-4 h-4 border-2 border-black-600 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                 </div>
               )}
             </div>
 
             {/* Distance Filter */}
             <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-gray-400" />
+              <MapPin className="w-4 h-4 text-muted-foreground" />
               <Select
                 value={distanceFilter}
                 onChange={(e) => setDistanceFilter(e.target.value)}
@@ -781,7 +781,7 @@ export default function WorkerWorksTable() {
 
             {/* Status Filter */}
             <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gray-400" />
+              <Filter className="w-4 h-4 text-muted-foreground" />
               <Select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
@@ -799,38 +799,38 @@ export default function WorkerWorksTable() {
 
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : (
             <>
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50 border-b">
+                  <thead className="bg-muted border-b border-border">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                         Work Title
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                         Location
                       </th>
                       {userLocation && (
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                           Distance
                         </th>
                       )}
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                         Budget
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                         Details
                       </th>
                     </tr>
                   </thead>
 
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-card divide-y divide-border">
                     {works.length > 0 ? (
                       works.map((work) => {
                         let distance: number | null = null
@@ -845,17 +845,17 @@ export default function WorkerWorksTable() {
                         }
 
                         return (
-                          <tr key={work.id} className="hover:bg-gray-50 transition-colors">
+                          <tr key={work.id} className="hover:bg-accent transition-colors">
                             <td className="px-6 py-4">
-                              <div className="font-medium text-gray-900">{work.workTitle}</div>
-                              <div className="text-sm text-gray-500">{formatDate(work.date || work.startDate)}</div>
+                              <div className="font-medium text-foreground">{work.workTitle}</div>
+                              <div className="text-sm text-muted-foreground">{formatDate(work.date || work.startDate)}</div>
                             </td>
                             <td className="px-6 py-4">
                               <div className="flex items-start gap-1.5">
-                                <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
-                                <span className="text-sm text-gray-600">
+                                <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                                <span className="text-sm text-muted-foreground">
                                   {loadingPlaces ? (
-                                    <span className="text-gray-400">Loading...</span>
+                                    <span className="text-muted-foreground">Loading...</span>
                                   ) : (
                                     placeNames[work.id!] || 'Not specified'
                                   )}
@@ -864,12 +864,12 @@ export default function WorkerWorksTable() {
                             </td>
                             {userLocation && (
                               <td className="px-6 py-4">
-                                <span className="text-sm text-black font-medium">
+                                <span className="text-sm text-foreground font-medium">
                                   {distance !== null ? `${distance.toFixed(1)} km` : 'N/A'}
                                 </span>
                               </td>
                             )}
-                            <td className="px-6 py-4 text-gray-900 font-medium">
+                            <td className="px-6 py-4 text-foreground font-medium">
                               {work.budget ? `₹${work.budget}` : 'Not specified'}
                             </td>
                             <td className="px-6 py-4">
@@ -893,7 +893,7 @@ export default function WorkerWorksTable() {
                       })
                     ) : (
                       <tr>
-                        <td colSpan={userLocation ? 6 : 5} className="px-6 py-12 text-center text-gray-500">
+                        <td colSpan={userLocation ? 6 : 5} className="px-6 py-12 text-center text-muted-foreground">
                           {distanceFilter !== "all" && !userLocation
                             ? "Please enable location to filter by distance"
                             : "No works found matching your filters."}
@@ -906,8 +906,8 @@ export default function WorkerWorksTable() {
 
               {/* Pagination */}
               {pagination.totalPages > 1 && (
-                <div className="px-6 py-4 border-t flex items-center justify-between">
-                  <div className="text-sm text-gray-600">
+                <div className="px-6 py-4 border-t border-border flex items-center justify-between">
+                  <div className="text-sm text-muted-foreground">
                     Showing {((currentPage - 1) * itemsPerPage) + 1} to{' '}
                     {Math.min(currentPage * itemsPerPage, pagination.total)} of{' '}
                     {pagination.total} results
@@ -924,7 +924,7 @@ export default function WorkerWorksTable() {
                     <div className="flex items-center gap-1">
                       {getPageNumbers().map((page, index) => (
                         page === '...' ? (
-                          <span key={`ellipsis-${index}`} className="px-3 py-1 text-gray-500">
+                          <span key={`ellipsis-${index}`} className="px-3 py-1 text-muted-foreground">
                             ...
                           </span>
                         ) : (
@@ -933,8 +933,8 @@ export default function WorkerWorksTable() {
                             onClick={() => setCurrentPage(page as number)}
                             disabled={loading}
                             className={`px-3 py-1 rounded text-sm transition-colors ${currentPage === page
-                              ? 'bg-gray-900 text-white'
-                              : 'bg-white text-gray-700 hover:bg-gray-50 border'
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-background text-foreground hover:bg-accent border border-border'
                               } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
                             {page}
