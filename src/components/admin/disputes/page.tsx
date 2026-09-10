@@ -104,25 +104,25 @@ const STATUS_CONFIG = {
   pending: {
     label: 'Pending',
     className:
-      'border-amber-200 bg-amber-50 text-amber-700',
+      'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400',
     icon: Clock3,
   },
   in_review: {
     label: 'In Review',
     className:
-      'border-blue-200 bg-blue-50 text-blue-700',
+      'border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400',
     icon: Gavel,
   },
   resolved: {
     label: 'Resolved',
     className:
-      'border-emerald-200 bg-emerald-50 text-emerald-700',
+      'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
     icon: CheckCircle2,
   },
   dismissed: {
     label: 'Dismissed',
     className:
-      'border-slate-200 bg-slate-50 text-slate-600',
+      'border-muted-foreground/20 bg-muted text-muted-foreground',
     icon: XCircle,
   },
 };
@@ -157,7 +157,7 @@ function EntityStatus({
     return (
       <Badge
         variant="outline"
-        className="border-slate-800 bg-slate-900 text-white"
+        className="border-destructive/30 bg-destructive/10 text-destructive"
       >
         Blacklisted
       </Badge>
@@ -168,7 +168,7 @@ function EntityStatus({
     return (
       <Badge
         variant="outline"
-        className="border-red-200 bg-red-50 text-red-700"
+        className="border-destructive/30 bg-destructive/10 text-destructive"
       >
         Blocked
       </Badge>
@@ -178,7 +178,7 @@ function EntityStatus({
   return (
     <Badge
       variant="outline"
-      className="border-emerald-200 bg-emerald-50 text-emerald-700"
+      className="border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
     >
       Active
     </Badge>
@@ -220,6 +220,7 @@ function EntityCard({
       <CardHeader className="border-b bg-muted/30 px-4 py-3">
         <div className="flex items-center gap-2">
           {icon}
+
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             {roleLabel}
           </span>
@@ -228,9 +229,10 @@ function EntityCard({
 
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
-          <Avatar className="h-12 w-12 border">
+          <Avatar className="h-12 w-12 border border-border">
             <AvatarImage src={image} alt={name} />
-            <AvatarFallback className="font-medium">
+
+            <AvatarFallback className="bg-muted font-medium text-muted-foreground">
               {initials}
             </AvatarFallback>
           </Avatar>
@@ -253,7 +255,7 @@ function EntityCard({
           </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 divide-x rounded-lg border bg-muted/20">
+        <div className="mt-4 grid grid-cols-2 divide-x divide-border rounded-lg border border-border bg-muted/20">
           {stats.map((stat) => (
             <div
               key={stat.label}
@@ -262,7 +264,8 @@ function EntityCard({
               <p className="text-[11px] font-medium text-muted-foreground">
                 {stat.label}
               </p>
-              <p className="mt-0.5 text-sm font-semibold">
+
+              <p className="mt-0.5 text-sm font-semibold text-foreground">
                 {stat.value}
               </p>
             </div>
@@ -296,16 +299,18 @@ function ActionButton({
       variant={variant}
       disabled={disabled}
       onClick={onClick}
-      className={`h-auto min-h-[58px] justify-start gap-3 px-3 py-2.5 text-left ${destructive
-        ? 'border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700'
-        : ''
-        }`}
+      className={`h-auto min-h-[58px] justify-start gap-3 px-3 py-2.5 text-left ${
+        destructive
+          ? 'border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive'
+          : ''
+      }`}
     >
       <span
-        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${destructive
-          ? 'bg-red-50'
-          : 'bg-muted'
-          }`}
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${
+          destructive
+            ? 'bg-destructive/10'
+            : 'bg-muted text-muted-foreground'
+        }`}
       >
         {icon}
       </span>
@@ -314,6 +319,7 @@ function ActionButton({
         <span className="block text-sm font-medium">
           {label}
         </span>
+
         <span className="mt-0.5 block truncate text-[11px] font-normal text-muted-foreground">
           {description}
         </span>
@@ -334,7 +340,6 @@ function buildActionOptions(
 }[] {
   const options = [];
 
-
   options.push({
     value: 'warning_email_worker' as DisputeActionType,
     label: 'Warn Worker',
@@ -352,71 +357,70 @@ function buildActionOptions(
   options.push(
     worker.isBlocked
       ? {
-        value: 'unblock_worker' as DisputeActionType,
-        label: 'Unblock Worker',
-        description: 'Restore worker account access',
-        icon: <ShieldOff className="h-4 w-4" />,
-      }
+          value: 'unblock_worker' as DisputeActionType,
+          label: 'Unblock Worker',
+          description: 'Restore worker account access',
+          icon: <ShieldOff className="h-4 w-4" />,
+        }
       : {
-        value: 'block_worker' as DisputeActionType,
-        label: 'Block Worker',
-        description: 'Temporarily restrict worker access',
-        icon: <Ban className="h-4 w-4" />,
-        destructive: true,
-      },
+          value: 'block_worker' as DisputeActionType,
+          label: 'Block Worker',
+          description: 'Temporarily restrict worker access',
+          icon: <Ban className="h-4 w-4" />,
+          destructive: true,
+        },
   );
 
   options.push(
     worker.isBlacklisted
       ? {
-        value: 'unblacklist_worker' as DisputeActionType,
-        label: 'Remove Worker Blacklist',
-        description: 'Remove permanent restriction',
-        icon: <ShieldOff className="h-4 w-4" />,
-      }
+          value: 'unblacklist_worker' as DisputeActionType,
+          label: 'Remove Worker Blacklist',
+          description: 'Remove permanent restriction',
+          icon: <ShieldOff className="h-4 w-4" />,
+        }
       : {
-        value: 'blacklist_worker' as DisputeActionType,
-        label: 'Blacklist Worker',
-        description: 'Permanently restrict worker',
-        icon: <ShieldAlert className="h-4 w-4" />,
-        destructive: true,
-      },
+          value: 'blacklist_worker' as DisputeActionType,
+          label: 'Blacklist Worker',
+          description: 'Permanently restrict worker',
+          icon: <ShieldAlert className="h-4 w-4" />,
+          destructive: true,
+        },
   );
 
   options.push(
     user.isBlocked
       ? {
-        value: 'unblock_user' as DisputeActionType,
-        label: 'Unblock Client',
-        description: 'Restore client account access',
-        icon: <ShieldOff className="h-4 w-4" />,
-      }
+          value: 'unblock_user' as DisputeActionType,
+          label: 'Unblock Client',
+          description: 'Restore client account access',
+          icon: <ShieldOff className="h-4 w-4" />,
+        }
       : {
-        value: 'block_user' as DisputeActionType,
-        label: 'Block Client',
-        description: 'Temporarily restrict client access',
-        icon: <Ban className="h-4 w-4" />,
-        destructive: true,
-      },
+          value: 'block_user' as DisputeActionType,
+          label: 'Block Client',
+          description: 'Temporarily restrict client access',
+          icon: <Ban className="h-4 w-4" />,
+          destructive: true,
+        },
   );
 
   options.push(
     user.isBlacklisted
       ? {
-        value: 'unblacklist_user' as DisputeActionType,
-        label: 'Remove Client Blacklist',
-        description: 'Remove permanent restriction',
-        icon: <ShieldOff className="h-4 w-4" />,
-      }
+          value: 'unblacklist_user' as DisputeActionType,
+          label: 'Remove Client Blacklist',
+          description: 'Remove permanent restriction',
+          icon: <ShieldOff className="h-4 w-4" />,
+        }
       : {
-        value: 'blacklist_user' as DisputeActionType,
-        label: 'Blacklist Client',
-        description: 'Permanently restrict client',
-        icon: <ShieldAlert className="h-4 w-4" />,
-        destructive: true,
-      },
+          value: 'blacklist_user' as DisputeActionType,
+          label: 'Blacklist Client',
+          description: 'Permanently restrict client',
+          icon: <ShieldAlert className="h-4 w-4" />,
+          destructive: true,
+        },
   );
-
 
   options.push({
     value: 'no_action' as DisputeActionType,
@@ -523,7 +527,7 @@ export default function DisputeResolution() {
     } catch (err) {
       setError(
         getErrorMessage(err) ||
-        'Failed to apply action. Please try again.',
+          'Failed to apply action. Please try again.',
       );
     } finally {
       setSubmitting(false);
@@ -532,17 +536,18 @@ export default function DisputeResolution() {
 
   const selectedAction =
     detail && confirmAction
-      ? buildActionOptions(detail.worker, detail.user).find(
-        (action) => action.value === confirmAction,
-      )
+      ? buildActionOptions(
+          detail.worker,
+          detail.user,
+        ).find(
+          (action) => action.value === confirmAction,
+        )
       : undefined;
 
   return (
-    <div className="mx-auto w-full space-y-6 p-4 md:p-6">
-
-
+    <div className="mx-auto w-full space-y-6 bg-background p-4 text-foreground md:p-6">
       {/* Status Tabs */}
-      <div className="flex gap-1 rounded-lg bg-gray-100 p-1">
+      <div className="flex gap-1 rounded-lg border border-border bg-muted p-1">
         {[
           { value: 'all', label: 'All' },
           { value: 'pending', label: 'Pending' },
@@ -553,10 +558,11 @@ export default function DisputeResolution() {
             key={tab.value}
             type="button"
             onClick={() => setStatusFilter(tab.value)}
-            className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${statusFilter === tab.value
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-700'
-              }`}
+            className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${
+              statusFilter === tab.value
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:bg-background/60 hover:text-foreground'
+            }`}
           >
             {tab.label}
           </button>
@@ -570,8 +576,9 @@ export default function DisputeResolution() {
         className="w-fit"
       >
         <RefreshCw
-          className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''
-            }`}
+          className={`mr-2 h-4 w-4 ${
+            loading ? 'animate-spin' : ''
+          }`}
         />
         Refresh
       </Button>
@@ -582,6 +589,7 @@ export default function DisputeResolution() {
           <CardContent className="flex min-h-[280px] items-center justify-center">
             <div className="flex flex-col items-center gap-3">
               <Loader2 className="h-7 w-7 animate-spin text-muted-foreground" />
+
               <p className="text-sm text-muted-foreground">
                 Loading disputes...
               </p>
@@ -595,7 +603,7 @@ export default function DisputeResolution() {
               <ShieldCheck className="h-6 w-6 text-muted-foreground" />
             </div>
 
-            <h3 className="mt-4 font-semibold">
+            <h3 className="mt-4 font-semibold text-foreground">
               No disputes found
             </h3>
 
@@ -606,9 +614,8 @@ export default function DisputeResolution() {
         </Card>
       ) : (
         <Card className="overflow-hidden shadow-none">
-
           <CardContent className="p-0">
-            <div className="divide-y">
+            <div className="divide-y divide-border">
               {disputes.map((dispute) => (
                 <button
                   key={dispute.id}
@@ -617,7 +624,7 @@ export default function DisputeResolution() {
                   className="group flex w-full items-center gap-4 p-4 text-left transition-colors hover:bg-muted/40"
                 >
                   {/* Icon */}
-                  <div className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-lg border bg-background sm:flex">
+                  <div className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-background sm:flex">
                     <FileText className="h-4 w-4 text-muted-foreground" />
                   </div>
 
@@ -669,13 +676,16 @@ export default function DisputeResolution() {
       {/* Detail Dialog */}
       <Dialog
         open={!!selectedId}
-        onOpenChange={(open) => !open && closeModal()}
+        onOpenChange={(open) =>
+          !open && closeModal()
+        }
       >
         <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-3xl">
           {detailLoading || !detail ? (
             <div className="flex min-h-[400px] items-center justify-center">
               <div className="flex flex-col items-center gap-3">
                 <Loader2 className="h-7 w-7 animate-spin text-muted-foreground" />
+
                 <p className="text-sm text-muted-foreground">
                   Loading dispute...
                 </p>
@@ -683,10 +693,10 @@ export default function DisputeResolution() {
             </div>
           ) : (
             <>
-              <DialogHeader className="border-b pb-5">
+              <DialogHeader className="border-b border-border pb-5">
                 <div className="flex flex-col gap-3 pr-6 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
-                    <DialogTitle className="truncate text-xl">
+                    <DialogTitle className="truncate text-xl text-foreground">
                       {detail.workTitle}
                     </DialogTitle>
 
@@ -719,7 +729,7 @@ export default function DisputeResolution() {
                       ] || detail.complaintType}
                     </Badge>
 
-                    <div className="rounded-lg border bg-muted/30 p-4">
+                    <div className="rounded-lg border border-border bg-muted/30 p-4">
                       <p className="whitespace-pre-wrap text-sm leading-6 text-foreground">
                         {detail.description}
                       </p>
@@ -730,70 +740,71 @@ export default function DisputeResolution() {
                 {/* Evidence */}
                 {(detail.proofImages.length > 0 ||
                   detail.proofVideo) && (
-                    <Card className="shadow-none">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="flex items-center gap-2 text-sm">
-                          <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                          Evidence
-                        </CardTitle>
-                      </CardHeader>
+                  <Card className="shadow-none">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-sm">
+                        <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                        Evidence
+                      </CardTitle>
+                    </CardHeader>
 
-                      <CardContent>
-                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                          {detail.proofImages.map(
-                            (image) => (
-                              <a
-                                key={image}
-                                href={image}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="group relative aspect-square overflow-hidden rounded-lg border bg-muted"
-                              >
-                                <img
-                                  src={image}
-                                  alt="Proof"
-                                  className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
-                                />
-                              </a>
-                            ),
-                          )}
-
-                          {detail.proofVideo && (
-                            <div className="relative aspect-square overflow-hidden rounded-lg border bg-muted">
-                              <video
-                                src={detail.proofVideo}
-                                className="h-full w-full object-cover"
-                                controls
+                    <CardContent>
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                        {detail.proofImages.map(
+                          (image) => (
+                            <a
+                              key={image}
+                              href={image}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="group relative aspect-square overflow-hidden rounded-lg border border-border bg-muted"
+                            >
+                              <img
+                                src={image}
+                                alt="Proof"
+                                className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
                               />
+                            </a>
+                          ),
+                        )}
 
-                              <div className="pointer-events-none absolute left-2 top-2">
-                                <Badge
-                                  variant="secondary"
-                                  className="gap-1 bg-background/90"
-                                >
-                                  <Video className="h-3 w-3" />
-                                  Video
-                                </Badge>
-                              </div>
+                        {detail.proofVideo && (
+                          <div className="relative aspect-square overflow-hidden rounded-lg border border-border bg-muted">
+                            <video
+                              src={detail.proofVideo}
+                              className="h-full w-full object-cover"
+                              controls
+                            />
+
+                            <div className="pointer-events-none absolute left-2 top-2">
+                              <Badge
+                                variant="secondary"
+                                className="gap-1 bg-background/90"
+                              >
+                                <Video className="h-3 w-3" />
+                                Video
+                              </Badge>
                             </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Parties */}
                 <div>
                   <div className="mb-3">
-                    <h3 className="text-sm font-semibold">
+                    <h3 className="text-sm font-semibold text-foreground">
                       Parties involved
                     </h3>
+
                     <p className="text-xs text-muted-foreground">
                       Review both accounts before taking action.
                     </p>
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-2 ">
+                  <div className="grid gap-3 sm:grid-cols-2">
                     <EntityCard
                       icon={
                         <Briefcase className="h-4 w-4 text-muted-foreground" />
@@ -865,17 +876,17 @@ export default function DisputeResolution() {
                             >
                               {index <
                                 detail.actions.length -
-                                1 && (
-                                  <div className="absolute left-[15px] top-8 h-full w-px bg-border" />
-                                )}
+                                  1 && (
+                                <div className="absolute left-[15px] top-8 h-full w-px bg-border" />
+                              )}
 
-                              <div className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border bg-background">
+                              <div className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border bg-background">
                                 <ShieldCheck className="h-3.5 w-3.5 text-muted-foreground" />
                               </div>
 
-                              <div className="min-w-0 flex-1 rounded-lg border bg-muted/20 p-3">
+                              <div className="min-w-0 flex-1 rounded-lg border border-border bg-muted/20 p-3">
                                 <div className="flex flex-wrap items-center gap-2">
-                                  <span className="text-sm font-medium capitalize">
+                                  <span className="text-sm font-medium capitalize text-foreground">
                                     {action.actionType.replace(
                                       /_/g,
                                       ' ',
@@ -930,12 +941,8 @@ export default function DisputeResolution() {
                           key={action.value}
                           icon={action.icon}
                           label={action.label}
-                          description={
-                            action.description
-                          }
-                          destructive={
-                            action.destructive
-                          }
+                          description={action.description}
+                          destructive={action.destructive}
                           variant={
                             actionType === action.value
                               ? 'default'
@@ -943,9 +950,7 @@ export default function DisputeResolution() {
                           }
                           disabled={submitting}
                           onClick={() => {
-                            setActionType(
-                              action.value,
-                            );
+                            setActionType(action.value);
                             setError(null);
                           }}
                         />
@@ -954,11 +959,11 @@ export default function DisputeResolution() {
 
                     {/* Selected Action */}
                     {actionType && (
-                      <div className="rounded-lg border bg-muted/30 p-3">
+                      <div className="rounded-lg border border-border bg-muted/30 p-3">
                         <div className="flex items-center gap-2">
-                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                          <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
 
-                          <p className="text-sm font-medium">
+                          <p className="text-sm font-medium text-foreground">
                             Selected:{' '}
                             {
                               buildActionOptions(
@@ -978,7 +983,7 @@ export default function DisputeResolution() {
                     {/* Reason */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <label className="text-sm font-medium">
+                        <label className="text-sm font-medium text-foreground">
                           Reason
                         </label>
 
@@ -994,9 +999,7 @@ export default function DisputeResolution() {
                             event.target.value.length <=
                             500
                           ) {
-                            setReason(
-                              event.target.value,
-                            );
+                            setReason(event.target.value);
                           }
                         }}
                         placeholder="Explain why this action is being taken..."
@@ -1014,7 +1017,7 @@ export default function DisputeResolution() {
                 </Card>
               </div>
 
-              <DialogFooter className="border-t pt-4">
+              <DialogFooter className="border-t border-border pt-4">
                 <Button
                   variant="outline"
                   onClick={closeModal}
@@ -1073,7 +1076,7 @@ export default function DisputeResolution() {
 
             <AlertDialogDescription>
               Are you sure you want to{' '}
-              <strong>
+              <strong className="text-foreground">
                 {selectedAction?.label.toLowerCase()}
               </strong>
               ? This action will be recorded against this
@@ -1101,6 +1104,7 @@ export default function DisputeResolution() {
               {submitting && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
+
               Confirm Action
             </AlertDialogAction>
           </AlertDialogFooter>
