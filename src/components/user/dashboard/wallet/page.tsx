@@ -64,35 +64,35 @@ function StatusBadge({ status }: { status: string }) {
   switch (status) {
     case "completed":
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200 dark:bg-green-950/30 dark:text-green-400 dark:border-green-900">
           <CheckCircle2 className="w-3 h-3" />
           Completed
         </span>
       );
     case "pending":
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-900">
           <Clock className="w-3 h-3" />
           Pending
         </span>
       );
     case "failed":
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-900">
           <XCircle className="w-3 h-3" />
           Failed
         </span>
       );
     case "refunded":
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-900">
           <RefreshCw className="w-3 h-3" />
           Refunded
         </span>
       );
     default:
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground border border-border">
           {status}
         </span>
       );
@@ -115,14 +115,14 @@ function TransactionRow({ tx }: { tx: Transaction }) {
             : tx.type;
 
   return (
-    <div className="border rounded-xl overflow-hidden">
+    <div className="border border-border rounded-xl overflow-hidden">
       <button
         onClick={() => setExpanded(!expanded)}
         className="w-full text-left"
       >
         <div className="flex items-center justify-between p-4 transition-colors hover:bg-muted/50">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gray-100">
+            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-muted">
               {isDebit ? (
                 <ArrowUpCircle className="h-5 w-5 text-muted-foreground" />
               ) : (
@@ -163,44 +163,44 @@ function TransactionRow({ tx }: { tx: Transaction }) {
       </button>
 
       {expanded && (
-        <div className="px-4 pb-4 bg-gray-50 border-t space-y-2">
+        <div className="px-4 pb-4 bg-muted/40 border-t border-border space-y-2">
           {tx.description && (
             <div className="pt-3">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
                 Description
               </p>
-              <p className="text-sm text-gray-700">{tx.description}</p>
+              <p className="text-sm text-foreground/80">{tx.description}</p>
             </div>
           )}
           <div className="grid grid-cols-2 gap-3 pt-1">
             <div>
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
                 Transaction ID
               </p>
-              <p className="text-xs text-gray-600 font-mono truncate">{tx.id}</p>
+              <p className="text-xs text-muted-foreground font-mono truncate">{tx.id}</p>
             </div>
             <div>
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
                 Currency
               </p>
-              <p className="text-xs text-gray-600">{tx.currency}</p>
+              <p className="text-xs text-muted-foreground">{tx.currency}</p>
             </div>
             {tx.metadata?.razorpayPaymentId && (
               <div className="col-span-2">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
                   Razorpay Payment ID
                 </p>
-                <p className="text-xs text-gray-600 font-mono truncate">
+                <p className="text-xs text-muted-foreground font-mono truncate">
                   {tx.metadata.razorpayPaymentId}
                 </p>
               </div>
             )}
             {tx.metadata?.razorpayOrderId && (
               <div className="col-span-2">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
                   Razorpay Order ID
                 </p>
-                <p className="text-xs text-gray-600 font-mono truncate">
+                <p className="text-xs text-muted-foreground font-mono truncate">
                   {tx.metadata.razorpayOrderId}
                 </p>
               </div>
@@ -257,7 +257,7 @@ export default function UserWallet() {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
-        <div className="w-8 h-8 border-4 border-gray-800 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -265,7 +265,7 @@ export default function UserWallet() {
   if (error) {
     return (
       <div className="p-6 text-center space-y-3">
-        <p className="text-red-500">{error}</p>
+        <p className="text-destructive">{error}</p>
         <Button variant="outline" onClick={fetchWallet}>
           Try Again
         </Button>
@@ -359,8 +359,8 @@ export default function UserWallet() {
                     key={f}
                     onClick={() => setFilter(f)}
                     className={`px-3 py-1 rounded-full text-xs font-medium transition-colors capitalize ${filter === f
-                      ? "bg-gray-900 text-white"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover:bg-accent"
                       }`}
                   >
                     {f}
@@ -373,8 +373,8 @@ export default function UserWallet() {
         <CardContent className="space-y-2">
           {filtered.length === 0 ? (
             <div className="text-center py-12">
-              <Wallet className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 text-sm">
+              <Wallet className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+              <p className="text-muted-foreground text-sm">
                 {filter === "all"
                   ? "No transactions yet. Make your first payment to get started."
                   : `No ${filter} transactions.`}
@@ -387,7 +387,7 @@ export default function UserWallet() {
       </Card>
 
       {failedCount > 0 && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 flex items-start gap-2">
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 flex items-start gap-2 dark:border-red-900 dark:bg-red-950/30 dark:text-red-400">
           <XCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
           <p>
             You have {failedCount} failed transaction
