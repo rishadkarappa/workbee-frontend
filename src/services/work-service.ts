@@ -1,6 +1,7 @@
 import type { ApplyForWorkerDto } from "@/components/worker/worker-apply";
 import { api } from "./axios-instance/axios-instance";
 import { WORK_ENDPOINTS } from "@/constants/api-endpoints/work-endpoints";
+import type { MediaItem } from "./cloudinary-work-media-service";
 
 interface UpdateWorkDto {
     workTitle?: string;
@@ -15,6 +16,40 @@ interface UpdateWorkDto {
     workerId?: string;
     manualAddress?: string;
     landmark?: string;
+}
+
+interface PostWorkDto {
+    userId: string;
+    workTitle: string;
+    workCategory: string;
+    workType: string;
+
+    date?: string;
+    startDate?: string;
+    endDate?: string;
+    time: string;
+
+    voiceFile: MediaItem | null;
+    images: MediaItem[];
+    videos: MediaItem[];
+
+    description: string;
+    duration?: string;
+    budget?: string;
+
+    latitude: number;
+    longitude: number;
+
+    currentLocation?: string;
+    manualAddress?: string;
+    landmark?: string;
+
+    contactNumber: string;
+    petrolAllowance?: string;
+    extraRequirements?: string;
+    anythingElse?: string;
+
+    termsAccepted: boolean;
 }
 
 export const WorkService = {
@@ -59,10 +94,8 @@ export const WorkService = {
         return api.get(WORK_ENDPOINTS.GET_ALL_WORKS, { params: filters });
     },
 
-    postWork: (formData: FormData) => {
-        return api.post(WORK_ENDPOINTS.POST_WORK, formData, {
-            headers: { "Content-Type": "multipart/form-data" }
-        })
+    postWork: (workData: PostWorkDto) => {
+        return api.post(WORK_ENDPOINTS.POST_WORK, workData);
     },
 
     applyForWorker: (workerData: ApplyForWorkerDto) => {
@@ -118,7 +151,7 @@ export const WorkService = {
         return api.get(WORK_ENDPOINTS.ADMIN_WORK_STATS);
     },
 
-    updateWorkerProfile: (data: {name: string;phone: string;location: string;bio: string;}) => {
+    updateWorkerProfile: (data: { name: string; phone: string; location: string; bio: string; }) => {
         return api.patch(WORK_ENDPOINTS.UPDATE_WORKER_PROFILE, data);
     },
 }

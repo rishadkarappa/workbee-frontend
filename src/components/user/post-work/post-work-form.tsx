@@ -35,6 +35,7 @@ import { TimePicker, TimePickerContent, TimePickerHour, TimePickerInput, TimePic
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import type { MediaItem } from "@/services/cloudinary-work-media-service"
 import { MediaUploader } from "./components/media-uploader"
+import { VoiceRecorder } from "./components/voice-recorder"
 
 export function PostWorkForm({ className, ...props }: React.ComponentProps<"div">) {
   const [form, setForm] = useState({
@@ -46,11 +47,10 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
     startDate: "",
     endDate: "",
     time: "",
-    voiceFile: null as File | null,
+    voiceFile: null as MediaItem | null,
     images: [] as MediaItem[],
     videos: [] as MediaItem[],
     description: "",
-    videoFile: null as File | null,
     duration: "",
     budget: "",
 
@@ -63,7 +63,6 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
     manualAddress: "",
     landmark: "",
     contactNumber: "",
-    beforeImage: null as File | null,
     petrolAllowance: "",
     extraRequirements: "",
     anythingElse: "",
@@ -84,13 +83,6 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setForm({ ...form, [name]: value })
-  }
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, files } = e.target
-    if (files && files.length > 0) {
-      setForm({ ...form, [name]: files[0] })
-    }
   }
 
   // Helper function for AddressAutocomplete to update form
@@ -123,27 +115,45 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
         return
       }
 
-      const formData = new FormData()
 
-      Object.entries(form).forEach(([key, value]) => {
-        if (key === 'latitude' || key === 'longitude' || key === 'location') return
-        if (key === 'images' || key === 'videos') return // handled separately below
-        if (value === null || value === "") return
-        if (value instanceof File) {
-          formData.append(key, value)
-        } else if (typeof value === 'boolean') {
-          formData.append(key, value.toString())
-        } else {
-          formData.append(key, value as string)
-        }
-      })
+      const workData = {
+        userId: form.userId,
+        workTitle: form.workTitle,
+        workCategory: form.workCategory,
+        workType: form.workType,
 
-      formData.append('images', JSON.stringify(form.images))
-      formData.append('videos', JSON.stringify(form.videos))
-      formData.append('latitude', form.latitude)
-      formData.append('longitude', form.longitude)
+        date: form.date || undefined,
+        startDate: form.startDate || undefined,
+        endDate: form.endDate || undefined,
 
-      const result = await WorkService.postWork(formData)
+        time: form.time,
+
+        description: form.description,
+
+        duration: form.duration || undefined,
+        budget: form.budget || undefined,
+
+        latitude: Number(form.latitude),
+        longitude: Number(form.longitude),
+
+        currentLocation: form.currentLocation || undefined,
+        manualAddress: form.manualAddress || undefined,
+        landmark: form.landmark || undefined,
+
+        contactNumber: form.contactNumber,
+
+        petrolAllowance: form.petrolAllowance || undefined,
+        extraRequirements: form.extraRequirements || undefined,
+        anythingElse: form.anythingElse || undefined,
+
+        termsAccepted: form.termsAccepted,
+
+        images: form.images,
+        videos: form.videos,
+        voiceFile: form.voiceFile,
+      }
+
+      const result = await WorkService.postWork(workData)
 
       console.log("Response:", result.data)
 
@@ -482,41 +492,14 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                 </Field>
 
                 <Field>
-                  <FieldLabel htmlFor="voiceFile">Voice Note, describe your work through voice note(optional)</FieldLabel>
-                  <Input
-                    id="voiceFile"
-                    name="voiceFile"
-                    type="file"
-                    accept="audio/*"
-                    onChange={handleFileChange}
+                  <FieldLabel>Voice Note, describe your work through a voice note (optional)</FieldLabel>
+                  <VoiceRecorder
+                    value={form.voiceFile}
+                    onChange={(voiceFile) => setForm(prev => ({ ...prev, voiceFile }))}
                   />
                 </Field>
               </div>
 
-              {/* ---------- RIGHT SIDE ---------- */}
-              {/* <div className="flex flex-col gap-4">
-                <Field>
-                  <FieldLabel htmlFor="videoFile">Video, describe your work through video note(optional)</FieldLabel>
-                  <Input
-                    id="videoFile"
-                    name="videoFile"
-                    type="file"
-                    accept="video/*"
-                    onChange={handleFileChange}
-                  />
-                </Field>
-
-                <Field>
-                  <FieldLabel htmlFor="beforeImage">Before Image (optional)</FieldLabel>
-                  <Input
-                    id="beforeImage"
-                    name="beforeImage"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                  />
-                </Field>
-              </div> */}
               {/* ---------- RIGHT SIDE ---------- */}
               <div className="flex flex-col gap-4">
                 <Field>

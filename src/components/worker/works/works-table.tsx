@@ -110,7 +110,7 @@ interface Work {
 
   description: string
 
-  voiceFile?: string
+  voiceFile?: MediaItem | null
   videoFile?: string
 
   images?: MediaItem[]
@@ -138,11 +138,11 @@ interface Work {
   termsAccepted: boolean
 
   status:
-    | "pending"
-    | "assigned"
-    | "in-progress"
-    | "completed"
-    | "cancelled"
+  | "pending"
+  | "assigned"
+  | "in-progress"
+  | "completed"
+  | "cancelled"
 
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -399,9 +399,7 @@ const WorkDetailsModal = ({
     return null
   }
 
-  // ==
   // CHAT WITH CLIENT
-  // ==
 
   const handleChatWithClient = async () => {
     try {
@@ -821,62 +819,62 @@ const WorkDetailsModal = ({
 
           {(work.extraRequirements ||
             work.anythingElse) && (
-            <div
-              className="
+              <div
+                className="
                 border-t border-border
                 pt-4
                 space-y-3
               "
-            >
+              >
 
-              <h3 className="text-sm font-medium text-foreground">
-                Additional Information
-              </h3>
+                <h3 className="text-sm font-medium text-foreground">
+                  Additional Information
+                </h3>
 
-              {work.extraRequirements && (
-                <div>
+                {work.extraRequirements && (
+                  <div>
 
-                  <label className="text-sm text-muted-foreground">
-                    Extra Requirements
-                  </label>
+                    <label className="text-sm text-muted-foreground">
+                      Extra Requirements
+                    </label>
 
-                  <p
-                    className="
+                    <p
+                      className="
                       mt-1
                       text-sm
                       text-foreground
                       whitespace-pre-wrap
                     "
-                  >
-                    {work.extraRequirements}
-                  </p>
+                    >
+                      {work.extraRequirements}
+                    </p>
 
-                </div>
-              )}
+                  </div>
+                )}
 
-              {work.anythingElse && (
-                <div>
+                {work.anythingElse && (
+                  <div>
 
-                  <label className="text-sm text-muted-foreground">
-                    Additional Notes
-                  </label>
+                    <label className="text-sm text-muted-foreground">
+                      Additional Notes
+                    </label>
 
-                  <p
-                    className="
+                    <p
+                      className="
                       mt-1
                       text-sm
                       text-foreground
                       whitespace-pre-wrap
                     "
-                  >
-                    {work.anythingElse}
-                  </p>
+                    >
+                      {work.anythingElse}
+                    </p>
 
-                </div>
-              )}
+                  </div>
+                )}
 
-            </div>
-          )}
+              </div>
+            )}
 
           {/* 
               IMAGES
@@ -964,29 +962,23 @@ const WorkDetailsModal = ({
               VOICE NOTE
            */}
 
-          {work.voiceFile && (
+
+          {/* 
+              VOICE NOTE
+           */}
+
+          {work.voiceFile?.url && (
             <div className="border-t border-border pt-4">
 
               <h3 className="text-sm font-medium text-muted-foreground mb-3">
-                Attachments
+                Voice Note
               </h3>
 
-              {/* FIXED: MISSING <a> TAG */}
-              <a
-                href={`http://localhost:4002/${work.voiceFile}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="
-                  text-sm
-                  text-primary
-                  hover:underline
-                  inline-flex
-                  items-center
-                  gap-2
-                "
-              >
-                🎤 Listen Voice Note
-              </a>
+              <audio
+                controls
+                src={work.voiceFile.url}
+                className="w-full max-w-md"
+              />
 
             </div>
           )}
@@ -1124,16 +1116,12 @@ export default function WorkerWorksTable() {
       limit: 10,
     })
 
-  // ==
   // DEBOUNCED SEARCH
-  // ==
 
   const debouncedSearchTerm =
     useDebounce(searchTerm, 500)
 
-  // ==
   // CALCULATE DISTANCE
-  // ==
 
   const calculateDistance = (
     lat1: number,
@@ -1154,15 +1142,15 @@ export default function WorkerWorksTable() {
 
     const a =
       Math.sin(dLat / 2) *
-        Math.sin(dLat / 2) +
+      Math.sin(dLat / 2) +
       Math.cos(
         lat1 * (Math.PI / 180)
       ) *
-        Math.cos(
-          lat2 * (Math.PI / 180)
-        ) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2)
+      Math.cos(
+        lat2 * (Math.PI / 180)
+      ) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2)
 
     const c =
       2 *
@@ -1174,9 +1162,7 @@ export default function WorkerWorksTable() {
     return R * c
   }
 
-  // ==
   // GET USER LOCATION
-  // ==
 
   useEffect(() => {
 
@@ -1206,9 +1192,7 @@ export default function WorkerWorksTable() {
 
   }, [])
 
-  // ==
   // FETCH WORKS
-  // ==
 
   const fetchWorks = useCallback(
     async () => {
@@ -1253,7 +1237,7 @@ export default function WorkerWorksTable() {
 
           filters.maxDistance =
             distanceMap[
-              distanceFilter
+            distanceFilter
             ]
         }
 
@@ -1407,17 +1391,13 @@ export default function WorkerWorksTable() {
     ]
   )
 
-  // ==
   // FETCH EFFECT
-  // ==
 
   useEffect(() => {
     fetchWorks()
   }, [fetchWorks])
 
-  // ==
   // RESET PAGE WHEN FILTER CHANGES
-  // ==
 
   useEffect(() => {
 
@@ -1429,9 +1409,7 @@ export default function WorkerWorksTable() {
     distanceFilter,
   ])
 
-  // ==
   // VIEW DETAILS
-  // ==
 
   const handleViewDetails = (
     work: Work
@@ -1441,9 +1419,7 @@ export default function WorkerWorksTable() {
     setIsModalOpen(true)
   }
 
-  // ==
   // PAGE NUMBERS
-  // ==
 
   const getPageNumbers = () => {
 
@@ -1518,9 +1494,7 @@ export default function WorkerWorksTable() {
     return pages
   }
 
-  // ==
   // INITIAL LOADING
-  // ==
 
   if (
     loading &&
@@ -1563,9 +1537,7 @@ export default function WorkerWorksTable() {
     )
   }
 
-  // ==
   // RENDER
-  // ==
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -1894,7 +1866,7 @@ export default function WorkerWorksTable() {
                               <div className="text-sm text-muted-foreground">
                                 {formatDate(
                                   work.date ||
-                                    work.startDate
+                                  work.startDate
                                 )}
                               </div>
 
@@ -1926,9 +1898,9 @@ export default function WorkerWorksTable() {
                                   ) : (
 
                                     placeNames[
-                                      work.id || ""
+                                    work.id || ""
                                     ] ||
-                                      "Not specified"
+                                    "Not specified"
                                   )}
 
                                 </span>
@@ -1949,10 +1921,10 @@ export default function WorkerWorksTable() {
                                   "
                                 >
                                   {distance !==
-                                  null
+                                    null
                                     ? `${distance.toFixed(
-                                        1
-                                      )} km`
+                                      1
+                                    )} km`
                                     : "N/A"}
                                 </span>
 
@@ -2036,7 +2008,7 @@ export default function WorkerWorksTable() {
 
                           {distanceFilter !==
                             "all" &&
-                          !userLocation
+                            !userLocation
                             ? "Please enable location to filter by distance"
                             : "No works found matching your filters."}
 
@@ -2058,8 +2030,8 @@ export default function WorkerWorksTable() {
               {pagination.totalPages >
                 1 && (
 
-                <div
-                  className="
+                  <div
+                    className="
                     px-6
                     py-4
                     border-t border-border
@@ -2069,135 +2041,133 @@ export default function WorkerWorksTable() {
                     gap-4
                     flex-wrap
                   "
-                >
+                  >
 
-                  {/* RESULT COUNT */}
-                  <div className="text-sm text-muted-foreground">
+                    {/* RESULT COUNT */}
+                    <div className="text-sm text-muted-foreground">
 
-                    Showing{" "}
-                    {(
-                      (currentPage - 1) *
-                      itemsPerPage
-                    ) + 1}{" "}
-                    to{" "}
-                    {Math.min(
-                      currentPage *
+                      Showing{" "}
+                      {(
+                        (currentPage - 1) *
+                        itemsPerPage
+                      ) + 1}{" "}
+                      to{" "}
+                      {Math.min(
+                        currentPage *
                         itemsPerPage,
-                      pagination.total
-                    )}{" "}
-                    of{" "}
-                    {pagination.total}{" "}
-                    results
+                        pagination.total
+                      )}{" "}
+                      of{" "}
+                      {pagination.total}{" "}
+                      results
 
-                  </div>
+                    </div>
 
-                  {/* PAGINATION BUTTONS */}
-                  <div className="flex gap-2">
+                    {/* PAGINATION BUTTONS */}
+                    <div className="flex gap-2">
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setCurrentPage(
-                          (prev) =>
-                            Math.max(
-                              1,
-                              prev - 1
-                            )
-                        )
-                      }
-                      disabled={
-                        currentPage ===
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setCurrentPage(
+                            (prev) =>
+                              Math.max(
+                                1,
+                                prev - 1
+                              )
+                          )
+                        }
+                        disabled={
+                          currentPage ===
                           1 ||
-                        loading
-                      }
-                    >
-                      Previous
-                    </Button>
+                          loading
+                        }
+                      >
+                        Previous
+                      </Button>
 
-                    <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1">
 
-                      {getPageNumbers().map(
-                        (
-                          page,
-                          index
-                        ) =>
+                        {getPageNumbers().map(
+                          (
+                            page,
+                            index
+                          ) =>
 
-                          page ===
-                          "..." ? (
+                            page ===
+                              "..." ? (
 
-                            <span
-                              key={`ellipsis-${index}`}
-                              className="
+                              <span
+                                key={`ellipsis-${index}`}
+                                className="
                                 px-3
                                 py-1
                                 text-muted-foreground
                               "
-                            >
-                              ...
-                            </span>
+                              >
+                                ...
+                              </span>
 
-                          ) : (
+                            ) : (
 
-                            <button
-                              key={page}
-                              onClick={() =>
-                                setCurrentPage(
-                                  page as number
-                                )
-                              }
-                              disabled={loading}
-                              className={`
+                              <button
+                                key={page}
+                                onClick={() =>
+                                  setCurrentPage(
+                                    page as number
+                                  )
+                                }
+                                disabled={loading}
+                                className={`
                                 px-3
                                 py-1
                                 rounded
                                 text-sm
                                 transition-colors
-                                ${
-                                  currentPage ===
-                                  page
+                                ${currentPage ===
+                                    page
                                     ? "bg-primary text-primary-foreground"
                                     : "bg-background text-foreground hover:bg-accent border border-border"
-                                }
-                                ${
-                                  loading
+                                  }
+                                ${loading
                                     ? "opacity-50 cursor-not-allowed"
                                     : ""
-                                }
+                                  }
                               `}
-                            >
-                              {page}
-                            </button>
+                              >
+                                {page}
+                              </button>
 
+                            )
+                        )}
+
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setCurrentPage(
+                            (prev) =>
+                              Math.min(
+                                pagination.totalPages,
+                                prev + 1
+                              )
                           )
-                      )}
+                        }
+                        disabled={
+                          currentPage ===
+                          pagination.totalPages ||
+                          loading
+                        }
+                      >
+                        Next
+                      </Button>
 
                     </div>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setCurrentPage(
-                          (prev) =>
-                            Math.min(
-                              pagination.totalPages,
-                              prev + 1
-                            )
-                        )
-                      }
-                      disabled={
-                        currentPage ===
-                          pagination.totalPages ||
-                        loading
-                      }
-                    >
-                      Next
-                    </Button>
-
                   </div>
-                </div>
-              )}
+                )}
 
             </>
           )}
@@ -2218,22 +2188,22 @@ export default function WorkerWorksTable() {
         placeName={
           selectedWork?.id
             ? placeNames[
-                selectedWork.id
-              ]
+            selectedWork.id
+            ]
             : undefined
         }
         distance={
           selectedWork &&
-          userLocation &&
-          selectedWork.location?.coordinates
+            userLocation &&
+            selectedWork.location?.coordinates
             ? calculateDistance(
-                userLocation.lat,
-                userLocation.lng,
-                selectedWork.location
-                  .coordinates[1],
-                selectedWork.location
-                  .coordinates[0]
-              )
+              userLocation.lat,
+              userLocation.lng,
+              selectedWork.location
+                .coordinates[1],
+              selectedWork.location
+                .coordinates[0]
+            )
             : null
         }
       />
