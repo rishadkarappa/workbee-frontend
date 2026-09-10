@@ -1,284 +1,326 @@
-import { useState, useEffect, useCallback } from "react"
-import { Eye, X, Search, BookmarkIcon } from "lucide-react"
-import { WorkService } from "@/services/work-service"
-import { Toggle } from "../ui/toggle"
+import { useState, useEffect, useCallback } from "react";
+import {Eye,X,Search,BookmarkIcon,Loader2,MapPin,Mail,Phone,Briefcase,CalendarDays,} from "lucide-react";
+
+import { WorkService } from "@/services/work-service";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {Dialog,DialogContent,DialogDescription,DialogFooter,DialogHeader,DialogTitle,} from "@/components/ui/dialog";
+import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue,} from "@/components/ui/select";
+
+import { Separator } from "@/components/ui/separator";
+import { Toggle } from "@/components/ui/toggle";
 
 // Types
 interface Applier {
-    id: string
-    name: string
-    email: string
-    phone: string
-    location: string
-    workType: string
-    preferredWorks: string[]
-    isBlocked?: boolean
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    location: string;
+    workType: string;
+    preferredWorks: string[];
+    isBlocked?: boolean;
     confirmations: {
-        reliable: boolean
-        honest: boolean
-        termsAccepted: boolean
-    }
-    createdAt?: Date
+        reliable: boolean;
+        honest: boolean;
+        termsAccepted: boolean;
+    };
+    createdAt?: Date;
 }
 
-// UI Components
-const Button = ({
-    children,
-    onClick,
-    variant = "default",
-    size = "default",
-    disabled = false,
-    className = "",
-    type = "button",
-}: {
-    children: React.ReactNode
-    onClick?: () => void
-    variant?: "default" | "outline" | "ghost"
-    size?: "default" | "sm" | "icon"
-    disabled?: boolean
-    className?: string
-    type?: "button" | "submit" | "reset"
-}) => {
-    const baseStyles =
-        "inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50"
-    const variants = {
-        default: "bg-blue-600 text-white hover:bg-blue-700",
-        outline: "border border-gray-300 bg-white hover:bg-gray-50 text-gray-700",
-        ghost: "hover:bg-gray-100 text-gray-700",
-    }
-    const sizes = {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 px-3 text-sm",
-        icon: "h-10 w-10",
-    }
-    return (
-        <button
-            type={type}
-            onClick={onClick}
-            disabled={disabled}
-            className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
-        >
-            {children}
-        </button>
-    )
-}
-
-const Input = ({
-    value,
-    onChange,
-    placeholder,
-    className = "",
-}: {
-    value: string
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-    placeholder?: string
-    className?: string
-}) => {
-    return (
-        <input
-            value={value}
-            onChange={onChange}
-            placeholder={placeholder}
-            className={`flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
-        />
-    )
-}
-
-const Badge = ({
-    children,
-    variant = "default",
-}: {
-    children: React.ReactNode
-    variant?: "default" | "success" | "secondary"
-}) => {
-    const variants = {
-        default: "bg-gray-100 text-gray-700",
-        success: "bg-green-100 text-green-700",
-        secondary: "bg-blue-100 text-blue-700",
-    }
-    return (
-        <span
-            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${variants[variant]}`}
-        >
-            {children}
-        </span>
-    )
-}
-
-// Simple Select Component
-const Select = ({
-    value,
-    onChange,
-    children,
-    className = ""
-}: {
-    value: string;
-    onChange: (value: string) => void;
-    children: React.ReactNode;
-    className?: string;
-}) => {
-    return (
-        <select
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className={`h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 ${className}`}
-        >
-            {children}
-        </select>
-    );
-};
-
-// Modal Component
-const Modal = ({
+// Worker Details Dialog
+const WorkerDetailsDialog = ({
     isOpen,
     onClose,
     applier,
     onBlockUnblock,
 }: {
-    isOpen: boolean
-    onClose: () => void
-    applier: Applier | null
-    onBlockUnblock: (applierId: string) => void
+    isOpen: boolean;
+    onClose: () => void;
+    applier: Applier | null;
+    onBlockUnblock: (applierId: string) => void;
 }) => {
-    if (!isOpen || !applier) return null
+    if (!applier) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-            <div className="relative bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto m-4">
-                {/* Header */}
-                <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between z-10">
+        <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+            <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+                <DialogHeader className="pr-8">
+                    <div className="flex items-start gap-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-muted">
+                            <Briefcase className="h-5 w-5 text-muted-foreground" />
+                        </div>
+
+                        <div className="min-w-0">
+                            <DialogTitle className="truncate text-xl">
+                                {applier.name}
+                            </DialogTitle>
+
+                            <DialogDescription className="mt-1">
+                                Worker details and application information
+                            </DialogDescription>
+                        </div>
+                    </div>
+                </DialogHeader>
+
+                <div className="space-y-6 py-2">
+                    {/* Status */}
+                    <div className="flex items-center justify-between rounded-lg border bg-muted/30 px-4 py-3">
+                        <div>
+                            <p className="text-sm font-medium text-foreground">
+                                Account status
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                                Current worker account state
+                            </p>
+                        </div>
+
+                        <Badge
+                            variant={applier.isBlocked ? "destructive" : "secondary"}
+                            className={
+                                !applier.isBlocked
+                                    ? "border-green-200 bg-green-100 text-green-700 dark:border-green-900 dark:bg-green-950 dark:text-green-400"
+                                    : ""
+                            }
+                        >
+                            <span
+                                className={`mr-1.5 h-1.5 w-1.5 rounded-full ${
+                                    applier.isBlocked
+                                        ? "bg-current"
+                                        : "bg-green-600 dark:bg-green-400"
+                                }`}
+                            />
+                            {applier.isBlocked ? "Blocked" : "Active"}
+                        </Badge>
+                    </div>
+
+                    {/* Worker Information */}
                     <div>
-                        <h2 className="text-xl font-semibold text-gray-900">{applier.name}</h2>
-                        <p className="text-sm text-gray-500 mt-1">Worker Details</p>
-                    </div>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
-
-                {/* Body */}
-                <div className="px-6 py-4 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="text-sm font-medium text-gray-700">Name</label>
-                            <p className="mt-1 text-sm text-gray-900">{applier.name}</p>
-                        </div>
-                        <div>
-                            <label className="text-sm font-medium text-gray-700">Email</label>
-                            <p className="mt-1 text-sm text-gray-900">{applier.email}</p>
-                        </div>
-                        <div>
-                            <label className="text-sm font-medium text-gray-700">Phone</label>
-                            <p className="mt-1 text-sm text-gray-900">{applier.phone}</p>
-                        </div>
-                        <div>
-                            <label className="text-sm font-medium text-gray-700">Location</label>
-                            <p className="mt-1 text-sm text-gray-900">{applier.location}</p>
-                        </div>
-                        <div>
-                            <label className="text-sm font-medium text-gray-700">Work Type</label>
-                            <p className="mt-1">
-                                <Badge variant="secondary">{applier.workType}</Badge>
+                        <div className="mb-4">
+                            <h3 className="text-sm font-semibold text-foreground">
+                                Personal information
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                                Basic information provided by the worker.
                             </p>
                         </div>
 
-                        {/* Status with Badge */}
-                        <div>
-                            <label className="text-sm font-medium text-gray-700">Status</label>
-                            <div className="mt-1">
-                                <span
-                                    className={`
-                                        inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium
-                                        ${applier.isBlocked
-                                            ? "bg-red-100/80 text-red-700 border border-red-200"
-                                            : "bg-green-100/80 text-green-700 border border-green-200"
-                                        }
-                                    `}
-                                >
-                                    <span
-                                        className={`
-                                            w-2 h-2 rounded-full
-                                            ${applier.isBlocked ? "bg-red-500" : "bg-green-500"}
-                                        `}
-                                    />
-                                    {applier.isBlocked ? "Blocked" : "Active"}
-                                </span>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            <InfoItem
+                                icon={Briefcase}
+                                label="Name"
+                                value={applier.name}
+                            />
+
+                            <InfoItem
+                                icon={Mail}
+                                label="Email"
+                                value={applier.email}
+                            />
+
+                            <InfoItem
+                                icon={Phone}
+                                label="Phone"
+                                value={applier.phone}
+                            />
+
+                            <InfoItem
+                                icon={MapPin}
+                                label="Location"
+                                value={applier.location}
+                            />
+
+                            <InfoItem
+                                icon={Briefcase}
+                                label="Work Type"
+                                value={
+                                    <Badge variant="secondary">
+                                        {applier.workType}
+                                    </Badge>
+                                }
+                            />
+
+                            <InfoItem
+                                icon={CalendarDays}
+                                label="Applied On"
+                                value={
+                                    applier.createdAt
+                                        ? new Date(
+                                              applier.createdAt
+                                          ).toLocaleDateString()
+                                        : "N/A"
+                                }
+                            />
+                        </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Preferred Works */}
+                    <div>
+                        <div className="mb-3">
+                            <h3 className="text-sm font-semibold text-foreground">
+                                Preferred works
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                                Types of work the worker is interested in.
+                            </p>
+                        </div>
+
+                        {applier.preferredWorks?.length > 0 ? (
+                            <div className="flex flex-wrap gap-2">
+                                {applier.preferredWorks.map((work, index) => (
+                                    <Badge
+                                        key={index}
+                                        variant="outline"
+                                        className="bg-muted/40"
+                                    >
+                                        {work}
+                                    </Badge>
+                                ))}
                             </div>
-                        </div>
-
-                        <div>
-                            <label className="text-sm font-medium text-gray-700">Applied On</label>
-                            <p className="mt-1 text-sm text-gray-900">
-                                {applier.createdAt
-                                    ? new Date(applier.createdAt).toLocaleDateString()
-                                    : "N/A"}
+                        ) : (
+                            <p className="text-sm text-muted-foreground">
+                                No preferred works listed.
                             </p>
-                        </div>
+                        )}
                     </div>
 
-                    <div className="border-t pt-4">
-                        <label className="text-sm font-medium text-gray-700">Preferred Works</label>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                            {applier.preferredWorks?.length > 0 ? (
-                                applier.preferredWorks.map((work, index) => (
-                                    <Badge key={index}>{work}</Badge>
-                                ))
-                            ) : (
-                                <span className="text-sm text-gray-500">No preferred works listed</span>
-                            )}
+                    {/* Confirmations */}
+                    <div>
+                        <div className="mb-3">
+                            <h3 className="text-sm font-semibold text-foreground">
+                                Confirmations
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                                Worker application confirmations.
+                            </p>
+                        </div>
+
+                        <div className="grid gap-2 sm:grid-cols-3">
+                            <ConfirmationItem
+                                label="Reliable"
+                                value={applier.confirmations.reliable}
+                            />
+
+                            <ConfirmationItem
+                                label="Honest"
+                                value={applier.confirmations.honest}
+                            />
+
+                            <ConfirmationItem
+                                label="Terms accepted"
+                                value={applier.confirmations.termsAccepted}
+                            />
                         </div>
                     </div>
                 </div>
 
-                {/* Footer */}
-                <div className="px-6 py-4 border-t bg-gray-50 flex justify-end">
+                <DialogFooter className="border-t pt-4">
                     <Button
                         variant="outline"
-                        onClick={() => onBlockUnblock(applier.id || "")}
+                        onClick={() => onBlockUnblock(applier.id)}
                         className={
                             applier.isBlocked
-                                ? "hover:bg-green-50 hover:text-green-700 hover:border-green-300"
-                                : "hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+                                ? "hover:border-green-300 hover:bg-green-50 hover:text-green-700 dark:hover:border-green-900 dark:hover:bg-green-950 dark:hover:text-green-400"
+                                : "hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
                         }
                     >
-                        {applier.isBlocked ? "Unblock Worker" : "Block Worker"}
+                        {applier.isBlocked
+                            ? "Unblock Worker"
+                            : "Block Worker"}
                     </Button>
-                </div>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+};
+
+// Information Item
+const InfoItem = ({
+    icon: Icon,
+    label,
+    value,
+}: {
+    icon: React.ElementType;
+    label: string;
+    value: React.ReactNode;
+}) => {
+    return (
+        <div className="rounded-lg border bg-card p-3">
+            <div className="mb-1.5 flex items-center gap-2">
+                <Icon className="h-4 w-4 text-muted-foreground" />
+
+                <span className="text-xs font-medium text-muted-foreground">
+                    {label}
+                </span>
+            </div>
+
+            <div className="text-sm font-medium text-foreground">
+                {value}
             </div>
         </div>
-    )
-}
+    );
+};
+
+// Confirmation Item
+const ConfirmationItem = ({
+    label,
+    value,
+}: {
+    label: string;
+    value: boolean;
+}) => {
+    return (
+        <div className="flex items-center justify-between rounded-lg border bg-card px-3 py-2.5">
+            <span className="text-sm text-foreground">{label}</span>
+
+            <Badge
+                variant="outline"
+                className={
+                    value
+                        ? "border-green-200 bg-green-50 text-green-700 dark:border-green-900 dark:bg-green-950 dark:text-green-400"
+                        : "border-border bg-muted text-muted-foreground"
+                }
+            >
+                {value ? "Yes" : "No"}
+            </Badge>
+        </div>
+    );
+};
 
 // Main Component
 export default function WorkersManagementComponent() {
-    const [workers, setWorkers] = useState<Applier[]>([])
-    const [totalWorkers, setTotalWorkers] = useState(0)
-    const [loading, setLoading] = useState(true)
-    const [selectedApplier, setSelectedApplier] = useState<Applier | null>(null)
-    const [isModalOpen, setIsModalOpen] = useState(false)
-    const [searchTerm, setSearchTerm] = useState("")
-    const [statusFilter, setStatusFilter] = useState("all")
-    const [debouncedSearch, setDebouncedSearch] = useState("")
-    const [currentPage, setCurrentPage] = useState(1)
-    const [itemsPerPage] = useState(10)
-    const [totalPages, setTotalPages] = useState(0)
+    const [workers, setWorkers] = useState<Applier[]>([]);
+    const [totalWorkers, setTotalWorkers] = useState(0);
+    const [loading, setLoading] = useState(true);
+    const [selectedApplier, setSelectedApplier] =
+        useState<Applier | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [statusFilter, setStatusFilter] = useState("all");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(10);
+    const [totalPages, setTotalPages] = useState(0);
 
     // Debounce search input
     useEffect(() => {
         const timer = setTimeout(() => {
-            setDebouncedSearch(searchTerm)
-        }, 500)
+            setDebouncedSearch(searchTerm);
+        }, 500);
 
-        return () => clearTimeout(timer)
-    }, [searchTerm])
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
 
-    // Reset to first page when debounced search or status filter changes
+    // Reset to first page when search/filter changes
     useEffect(() => {
-        setCurrentPage(1)
-    }, [debouncedSearch, statusFilter])
+        setCurrentPage(1);
+    }, [debouncedSearch, statusFilter]);
 
-    //get all workers in admin dash
+    // Get all workers
     const getAllWorkers = useCallback(async () => {
         try {
             setLoading(true);
@@ -292,6 +334,7 @@ export default function WorkersManagementComponent() {
 
             if (response.data.success) {
                 const data = response.data.data;
+
                 setWorkers(data.workers || []);
                 setTotalWorkers(data.total || 0);
                 setTotalPages(data.totalPages || 0);
@@ -302,183 +345,243 @@ export default function WorkersManagementComponent() {
         } finally {
             setLoading(false);
         }
-    }, [currentPage, itemsPerPage, debouncedSearch, statusFilter]);
+    }, [
+        currentPage,
+        itemsPerPage,
+        debouncedSearch,
+        statusFilter,
+    ]);
+
     useEffect(() => {
         getAllWorkers();
     }, [getAllWorkers]);
 
-
+    // Block / unblock worker
     const handleBlockUnblock = async (workerId: string) => {
         if (!workerId) {
-            alert("Worker ID is missing")
-            return
+            alert("Worker ID is missing");
+            return;
         }
 
         try {
-            const res = await WorkService.blockWorker(workerId)
+            const res = await WorkService.blockWorker(workerId);
 
             if (res.data.success) {
-                alert(selectedApplier?.isBlocked ? "Worker Unblocked" : "Worker Blocked")
-                setIsModalOpen(false)
-                getAllWorkers() // Refresh current page
+                alert(
+                    selectedApplier?.isBlocked
+                        ? "Worker Unblocked"
+                        : "Worker Blocked"
+                );
+
+                setIsModalOpen(false);
+                getAllWorkers();
             }
         } catch (error) {
-            console.error("Error blocking/unblocking worker:", error)
-            alert("Error occurred while updating worker status")
+            console.error(
+                "Error blocking/unblocking worker:",
+                error
+            );
+
+            alert("Error occurred while updating worker status");
         }
-    }
+    };
 
     const handleViewDetails = (applier: Applier) => {
-        setSelectedApplier(applier)
-        setIsModalOpen(true)
-    }
+        setSelectedApplier(applier);
+        setIsModalOpen(true);
+    };
 
     const handlePageChange = (newPage: number) => {
-        setCurrentPage(newPage)
-    }
+        setCurrentPage(newPage);
+    };
 
     const handleReset = () => {
-        setSearchTerm("")
-        setStatusFilter("all")
-    }
+        setSearchTerm("");
+        setStatusFilter("all");
+    };
 
     if (loading && workers.length === 0) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-gray-50">
-                <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-gray-600">Loading workers...</p>
+            <div className="flex min-h-screen items-center justify-center bg-background">
+                <div className="flex flex-col items-center text-center">
+                    <Loader2 className="mb-4 h-8 w-8 animate-spin text-primary" />
+
+                    <p className="text-sm text-muted-foreground">
+                        Loading workers...
+                    </p>
                 </div>
             </div>
-        )
+        );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="max-w-7xl mx-auto">
-                <div className="bg-white rounded-lg shadow">
-                    <div className="p-4 border-b">
-                        <div className="flex items-center gap-3">
-                            {/* Search Bar */}
-                            <div className="relative flex-1 min-w-[200px] max-w-sm">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+        <div className="min-h-screen bg-background">
+            <div className="mx-auto max-w-7xl">
+                <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+                    {/* Toolbar */}
+                    <div className="border-b p-4">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                            {/* Search */}
+                            <div className="relative min-w-0 flex-1 sm:max-w-sm">
+                                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+
                                 <Input
                                     placeholder="Search by name, email, phone..."
                                     value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="pl-9"
+                                    onChange={(e) =>
+                                        setSearchTerm(e.target.value)
+                                    }
+                                    className="pl-9 pr-9"
                                 />
-                                {/* Loading spinner inside input */}
+
                                 {loading && searchTerm && (
-                                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                                        <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
-                                    </div>
+                                    <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
                                 )}
                             </div>
 
-                            {/* Status Filter - immediately next to search */}
+                            {/* Status Filter */}
                             <Select
                                 value={statusFilter}
-                                onChange={setStatusFilter}
-                                className="w-[130px] flex-shrink-0"
+                                onValueChange={setStatusFilter}
                             >
-                                <option value="all">Status</option>
-                                <option value="active">Active</option>
-                                <option value="blocked">Blocked</option>
+                                <SelectTrigger className="w-full sm:w-[140px]">
+                                    <SelectValue placeholder="Status" />
+                                </SelectTrigger>
+
+                                <SelectContent>
+                                    <SelectItem value="all">
+                                        All Status
+                                    </SelectItem>
+
+                                    <SelectItem value="active">
+                                        Active
+                                    </SelectItem>
+
+                                    <SelectItem value="blocked">
+                                        Blocked
+                                    </SelectItem>
+                                </SelectContent>
                             </Select>
 
-                            {/* Reset Button - next to filter */}
+                            {/* Reset */}
                             {(searchTerm || statusFilter !== "all") && (
                                 <Button
                                     variant="ghost"
-                                    onClick={handleReset}
                                     size="sm"
-                                    className="flex-shrink-0"
+                                    onClick={handleReset}
+                                    className="shrink-0"
                                 >
+                                    <X className="mr-1 h-4 w-4" />
                                     Reset
                                 </Button>
                             )}
                         </div>
                     </div>
 
-
+                    {/* Table */}
                     <div className="overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-gray-50 border-b">
+                            <thead className="border-b bg-muted/40">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
                                         Name
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+
+                                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
                                         Email
                                     </th>
-                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">
+
+                                    <th className="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-muted-foreground">
                                         Status
                                     </th>
-                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">
+
+                                    <th className="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-muted-foreground">
                                         Approve
                                     </th>
-                                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">
+
+                                    <th className="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-muted-foreground">
                                         Details
                                     </th>
                                 </tr>
                             </thead>
 
-                            <tbody className="bg-white divide-y divide-gray-200">
+                            <tbody className="divide-y divide-border">
                                 {loading && workers.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} className="px-6 py-12 text-center">
-                                            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                                        <td
+                                            colSpan={5}
+                                            className="px-6 py-12 text-center"
+                                        >
+                                            <Loader2 className="mx-auto h-7 w-7 animate-spin text-primary" />
                                         </td>
                                     </tr>
                                 ) : workers.length > 0 ? (
                                     workers.map((worker) => (
-                                        <tr key={worker.id} className="hover:bg-gray-50 transition-colors">
-                                            <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">
-                                                {worker.name}
+                                        <tr
+                                            key={worker.id}
+                                            className="transition-colors hover:bg-muted/40"
+                                        >
+                                            {/* Name */}
+                                            <td className="whitespace-nowrap px-6 py-4">
+                                                <div className="font-medium text-foreground">
+                                                    {worker.name}
+                                                </div>
                                             </td>
-                                            <td className="px-6 py-4 text-gray-600">{worker.email}</td>
 
+                                            {/* Email */}
+                                            <td className="px-6 py-4 text-sm text-muted-foreground">
+                                                {worker.email}
+                                            </td>
+
+                                            {/* Status */}
                                             <td className="px-6 py-4 text-center">
-                                                <span
-                                                    className={`
-                                                        inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
-                                                        ${worker.isBlocked
-                                                            ? "bg-red-100/80 text-red-700 border border-red-200"
-                                                            : "bg-green-100/80 text-green-700 border border-green-200"
-                                                        }
-                                                    `}
+                                                <Badge
+                                                    variant="outline"
+                                                    className={
+                                                        worker.isBlocked
+                                                            ? "border-destructive/30 bg-destructive/10 text-destructive"
+                                                            : "border-green-200 bg-green-50 text-green-700 dark:border-green-900 dark:bg-green-950 dark:text-green-400"
+                                                    }
                                                 >
                                                     <span
-                                                        className={`
-                                                            w-1.5 h-1.5 rounded-full
-                                                            ${worker.isBlocked ? "bg-red-500" : "bg-green-500"}
-                                                        `}
+                                                        className={`mr-1.5 h-1.5 w-1.5 rounded-full ${
+                                                            worker.isBlocked
+                                                                ? "bg-destructive"
+                                                                : "bg-green-500"
+                                                        }`}
                                                     />
-                                                    {worker.isBlocked ? "Blocked" : "Active"}
-                                                </span>
+
+                                                    {worker.isBlocked
+                                                        ? "Blocked"
+                                                        : "Active"}
+                                                </Badge>
                                             </td>
 
+                                            {/* Approve */}
                                             <td className="px-6 py-4 text-center">
                                                 <Toggle
-                                                    aria-label="Toggle bookmark"
+                                                    aria-label="Toggle approval"
                                                     size="sm"
                                                     variant="outline"
-                                                    className="data-[state=on]:bg-transparent data-[state=on]:*:[svg]:fill-blue-500 data-[state=on]:*:[svg]:stroke-blue-500"
+                                                    className="data-[state=on]:bg-transparent data-[state=on]:*:[svg]:fill-primary data-[state=on]:*:[svg]:stroke-primary"
                                                 >
                                                     <BookmarkIcon />
                                                     Approved
                                                 </Toggle>
                                             </td>
 
+                                            {/* Details */}
                                             <td className="px-6 py-4 text-center">
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
-                                                    onClick={() => handleViewDetails(worker)}
-                                                    className="inline-flex items-center gap-1"
+                                                    onClick={() =>
+                                                        handleViewDetails(
+                                                            worker
+                                                        )
+                                                    }
                                                 >
-                                                    <Eye className="w-4 h-4" />
+                                                    <Eye className="h-4 w-4" />
                                                     View
                                                 </Button>
                                             </td>
@@ -486,8 +589,24 @@ export default function WorkersManagementComponent() {
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
-                                            No workers found.
+                                        <td
+                                            colSpan={5}
+                                            className="px-6 py-12 text-center"
+                                        >
+                                            <div className="flex flex-col items-center">
+                                                <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                                                    <Search className="h-5 w-5 text-muted-foreground" />
+                                                </div>
+
+                                                <p className="text-sm font-medium text-foreground">
+                                                    No workers found
+                                                </p>
+
+                                                <p className="mt-1 text-sm text-muted-foreground">
+                                                    Try changing your search
+                                                    or filter.
+                                                </p>
+                                            </div>
                                         </td>
                                     </tr>
                                 )}
@@ -495,31 +614,48 @@ export default function WorkersManagementComponent() {
                         </table>
                     </div>
 
-                    {/* Pagination Controls */}
+                    {/* Pagination */}
                     {totalWorkers > 0 && (
-                        <div className="px-6 py-4 border-t flex items-center justify-between">
-                            <div className="text-sm text-gray-600">
-                                Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-                                {Math.min(currentPage * itemsPerPage, totalWorkers)} of{" "}
-                                {totalWorkers} workers
+                        <div className="flex flex-col gap-3 border-t px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="text-sm text-muted-foreground">
+                                Showing{" "}
+                                {(currentPage - 1) * itemsPerPage + 1} to{" "}
+                                {Math.min(
+                                    currentPage * itemsPerPage,
+                                    totalWorkers
+                                )}{" "}
+                                of {totalWorkers} workers
                             </div>
+
                             <div className="flex items-center gap-2">
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => handlePageChange(currentPage - 1)}
-                                    disabled={currentPage === 1 || loading}
+                                    onClick={() =>
+                                        handlePageChange(currentPage - 1)
+                                    }
+                                    disabled={
+                                        currentPage === 1 || loading
+                                    }
                                 >
                                     Previous
                                 </Button>
-                                <span className="text-sm text-gray-700 px-4">
-                                    Page {currentPage} of {totalPages || 1}
-                                </span>
+
+                                <div className="min-w-[110px] text-center text-sm text-muted-foreground">
+                                    Page {currentPage} of{" "}
+                                    {totalPages || 1}
+                                </div>
+
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => handlePageChange(currentPage + 1)}
-                                    disabled={currentPage >= totalPages || loading}
+                                    onClick={() =>
+                                        handlePageChange(currentPage + 1)
+                                    }
+                                    disabled={
+                                        currentPage >= totalPages ||
+                                        loading
+                                    }
                                 >
                                     Next
                                 </Button>
@@ -529,12 +665,13 @@ export default function WorkersManagementComponent() {
                 </div>
             </div>
 
-            <Modal
+            {/* Worker Details */}
+            <WorkerDetailsDialog
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 applier={selectedApplier}
                 onBlockUnblock={handleBlockUnblock}
             />
         </div>
-    )
+    );
 }
