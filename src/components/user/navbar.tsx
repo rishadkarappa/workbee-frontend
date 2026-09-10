@@ -6,7 +6,7 @@ import {
   Monitor,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/theme-provider";
 
 import { AuthService } from "@/services/auth-service";
 import ProfileDropDownMenu from "./profile-drop-down";

@@ -34,7 +34,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
+    <div className="min-h-screen bg-background text-foreground">
       <Navbar />
 
       <main className="mx-auto flex min-h-[calc(100vh-95px)] w-full max-w-7xl items-center px-5 py-10 sm:px-8 lg:px-12 xl:px-16">
