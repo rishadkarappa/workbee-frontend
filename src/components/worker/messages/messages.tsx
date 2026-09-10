@@ -429,18 +429,18 @@ export default function WorkerMessages() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="flex h-[calc(120vh-350px)] w-full bg-gray-50 overflow-hidden">
+    <div className="flex h-[calc(120vh-350px)] w-full bg-background overflow-hidden">
       {/* Sidebar */}
-      <div className="w-80 bg-white border-r flex flex-col shrink-0">
+      <div className="w-80 bg-card border-r border-border flex flex-col shrink-0">
         <div className="flex-1 overflow-y-auto">
           {chats.length === 0 ? (
-            <div className="p-4 text-center text-gray-500">No conversations yet</div>
+            <div className="p-4 text-center text-muted-foreground">No conversations yet</div>
           ) : (
             chats.map(chat => {
               const otherUser = getOtherParticipant(chat);
@@ -453,7 +453,7 @@ export default function WorkerMessages() {
                 <div
                   key={chat.id}
                   onClick={() => handleSelectChat(chat)}
-                  className={`p-4 border-b cursor-pointer hover:bg-gray-50 transition-colors ${isSelected ? 'bg-blue-50' : ''
+                  className={`p-4 border-b border-border cursor-pointer hover:bg-accent transition-colors ${isSelected ? 'bg-accent' : ''
                     }`}
                 >
                   <div className="flex items-center gap-3">
@@ -471,16 +471,16 @@ export default function WorkerMessages() {
                         className="w-12 h-12 rounded-full object-cover flex-shrink-0"
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0">
-                        <User className="w-6 h-6 text-gray-600" />
+                      <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                        <User className="w-6 h-6 text-muted-foreground" />
                       </div>
                     )}
 
                     <div className="flex-1 min-w-0">
                       <h3
                         className={`truncate ${unread > 0
-                          ? 'font-semibold text-gray-900'
-                          : 'font-medium text-gray-900'
+                          ? 'font-semibold text-foreground'
+                          : 'font-medium text-foreground'
                           }`}
                       >
                         {otherUser?.name || 'Unknown User'}
@@ -488,8 +488,8 @@ export default function WorkerMessages() {
 
                       <p
                         className={`text-sm truncate ${unread > 0
-                          ? 'font-medium text-gray-800'
-                          : 'text-gray-500'
+                          ? 'font-medium text-foreground/80'
+                          : 'text-muted-foreground'
                           }`}
                       >
                         {chat.lastMessage || 'No messages yet'}
@@ -497,7 +497,7 @@ export default function WorkerMessages() {
                     </div>
 
                     {unread > 0 && (
-                      <span className="flex-shrink-0 min-w-[20px] h-5 px-1.5 bg-black text-white text-[11px] font-bold rounded-full flex items-center justify-center">
+                      <span className="flex-shrink-0 min-w-[20px] h-5 px-1.5 bg-foreground text-background text-[11px] font-bold rounded-full flex items-center justify-center">
                         {unread > 99 ? '99+' : unread}
                       </span>
                     )}
@@ -515,9 +515,9 @@ export default function WorkerMessages() {
         {selectedChat ? (
           <>
             {/* Header */}
-            <div className="bg-white border-b p-4 flex items-center gap-3">
-              <button onClick={() => navigate(-1)} className="lg:hidden p-2 hover:bg-gray-100 rounded-full">
-                <ArrowLeft className="w-5 h-5" />
+            <div className="bg-card border-b border-border p-4 flex items-center gap-3">
+              <button onClick={() => navigate(-1)} className="lg:hidden p-2 hover:bg-accent rounded-full">
+                <ArrowLeft className="w-5 h-5 text-foreground" />
               </button>
               {(() => {
                 const otherUser = getOtherParticipant(selectedChat);
@@ -542,13 +542,13 @@ export default function WorkerMessages() {
                           className="w-10 h-10 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-                          <User className="w-5 h-5 text-gray-600" />
+                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                          <User className="w-5 h-5 text-muted-foreground" />
                         </div>
                       )}
 
                       <div className="min-w-0">
-                        <h3 className="font-semibold truncate">
+                        <h3 className="font-semibold truncate text-foreground">
                           {otherUser?.name || 'Unknown User'}
                         </h3>
                       </div>
@@ -559,9 +559,9 @@ export default function WorkerMessages() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-3 py-5 md:px-6 lg:px-8 bg-gray-50">
+            <div className="flex-1 overflow-y-auto px-3 py-5 md:px-6 lg:px-8 bg-background">
               {messages.length === 0 ? (
-                <div className="text-center text-gray-500 mt-10">No messages yet. Start the conversation!</div>
+                <div className="text-center text-muted-foreground mt-10">No messages yet. Start the conversation!</div>
               ) : (
                 messages.map(msg => {
                   const isSent = msg.senderId === userId;
@@ -595,11 +595,11 @@ export default function WorkerMessages() {
                   return (
                     <div key={msg.id} className={`flex ${isSent ? 'justify-end' : 'justify-start'} mb-4`}>
                       <div className={`px-4 py-2.5 rounded-2xl max-w-[82%] sm:max-w-[75%] md:max-w-[68%] lg:max-w-[62%] break-words shadow-sm ${isSent
-                        ? 'bg-black text-white rounded-br-none'
-                        : 'bg-white border border-gray-200 text-gray-900 rounded-bl-none'
+                        ? 'bg-primary text-primary-foreground rounded-br-none'
+                        : 'bg-card border border-border text-foreground rounded-bl-none'
                         }`}>
                         {!isSent && msg.senderDetails && (
-                          <div className="text-xs text-gray-500 mb-1 font-medium">
+                          <div className="text-xs text-muted-foreground mb-1 font-medium">
                             {msg.senderDetails.name}
                           </div>
                         )}
@@ -623,7 +623,7 @@ export default function WorkerMessages() {
               )}
               {isTyping && (
                 <div className="flex justify-start mb-4">
-                  <div className="bg-gray-200 px-4 py-2.5 rounded-2xl rounded-bl-none text-sm text-gray-600">
+                  <div className="bg-muted px-4 py-2.5 rounded-2xl rounded-bl-none text-sm text-muted-foreground">
                     Typing...
                   </div>
                 </div>
@@ -632,7 +632,7 @@ export default function WorkerMessages() {
             </div>
 
             {/* Input */}
-            <div className="bg-white border-t p-4">
+            <div className="bg-card border-t border-border p-4">
               {/* Work Actions */}
               {hasWorkContext && !workCompleted && (
                 <div className="mb-3 flex items-center gap-2">
@@ -643,7 +643,7 @@ export default function WorkerMessages() {
                       type="button"
                       onClick={() => setAskNewPriceModalOpen(true)}
                       disabled={alreadySentNewPrice || askNewPriceLoading}
-                      className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <TicketPercent className="w-4 h-4" />
 
@@ -664,7 +664,7 @@ export default function WorkerMessages() {
                       workConfirmStatus === 'accepted' ||
                       workBidStatus === 'accepted'
                     }
-                    className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 px-4 py-2 border border-border text-foreground rounded-lg text-sm font-medium hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <HandshakeIcon className="w-4 h-4" />
 
@@ -680,27 +680,27 @@ export default function WorkerMessages() {
                 </div>
               )}
               {sendError && (
-                <div className="mb-2 flex items-center justify-between bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg px-3 py-2">
+                <div className="mb-2 flex items-center justify-between bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-lg px-3 py-2">
                   <span>{sendError}</span>
                   <button
                     onClick={() => { setSendError(null); handleSendMessage(); }}
-                    className="ml-3 text-red-700 font-medium underline"
+                    className="ml-3 text-destructive font-medium underline"
                   >
                     Retry
                   </button>
                 </div>
               )}
               {pendingMedia && (
-                <div className="mb-2 flex items-center gap-2 bg-gray-50 border rounded-lg px-3 py-2">
+                <div className="mb-2 flex items-center gap-2 bg-muted border border-border rounded-lg px-3 py-2">
                   {pendingMedia.resourceType === 'image' ? (
                     <img src={pendingMedia.url} alt="preview" className="w-12 h-12 rounded object-cover" />
                   ) : (
                     <video src={pendingMedia.url} className="w-12 h-12 rounded object-cover" />
                   )}
-                  <span className="text-sm text-gray-600 flex-1 truncate">
+                  <span className="text-sm text-muted-foreground flex-1 truncate">
                     {pendingMedia.resourceType === 'image' ? 'Image ready to send' : 'Video ready to send'}
                   </span>
-                  <button onClick={() => setPendingMedia(null)} className="text-gray-400 hover:text-gray-600 text-lg leading-none">×</button>
+                  <button onClick={() => setPendingMedia(null)} className="text-muted-foreground hover:text-foreground text-lg leading-none">×</button>
                 </div>
               )}
               <div className="flex gap-2 items-center">
@@ -712,12 +712,12 @@ export default function WorkerMessages() {
                   onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
                   placeholder={pendingMedia ? 'Press send to share media…' : 'Type a message…'}
                   disabled={!!pendingMedia}
-                  className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:bg-gray-50 disabled:text-gray-400"
+                  className="flex-1 px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:bg-muted disabled:text-muted-foreground"
                 />
                 <button
                   onClick={handleSendMessage}
                   disabled={!canSend}
-                  className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   <Send className="w-4 h-4" />
                 </button>
@@ -725,7 +725,7 @@ export default function WorkerMessages() {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-gray-500">
+          <div className="flex-1 flex items-center justify-center text-muted-foreground">
             Select a conversation to start messaging
           </div>
         )}
