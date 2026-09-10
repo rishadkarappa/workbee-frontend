@@ -29,8 +29,9 @@ import { PhoneInput } from "../../ui/phone-input"
 import SelectWorkCategory from "./components/select-work-gategory"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon } from "lucide-react"
+import { CalendarIcon, Clock8Icon } from "lucide-react"
 import { format } from "date-fns"
+import { TimePicker, TimePickerContent, TimePickerHour, TimePickerInput, TimePickerInputGroup, TimePickerLabel, TimePickerMinute, TimePickerPeriod, TimePickerSeparator, TimePickerTrigger } from "@/components/ui/time-picker"
 
 export function PostWorkForm({ className, ...props }: React.ComponentProps<"div">) {
   const [form, setForm] = useState({
@@ -341,17 +342,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                       </Popover>
                     </Field>
 
-                    {/* <Field>
-                      <FieldLabel htmlFor="endDate">End Date</FieldLabel>
-                      <Input
-                        id="endDate"
-                        name="endDate"
-                        type="date"
-                        value={form.endDate}
-                        onChange={handleChange}
-                        required
-                      />
-                    </Field> */}
+
                     <Field>
                       <FieldLabel>End Date</FieldLabel>
 
@@ -409,16 +400,35 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                 )}
 
                 {form.workType && (
+
                   <Field>
-                    <FieldLabel htmlFor="time">Time (when to start work)</FieldLabel>
-                    <Input
-                      id="time"
-                      name="time"
-                      type="time"
+                    <TimePicker
+                      className="w-full"
+                      openOnFocus
                       value={form.time}
-                      onChange={handleChange}
-                      required
-                    />
+                      onValueChange={(value) => {
+                        setForm((prev) => ({
+                          ...prev,
+                          time: value,
+                        }))
+                      }}
+                    >
+                      <TimePickerLabel>Time (when to start work)</TimePickerLabel>
+
+                      <TimePickerInputGroup>
+                        <TimePickerInput segment="hour" />
+                        <TimePickerSeparator />
+                        <TimePickerInput segment="minute" />
+                        <TimePickerInput segment="period" />
+                        <TimePickerTrigger />
+                      </TimePickerInputGroup>
+
+                      <TimePickerContent>
+                        <TimePickerHour />
+                        <TimePickerMinute />
+                        <TimePickerPeriod />
+                      </TimePickerContent>
+                    </TimePicker>
                   </Field>
                 )}
               </div>
