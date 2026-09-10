@@ -19,13 +19,14 @@ import {
 } from "@/components/ui/dialog"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import TaskBookStepper, { Step } from "./task-book-stepper"
+import TaskBookStepper, { Step } from "./components/task-book-stepper"
 import { WorkService } from "@/services/work-service"
-import AddressAutocomplete from "./AddressAutocomplete"
+import AddressAutocomplete from "../AddressAutocomplete"
 import { getErrorMessage } from "@/utils/error-helper"
 import { AppRoutes } from "@/constants/routes/app-routes"
 import { toast } from "sonner"
-import { PhoneInput } from "../ui/phone-input"
+import { PhoneInput } from "../../ui/phone-input"
+import SelectWorkCategory from "./components/select-work-gategory"
 
 export function PostWorkForm({ className, ...props }: React.ComponentProps<"div">) {
   const [form, setForm] = useState({
@@ -183,14 +184,18 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                 </Field>
 
                 <Field>
-                  <FieldLabel htmlFor="workCategory">Work Category</FieldLabel>
-                  <Input
-                    id="workCategory"
-                    name="workCategory"
+                  <FieldLabel htmlFor="workCategory">
+                    Work Category
+                  </FieldLabel>
+
+                  <SelectWorkCategory
                     value={form.workCategory}
-                    onChange={handleChange}
-                    placeholder="E.g., Plumbing, Cleaning"
-                    required
+                    onChange={(value) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        workCategory: value,
+                      }))
+                    }
                   />
                 </Field>
               </div>

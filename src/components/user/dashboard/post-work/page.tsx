@@ -1,4 +1,4 @@
-import { PostWorkForm } from '../../post-work-form'
+import { PostWorkForm } from '../../post-work/post-work-form'
 
 export default function DashboardPostWork() {
   return (
