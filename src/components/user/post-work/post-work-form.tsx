@@ -27,6 +27,10 @@ import { AppRoutes } from "@/constants/routes/app-routes"
 import { toast } from "sonner"
 import { PhoneInput } from "../../ui/phone-input"
 import SelectWorkCategory from "./components/select-work-gategory"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { CalendarIcon } from "lucide-react"
+import { format } from "date-fns"
 
 export function PostWorkForm({ className, ...props }: React.ComponentProps<"div">) {
   const [form, setForm] = useState({
@@ -155,6 +159,14 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
     }
   }
 
+  const parseLocalDate = (value: string) => {
+    if (!value) return undefined
+
+    const [year, month, day] = value.split("-").map(Number)
+
+    return new Date(year, month - 1, day)
+  }
+
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -231,33 +243,105 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                 </Field>
 
                 {form.workType === "oneDay" && (
+
                   <Field>
-                    <FieldLabel htmlFor="date">Date</FieldLabel>
-                    <Input
-                      id="date"
-                      name="date"
-                      type="date"
-                      value={form.date}
-                      onChange={handleChange}
-                      required
-                    />
+                    <FieldLabel>Work Date</FieldLabel>
+
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !form.date && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 size-4" />
+
+                          {form.date
+                            ? format(parseLocalDate(form.date)!, "PPP")
+                            : "Select work date"}
+                        </Button>
+                      </PopoverTrigger>
+
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={parseLocalDate(form.date)}
+                          onSelect={(date) => {
+                            if (!date) return
+
+                            setForm((prev) => ({
+                              ...prev,
+                              date: format(date, "yyyy-MM-dd"),
+                            }))
+                          }}
+                          disabled={(date) => {
+                            const today = new Date()
+                            today.setHours(0, 0, 0, 0)
+
+                            return date < today
+                          }}
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </Field>
                 )}
 
                 {form.workType === "multipleDay" && (
                   <>
+
                     <Field>
-                      <FieldLabel htmlFor="startDate">Start Date</FieldLabel>
-                      <Input
-                        id="startDate"
-                        name="startDate"
-                        type="date"
-                        value={form.startDate}
-                        onChange={handleChange}
-                        required
-                      />
+                      <FieldLabel>Start Date</FieldLabel>
+
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !form.startDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 size-4" />
+
+                            {form.startDate
+                              ? format(parseLocalDate(form.startDate)!, "PPP")
+                              : "Select start date"}
+                          </Button>
+                        </PopoverTrigger>
+
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={parseLocalDate(form.startDate)}
+                            onSelect={(date) => {
+                              if (!date) return
+
+                              setForm((prev) => ({
+                                ...prev,
+                                startDate: format(date, "yyyy-MM-dd"),
+                                endDate:
+                                  prev.endDate &&
+                                    parseLocalDate(prev.endDate)! < date
+                                    ? ""
+                                    : prev.endDate,
+                              }))
+                            }}
+                            disabled={(date) => {
+                              const today = new Date()
+                              today.setHours(0, 0, 0, 0)
+
+                              return date < today
+                            }}
+                          />
+                        </PopoverContent>
+                      </Popover>
                     </Field>
-                    <Field>
+
+                    {/* <Field>
                       <FieldLabel htmlFor="endDate">End Date</FieldLabel>
                       <Input
                         id="endDate"
@@ -267,6 +351,59 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                         onChange={handleChange}
                         required
                       />
+                    </Field> */}
+                    <Field>
+                      <FieldLabel>End Date</FieldLabel>
+
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !form.endDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 size-4" />
+
+                            {form.endDate
+                              ? format(parseLocalDate(form.endDate)!, "PPP")
+                              : "Select end date"}
+                          </Button>
+                        </PopoverTrigger>
+
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={parseLocalDate(form.endDate)}
+                            onSelect={(date) => {
+                              if (!date) return
+
+                              setForm((prev) => ({
+                                ...prev,
+                                endDate: format(date, "yyyy-MM-dd"),
+                              }))
+                            }}
+                            disabled={(date) => {
+                              const today = new Date()
+                              today.setHours(0, 0, 0, 0)
+
+                              if (date < today) return true
+
+                              if (form.startDate) {
+                                const startDate = parseLocalDate(form.startDate)
+
+                                if (startDate) {
+                                  return date < startDate
+                                }
+                              }
+
+                              return false
+                            }}
+                          />
+                        </PopoverContent>
+                      </Popover>
                     </Field>
                   </>
                 )}
