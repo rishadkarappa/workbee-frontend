@@ -95,15 +95,6 @@ const WorkerNotificationDropdown = ({
     }
   };
 
-  // const loadUnreadCount = async () => {
-  //   try {
-  //     const response = await NotificationService.getUnreadCount();
-  //     setUnreadCount(response.data.data.count || 0);
-  //   } catch (error) {
-  //     console.error("Failed to load unread count:", error);
-  //   }
-  // };
-
   const handleMarkOneAsRead = async (
     e: React.MouseEvent,
     notification: Notification
@@ -173,15 +164,15 @@ const WorkerNotificationDropdown = ({
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case "NEW_MESSAGE":
-        return <MessageCircle className="w-5 h-5 text-blue-500" />;
+        return <MessageCircle className="w-5 h-5 text-blue-500 dark:text-blue-400" />;
       case "WORK_UPDATE":
-        return <ClipboardList className="w-5 h-5 text-purple-500" />;
+        return <ClipboardList className="w-5 h-5 text-purple-500 dark:text-purple-400" />;
       case "BOOKING_UPDATE":
-        return <CalendarDays className="w-5 h-5 text-green-500" />;
+        return <CalendarDays className="w-5 h-5 text-green-500 dark:text-green-400" />;
       case "PAYMENT":
-        return <CreditCard className="w-5 h-5 text-yellow-500" />;
+        return <CreditCard className="w-5 h-5 text-yellow-500 dark:text-yellow-400" />;
       default:
-        return <Bell className="w-5 h-5 text-gray-500" />;
+        return <Bell className="w-5 h-5 text-muted-foreground" />;
     }
   };
 
@@ -190,38 +181,38 @@ const WorkerNotificationDropdown = ({
       {/* Bell Icon */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2 rounded-full border hover:bg-gray-100 transition relative"
+        className="p-2 rounded-full border border-border hover:bg-accent transition relative"
       >
-        <Bell className="w-5 h-5" />
+        <Bell className="w-5 h-5 text-foreground" />
 
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-gray-700 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+          <span className="absolute -top-1 -right-1 bg-foreground text-background text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border z-50 max-h-[420px] overflow-hidden flex flex-col">
+        <div className="absolute right-0 mt-2 w-80 bg-popover text-popover-foreground rounded-lg shadow-lg border border-border z-50 max-h-[420px] overflow-hidden flex flex-col">
           {/* Header */}
-          <div className="border-b">
+          <div className="border-b border-border">
             <div className="px-4 pt-3 pb-2">
-              <h3 className="font-semibold text-base">Notifications</h3>
+              <h3 className="font-semibold text-base text-foreground">Notifications</h3>
             </div>
 
             {/* Tabs */}
             <div className="px-4 pb-3 flex items-center justify-between">
-              <div className="flex bg-gray-100 rounded-full p-1 gap-1">
+              <div className="flex bg-muted rounded-full p-1 gap-1">
                 <button
                   onClick={() => setActiveTab("unread")}
                   className={`px-3 py-1 text-xs rounded-full font-medium transition ${activeTab === "unread"
-                    ? "bg-white shadow text-black"
-                    : "text-gray-500 hover:text-black"
+                    ? "bg-background shadow text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
                     }`}
                 >
                   Unread
                   {unreadCount > 0 && (
-                    <span className="ml-1.5 bg-gray-700 text-white text-[10px] rounded-full px-1.5 py-[1px] font-bold">
+                    <span className="ml-1.5 bg-foreground text-background text-[10px] rounded-full px-1.5 py-[1px] font-bold">
                       {unreadCount}
                     </span>
                   )}
@@ -230,8 +221,8 @@ const WorkerNotificationDropdown = ({
                 <button
                   onClick={() => setActiveTab("all")}
                   className={`px-3 py-1 text-xs rounded-full font-medium transition ${activeTab === "all"
-                    ? "bg-white shadow text-black"
-                    : "text-gray-500 hover:text-black"
+                    ? "bg-background shadow text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
                     }`}
                 >
                   All
@@ -241,7 +232,7 @@ const WorkerNotificationDropdown = ({
               {unreadCount > 0 && (
                 <button
                   onClick={handleMarkAllAsRead}
-                  className="px-3 py-1 text-[11px] font-medium text-gray-700 bg-gray-100 rounded-full shadow-sm hover:bg-gray-200 transition cursor-pointer"
+                  className="px-3 py-1 text-[11px] font-medium text-foreground bg-muted rounded-full shadow-sm hover:bg-accent transition cursor-pointer"
                 >
                   Mark all as read
                 </button>
@@ -253,11 +244,11 @@ const WorkerNotificationDropdown = ({
           <div className="overflow-y-auto flex-1">
             {loading ? (
               <div className="p-6 text-center">
-                <div className="w-7 h-7 border-4 border-gray-600 border-t-transparent rounded-full animate-spin mx-auto" />
-                <p className="text-xs text-gray-400 mt-2">Loading...</p>
+                <div className="w-7 h-7 border-4 border-muted-foreground border-t-transparent rounded-full animate-spin mx-auto" />
+                <p className="text-xs text-muted-foreground mt-2">Loading...</p>
               </div>
             ) : displayedNotifications.length === 0 ? (
-              <div className="p-6 text-center text-gray-400">
+              <div className="p-6 text-center text-muted-foreground">
                 <Bell className="w-8 h-8 mx-auto mb-2 opacity-30" />
                 <p className="text-sm">
                   {activeTab === "unread"
@@ -270,7 +261,7 @@ const WorkerNotificationDropdown = ({
                 <div
                   key={notification.id}
                   onClick={() => handleNotificationClick(notification)}
-                  className="px-4 py-3 border-b cursor-pointer hover:bg-gray-50 transition"
+                  className="px-4 py-3 border-b border-border cursor-pointer hover:bg-accent transition"
                 >
                   <div className="flex gap-3 items-start">
                     <div className="mt-1">
@@ -279,20 +270,20 @@ const WorkerNotificationDropdown = ({
 
                     <div className="flex-1">
                       <div className="flex justify-between items-start">
-                        <h4 className="text-sm font-medium leading-tight">
+                        <h4 className="text-sm font-medium leading-tight text-foreground">
                           {notification.title}
                         </h4>
 
                         {!notification.isRead && (
-                          <span className="w-2 h-2 bg-black rounded-full mt-1 ml-2" />
+                          <span className="w-2 h-2 bg-foreground rounded-full mt-1 ml-2" />
                         )}
                       </div>
 
-                      <p className="text-xs text-gray-600 mt-1 leading-relaxed">
+                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                         {notification.message}
                       </p>
 
-                      <p className="text-[11px] text-gray-400 mt-1">
+                      <p className="text-[11px] text-muted-foreground/70 mt-1">
                         {formatDistanceToNow(new Date(notification.createdAt), {
                           addSuffix: true,
                         })}
@@ -302,8 +293,8 @@ const WorkerNotificationDropdown = ({
                     <button
                       onClick={(e) => handleMarkOneAsRead(e, notification)}
                       className={`p-1.5 rounded-full mt-1 ${notification.isRead
-                        ? "text-green-700"
-                        : "text-gray-500 hover:bg-gray-100"
+                        ? "text-green-600 dark:text-green-400"
+                        : "text-muted-foreground hover:bg-accent"
                         }`}
                     >
                       <CheckCheck className="w-4 h-4" />
