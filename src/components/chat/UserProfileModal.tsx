@@ -1,6 +1,19 @@
-import { useEffect, useState } from 'react';
-import { X, User } from 'lucide-react';
-import { AuthService } from '@/services/auth-service';
+import { useEffect, useState } from "react";
+import { User, Loader2, BadgeCheck } from "lucide-react";
+
+import { AuthService } from "@/services/auth-service";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "../ui/badge";
 
 interface UserProfileModalProps {
   open: boolean;
@@ -13,49 +26,80 @@ interface UserProfileData {
   userProfileImage?: string;
 }
 
-export default function UserProfileModal({ open, onClose, userId }: UserProfileModalProps) {
+export default function UserProfileModal({
+  open,
+  onClose,
+  userId,
+}: UserProfileModalProps) {
   const [profile, setProfile] = useState<UserProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open || !userId) return;
+
     setLoading(true);
     setError(null);
+    setProfile(null);
+
     AuthService.getUserProfileById(userId)
-      .then(res => setProfile(res.data.data))
-      .catch(() => setError('Failed to load user profile.'))
+      .then((res) => setProfile(res.data.data))
+      .catch(() => setError("Failed to load user profile."))
       .finally(() => setLoading(false));
   }, [open, userId]);
 
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 relative">
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-          <X className="w-5 h-5" />
-        </button>
+    <Dialog open={open} onOpenChange={(value) => !value && onClose()}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+
+          <DialogTitle>User Profile
+            <Badge
+              variant="secondary"
+              className="gap-1 rounded-full px-2 py-0.5 text-xs"
+            >
+              <BadgeCheck className="size-3.5" />
+              Verified User
+            </Badge>
+          </DialogTitle>
+
+        </DialogHeader>
+
+        <Separator />
 
         {loading ? (
-          <div className="flex items-center justify-center h-40">
-            <div className="w-6 h-6 border-4 border-gray-300 border-t-black rounded-full animate-spin" />
+          <div className="flex h-40 items-center justify-center">
+            <Loader2 className="size-6 animate-spin text-muted-foreground" />
           </div>
         ) : error || !profile ? (
-          <p className="text-sm text-red-500 text-center py-8">{error || 'User not found.'}</p>
+          <div className="flex min-h-40 items-center justify-center">
+            <p className="text-center text-sm text-destructive">
+              {error || "User not found."}
+            </p>
+          </div>
         ) : (
-          <div className="flex flex-col items-center text-center py-2">
-            {profile.userProfileImage ? (
-              <img src={profile.userProfileImage} alt={profile.name} className="w-24 h-24 rounded-full object-cover" />
-            ) : (
-              <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
-                <User className="w-12 h-12 text-gray-500" />
-              </div>
-            )}
-            <h3 className="text-lg font-semibold text-gray-900 mt-4">{profile.name}</h3>
+          <div className="flex flex-col items-center py-4">
+            <Avatar className="size-24">
+              <AvatarImage
+                src={profile.userProfileImage}
+                alt={profile.name}
+              />
+
+              <AvatarFallback className="text-2xl">
+                {profile.name?.charAt(0).toUpperCase() || (
+                  <User className="size-10" />
+                )}
+              </AvatarFallback>
+            </Avatar>
+
+            <div className="mt-4 flex items-center gap-2">
+              <h3 className="text-lg font-semibold">
+                {profile.name}
+              </h3>
+            </div>
           </div>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

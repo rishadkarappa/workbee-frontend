@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { socketService } from '@/services/chat-socket-service';
 import { ChatService } from '@/services/chat-service';
 import { AuthHelper } from '@/utils/auth-helper';
-import { ArrowLeft, Send, User, HandshakeIcon, TicketPercent } from 'lucide-react';
+import { ArrowLeft, Send, User, HandshakeIcon, TicketPercent, Search } from 'lucide-react';
 import { MediaUploadButton } from '@/components/chat/MediaUploadButton';
 import type { UploadedMedia } from '@/components/chat/MediaUploadButton';
 import { MediaMessage } from '@/components/chat/MediaMessage';
@@ -16,6 +16,7 @@ import UserProfileModal from '@/components/chat/UserProfileModal';
 // types
 import type { Message, Chat } from './types/messages.types'
 import { AuthService } from '@/services/auth-service';
+import { Input } from '@/components/ui/input';
 
 type ConfirmStatus = 'none' | 'pending' | 'rejected' | 'accepted' | 'paid';
 type BidStatus = 'none' | 'pending' | 'rejected' | 'accepted' | 'paid';
@@ -46,6 +47,9 @@ export default function WorkerMessages() {
 
   // profile image
   const [profileImages, setProfileImages] = useState<Record<string, string>>({});
+
+  //search
+  const [chatSearch, setChatSearch] = useState('');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const selectedChatRef = useRef<Chat | null>(null);
@@ -426,6 +430,19 @@ export default function WorkerMessages() {
     (workConfirmStatus === 'none' || workConfirmStatus === 'rejected') &&
     (workBidStatus === 'none' || workBidStatus === 'rejected');
 
+  //search chat
+  const filteredChats = chats.filter((chat) => {
+    const otherUser = getOtherParticipant(chat);
+    const search = chatSearch.trim().toLowerCase();
+
+    if (!search) return true;
+
+    return (
+      otherUser?.name?.toLowerCase().includes(search) ||
+      chat.lastMessage?.toLowerCase().includes(search)
+    );
+  });
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -438,70 +455,104 @@ export default function WorkerMessages() {
     <div className="flex h-[calc(120vh-350px)] w-full bg-background overflow-hidden">
       {/* Sidebar */}
       <div className="w-80 bg-card border-r border-border flex flex-col shrink-0">
+
+        {/* Search */}
+        <div className="border-b border-border p-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+
+            <Input
+              type="search"
+              value={chatSearch}
+              onChange={(e) => setChatSearch(e.target.value)}
+              placeholder="Search chats"
+              className="h-10 rounded-md bg-muted/50 pl-9 pr-3 focus-visible:bg-background"
+            />
+          </div>
+        </div>
+
+        {/* Chat list */}
         <div className="flex-1 overflow-y-auto">
-          {chats.length === 0 ? (
-            <div className="p-4 text-center text-muted-foreground">No conversations yet</div>
+          {filteredChats.length === 0 ? (
+            <div className="flex flex-col items-center justify-center px-4 py-10 text-center">
+              <Search className="mb-2 size-8 text-muted-foreground/50" />
+
+              <p className="text-sm font-medium text-foreground">
+                {chatSearch.trim()
+                  ? 'No chats found'
+                  : 'No conversations yet'}
+              </p>
+
+              {chatSearch.trim() && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Try searching for another name
+                </p>
+              )}
+            </div>
           ) : (
-            chats.map(chat => {
+            filteredChats.map((chat) => {
               const otherUser = getOtherParticipant(chat);
               const isSelected = selectedChat?.id === chat.id;
               const unread = unreadCounts[chat.id] || 0;
 
-              const profileImage = profileImages[chat.participants.userId];
+              const profileImage =
+                profileImages[chat.participants.userId];
 
               return (
                 <div
                   key={chat.id}
                   onClick={() => handleSelectChat(chat)}
-                  className={`p-4 border-b border-border cursor-pointer hover:bg-accent transition-colors ${isSelected ? 'bg-accent' : ''
+                  className={`cursor-pointer border-b border-border p-4 transition-colors hover:bg-accent ${isSelected ? 'bg-accent' : ''
                     }`}
                 >
                   <div className="flex items-center gap-3">
 
+                    {/* Avatar */}
                     {profileImage ? (
                       <img
                         src={profileImage}
                         alt={otherUser?.name || 'User'}
-                        className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                        className="size-12 shrink-0 rounded-full object-cover"
                       />
                     ) : otherUser?.avatar ? (
                       <img
                         src={otherUser.avatar}
                         alt={otherUser.name}
-                        className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                        className="size-12 shrink-0 rounded-full object-cover"
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                        <User className="w-6 h-6 text-muted-foreground" />
+                      <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-muted">
+                        <User className="size-6 text-muted-foreground" />
                       </div>
                     )}
 
-                    <div className="flex-1 min-w-0">
+                    {/* User info */}
+                    <div className="min-w-0 flex-1">
                       <h3
                         className={`truncate ${unread > 0
-                          ? 'font-semibold text-foreground'
-                          : 'font-medium text-foreground'
+                            ? 'font-semibold text-foreground'
+                            : 'font-medium text-foreground'
                           }`}
                       >
                         {otherUser?.name || 'Unknown User'}
                       </h3>
 
                       <p
-                        className={`text-sm truncate ${unread > 0
-                          ? 'font-medium text-foreground/80'
-                          : 'text-muted-foreground'
+                        className={`truncate text-sm ${unread > 0
+                            ? 'font-medium text-foreground/80'
+                            : 'text-muted-foreground'
                           }`}
                       >
                         {chat.lastMessage || 'No messages yet'}
                       </p>
                     </div>
 
+                    {/* Unread count */}
                     {unread > 0 && (
-                      <span className="flex-shrink-0 min-w-[20px] h-5 px-1.5 bg-foreground text-background text-[11px] font-bold rounded-full flex items-center justify-center">
+                      <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-foreground px-1.5 text-[11px] font-bold text-background">
                         {unread > 99 ? '99+' : unread}
                       </span>
                     )}
-
                   </div>
                 </div>
               );
