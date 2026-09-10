@@ -53,9 +53,33 @@ interface UpdateWorkPayload {
 
 // Progress step config
 const PROGRESS_STEPS = [
-  { value: 'started', label: 'Started', Icon: Wrench, color: 'bg-blue-500', textColor: 'text-blue-700', bg: 'bg-blue-50', border: 'border-blue-200' },
-  { value: 'ongoing', label: 'In Progress', Icon: TrendingUp, color: 'bg-amber-500', textColor: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200' },
-  { value: 'completed', label: 'Completed', Icon: Flag, color: 'bg-green-500', textColor: 'text-green-700', bg: 'bg-green-50', border: 'border-green-200' },
+  {
+    value: 'started',
+    label: 'Started',
+    Icon: Wrench,
+    color: 'bg-blue-500',
+    textColor: 'text-blue-700 dark:text-blue-400',
+    bg: 'bg-blue-50 dark:bg-blue-950/40',
+    border: 'border-blue-200 dark:border-blue-900',
+  },
+  {
+    value: 'ongoing',
+    label: 'In Progress',
+    Icon: TrendingUp,
+    color: 'bg-amber-500',
+    textColor: 'text-amber-700 dark:text-amber-400',
+    bg: 'bg-amber-50 dark:bg-amber-950/40',
+    border: 'border-amber-200 dark:border-amber-900',
+  },
+  {
+    value: 'completed',
+    label: 'Completed',
+    Icon: Flag,
+    color: 'bg-green-500',
+    textColor: 'text-green-700 dark:text-green-400',
+    bg: 'bg-green-50 dark:bg-green-950/40',
+    border: 'border-green-200 dark:border-green-900',
+  },
 ];
 
 function ProgressTracker({
@@ -71,7 +95,7 @@ function ProgressTracker({
 
   return (
     <div className="space-y-3">
-      <Label className="text-sm font-medium text-gray-700">Work Progress</Label>
+      <Label className="text-sm font-medium text-foreground">Work Progress</Label>
       <div className="flex items-center gap-2">
         {PROGRESS_STEPS.map((step, idx) => {
           const done = currentIdx >= idx;
@@ -85,22 +109,22 @@ function ProgressTracker({
                 className={`flex-1 flex flex-col items-center gap-1 py-2 px-1 rounded-xl border-2 transition-all ${active
                   ? `${step.bg} ${step.border} ${step.textColor}`
                   : done
-                    ? 'bg-gray-100 border-gray-300 text-gray-600'
-                    : 'bg-white border-gray-200 text-gray-400 hover:border-gray-300'
+                    ? 'bg-muted border-border text-muted-foreground'
+                    : 'bg-card border-border text-muted-foreground/60 hover:border-muted-foreground/40'
                   } ${disabled || idx > currentIdx + 1 ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
               >
                 <Icon className="w-4 h-4" />
                 <span className="text-xs font-medium">{step.label}</span>
               </button>
               {idx < PROGRESS_STEPS.length - 1 && (
-                <div className={`w-4 h-0.5 mx-0.5 rounded ${done && currentIdx > idx ? 'bg-gray-400' : 'bg-gray-200'}`} />
+                <div className={`w-4 h-0.5 mx-0.5 rounded ${done && currentIdx > idx ? 'bg-muted-foreground/50' : 'bg-muted'}`} />
               )}
             </div>
           );
         })}
       </div>
       {!progress && (
-        <p className="text-xs text-gray-400">Click a step to update work progress</p>
+        <p className="text-xs text-muted-foreground">Click a step to update work progress</p>
       )}
     </div>
   );
@@ -276,12 +300,12 @@ export default function ActiveWorks() {
 
   const getStatusColor = (status?: string) => {
     switch (status) {
-      case 'completed': return 'border-green-200 bg-green-50 text-green-700';
-      case 'active': return 'border-blue-200 bg-blue-50 text-blue-700';
-      case 'assigned': return 'border-purple-200 bg-purple-50 text-purple-700';
-      case 'pending': return 'border-yellow-200 bg-yellow-50 text-yellow-700';
-      case 'cancelled': return 'border-red-200 bg-red-50 text-red-700';
-      default: return 'border-gray-200 bg-gray-50 text-gray-700';
+      case 'completed': return 'border-green-200 bg-green-50 text-green-700 dark:border-green-900 dark:bg-green-950/40 dark:text-green-400';
+      case 'active': return 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-400';
+      case 'assigned': return 'border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-900 dark:bg-purple-950/40 dark:text-purple-400';
+      case 'pending': return 'border-yellow-200 bg-yellow-50 text-yellow-700 dark:border-yellow-900 dark:bg-yellow-950/40 dark:text-yellow-400';
+      case 'cancelled': return 'border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400';
+      default: return 'border-border bg-muted text-muted-foreground';
     }
   };
 
@@ -444,7 +468,7 @@ export default function ActiveWorks() {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="w-8 h-8 border-4 border-gray-800 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-foreground border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -452,7 +476,7 @@ export default function ActiveWorks() {
   if (error) {
     return (
       <div className="p-6 text-center">
-        <p className="text-red-500 mb-4">{error}</p>
+        <p className="text-red-500 dark:text-red-400 mb-4">{error}</p>
         <Button onClick={fetchAssignedWorks} variant="outline">Try Again</Button>
       </div>
     );

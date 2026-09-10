@@ -30,37 +30,17 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
-// Select component (inline)
-const Select = ({
-  value,
-  onValueChange,
-  children
-}: {
-  value: string;
-  onValueChange: (value: string) => void;
-  children: React.ReactNode
-}) => {
-  return (
-    <select
-      value={value}
-      onChange={(e) => onValueChange(e.target.value)}
-      className="h-8 w-[130px] rounded-md border border-gray-300 bg-white px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500"
-    >
-      {children}
-    </select>
-  );
-};
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-const SelectItem = ({
-  value,
-  children
-}: {
-  value: string;
-  children: React.ReactNode
-}) => {
-  return <option value={value}>{children}</option>;
-};
 import { AuthService } from "@/services/auth-service";
 import { useDebounce } from "@/hooks/useDebounce";
 import { getErrorMessage } from "@/utils/error-helper";
@@ -88,7 +68,30 @@ interface UserDataTableToolbarProps {
   isLoading?: boolean;
 }
 
+// Status Badge
+
+function UserStatusBadge({ isBlocked }: { isBlocked: boolean }) {
+  return (
+    <Badge
+      variant="outline"
+      className={
+        isBlocked
+          ? "border-destructive/30 bg-destructive/10 text-destructive"
+          : "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+      }
+    >
+      <span
+        className={`mr-1.5 h-1.5 w-1.5 rounded-full ${
+          isBlocked ? "bg-destructive" : "bg-emerald-500"
+        }`}
+      />
+      {isBlocked ? "Blocked" : "Active"}
+    </Badge>
+  );
+}
+
 // Toolbar
+
 function UserDataTableToolbar({
   searchValue,
   onSearchChange,
@@ -99,8 +102,9 @@ function UserDataTableToolbar({
   const isFiltered = searchValue !== "" || statusFilter !== "all";
 
   return (
-    <div className="flex items-center justify-between mb-4">
+    <div className="mb-4 flex items-center justify-between">
       <div className="flex flex-1 flex-col-reverse items-start gap-y-2 sm:flex-row sm:items-center sm:space-x-2">
+        {/* Search */}
         <div className="relative">
           <Input
             placeholder="Search users..."
@@ -108,21 +112,31 @@ function UserDataTableToolbar({
             onChange={(e) => onSearchChange(e.target.value)}
             className="h-8 w-[150px] lg:w-[250px]"
           />
-          {/* Loading spinner inside input */}
+
           {isLoading && searchValue && (
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-              <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
             </div>
           )}
         </div>
 
         {/* Status Filter */}
-        <Select value={statusFilter} onValueChange={onStatusFilterChange}>
-          <SelectItem value="all">Status</SelectItem>
-          <SelectItem value="active">Active</SelectItem>
-          <SelectItem value="blocked">Blocked</SelectItem>
+        <Select
+          value={statusFilter}
+          onValueChange={onStatusFilterChange}
+        >
+          <SelectTrigger className="h-8 w-[130px]">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+
+          <SelectContent>
+            <SelectItem value="all">Status</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="blocked">Blocked</SelectItem>
+          </SelectContent>
         </Select>
 
+        {/* Reset */}
         {isFiltered && (
           <Button
             variant="ghost"
@@ -141,6 +155,7 @@ function UserDataTableToolbar({
 }
 
 // Main Component
+
 const Users = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [totalUsers, setTotalUsers] = useState(0);
@@ -148,19 +163,24 @@ const Users = () => {
   const [searchValue, setSearchValue] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFiltersState] = useState<ColumnFiltersState>([]);
+  const [columnFilters, setColumnFiltersState] =
+    useState<ColumnFiltersState>([]);
+
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
   });
+
   const [pageCount, setPageCount] = useState(0);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Use your custom debounce hook
   const debouncedSearch = useDebounce(searchValue, 500);
 
-  //fetch users in admin dashboard
+
+  // Fetch users
+
+
   const fetchUsers = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -176,7 +196,10 @@ const Users = () => {
       setTotalUsers(res.data.data.total);
       setPageCount(res.data.data.totalPages);
     } catch (error) {
-      console.log("Error while fetching users:", getErrorMessage(error));
+      console.log(
+        "Error while fetching users:",
+        getErrorMessage(error)
+      );
     } finally {
       setIsLoading(false);
     }
@@ -186,28 +209,31 @@ const Users = () => {
     debouncedSearch,
     statusFilter,
   ]);
+
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
 
-
-  // Reset to first page when debounced search or status filter changes
-
+  // Reset page when filters change
   useEffect(() => {
-    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    setPagination((prev) => ({
+      ...prev,
+      pageIndex: 0,
+    }));
   }, [debouncedSearch, statusFilter]);
 
-  // Handle search change
   const handleSearchChange = (value: string) => {
     setSearchValue(value);
   };
 
-  // Handle status filter change
   const handleStatusFilterChange = (value: string) => {
     setStatusFilter(value);
   };
 
-  // Block/Unblock user
+
+  // Block / Unblock
+
+
   const blockUser = async () => {
     if (!selectedUser) return;
 
@@ -215,16 +241,24 @@ const Users = () => {
       const res = await AuthService.blockUser(selectedUser.id);
 
       if (res.data.success) {
-        toast.warning(selectedUser.isBlocked ? "User Unblocked" : "User Blocked");
+        toast.warning(
+          selectedUser.isBlocked
+            ? "User Unblocked"
+            : "User Blocked"
+        );
+
         setIsModalOpen(false);
         fetchUsers();
       }
-
     } catch (error) {
       toast.error("Error occurred while blocking user");
-      console.log(error)
+      console.log(error);
     }
   };
+
+
+  // Columns
+
 
   const columns: ColumnDef<User>[] = [
     {
@@ -244,25 +278,8 @@ const Users = () => {
       header: "Status",
       cell: ({ row }) => {
         const user = row.original;
-        return (
-          <span
-            className={`
-              inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
-              ${user.isBlocked
-                ? "bg-red-100/80 text-red-700 border border-red-200"
-                : "bg-green-100/80 text-green-700 border border-green-200"
-              }
-            `}
-          >
-            <span
-              className={`
-                w-1.5 h-1.5 rounded-full
-                ${user.isBlocked ? "bg-red-500" : "bg-green-500"}
-              `}
-            />
-            {user.isBlocked ? "Blocked" : "Active"}
-          </span>
-        );
+
+        return <UserStatusBadge isBlocked={user.isBlocked} />;
       },
     },
     {
@@ -283,6 +300,10 @@ const Users = () => {
     },
   ];
 
+
+  // Table
+
+
   const table = useReactTable<User>({
     data: users,
     columns,
@@ -292,7 +313,11 @@ const Users = () => {
     manualPagination: true,
     manualFiltering: true,
     manualSorting: true,
-    state: { sorting, columnFilters, pagination },
+    state: {
+      sorting,
+      columnFilters,
+      pagination,
+    },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFiltersState,
     onPaginationChange: setPagination,
@@ -300,6 +325,7 @@ const Users = () => {
 
   return (
     <div className="space-y-4">
+      {/* Toolbar */}
       <UserDataTableToolbar
         table={table}
         searchValue={searchValue}
@@ -309,9 +335,17 @@ const Users = () => {
         isLoading={isLoading}
       />
 
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-md rounded-xl p-0 overflow-hidden">
-          <div className="px-6 py-4 border-b bg-gray-50">
+      {/* 
+          User Details Dialog
+       */}
+
+      <Dialog
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+      >
+        <DialogContent className="max-w-md overflow-hidden rounded-xl p-0">
+          {/* Header */}
+          <div className="border-b bg-muted/30 px-6 py-4">
             <DialogHeader>
               <DialogTitle className="text-lg font-semibold">
                 User Details
@@ -319,95 +353,114 @@ const Users = () => {
             </DialogHeader>
           </div>
 
-          <div className="px-6 py-5 space-y-6">
+          {/* Content */}
+          <div className="space-y-6 px-6 py-5">
             {selectedUser && (
               <div className="space-y-4 text-sm">
+                {/* Basic Details */}
                 <div className="space-y-2">
                   <p>
-                    <span className="font-medium text-gray-700">Name : </span>{" "}
-                    {selectedUser.name}
-                  </p>
-                  <p>
-                    <span className="font-medium text-gray-700">Email : </span>{" "}
-                    {selectedUser.email}
-                  </p>
-                  <p>
-                    <span className="font-medium text-gray-700">Role : </span>{" "}
-                    {selectedUser.role}
+                    <span className="font-medium text-muted-foreground">
+                      Name :{" "}
+                    </span>
+                    <span className="text-foreground">
+                      {selectedUser.name}
+                    </span>
                   </p>
 
+                  <p>
+                    <span className="font-medium text-muted-foreground">
+                      Email :{" "}
+                    </span>
+                    <span className="text-foreground">
+                      {selectedUser.email}
+                    </span>
+                  </p>
+
+                  <p>
+                    <span className="font-medium text-muted-foreground">
+                      Role :{" "}
+                    </span>
+                    <span className="text-foreground">
+                      {selectedUser.role}
+                    </span>
+                  </p>
+
+                  {/* Status */}
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-gray-700">Status :</span>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`
-                          inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium
-                          ${selectedUser.isBlocked
-                            ? "bg-red-100/80 text-red-700 border border-red-200"
-                            : "bg-green-100/80 text-green-700 border border-green-200"
-                          }
-                        `}
-                      >
-                        <span
-                          className={`
-                            w-2 h-2 rounded-full
-                            ${selectedUser.isBlocked
-                              ? "bg-red-500"
-                              : "bg-green-500"
-                            }
-                          `}
-                        />
-                        {selectedUser.isBlocked ? "Blocked" : "Active"}
-                      </span>
-                    </div>
+                    <span className="font-medium text-muted-foreground">
+                      Status :
+                    </span>
+
+                    <UserStatusBadge
+                      isBlocked={selectedUser.isBlocked}
+                    />
                   </div>
 
                   <p>
-                    <span className="font-medium text-gray-700">
+                    <span className="font-medium text-muted-foreground">
                       Phone Number :{" "}
                     </span>
-                    {selectedUser.phone ?? "Not available"}
+
+                    <span className="text-foreground">
+                      {selectedUser.phone ?? "Not available"}
+                    </span>
                   </p>
                 </div>
 
-                <div className="border-t pt-4" />
+                <Separator />
 
+                {/* Statistics */}
                 <div className="space-y-2">
                   <p>
-                    <span className="font-medium text-gray-700">
+                    <span className="font-medium text-muted-foreground">
                       Number of Post Work :{" "}
                     </span>
-                    {selectedUser.countofpost ?? "Not available"}
+
+                    <span className="text-foreground">
+                      {selectedUser.countofpost ?? "Not available"}
+                    </span>
                   </p>
 
                   <p>
-                    <span className="font-medium text-gray-700">
+                    <span className="font-medium text-muted-foreground">
                       Complaint Against this User :{" "}
                     </span>
-                    {selectedUser.numberOfComplaints ?? "Not available"}
+
+                    <span className="text-foreground">
+                      {selectedUser.numberOfComplaints ??
+                        "Not available"}
+                    </span>
                   </p>
                 </div>
               </div>
             )}
           </div>
 
-          <div className="px-6 py-4 border-t bg-gray-50 flex justify-end">
+          {/* Footer */}
+          <div className="flex justify-end border-t bg-muted/30 px-6 py-4">
             <Button
               variant="outline"
               onClick={blockUser}
               className={
                 selectedUser?.isBlocked
-                  ? "hover:bg-green-50 hover:text-green-700 hover:border-green-300"
-                  : "hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+                  ? "hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400"
+                  : "hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
               }
             >
-              {selectedUser?.isBlocked ? "Unblock User" : "Block User"}
+              {selectedUser?.isBlocked
+                ? "Unblock User"
+                : "Block User"}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      <div className="rounded-md border">
+      {/* 
+          Table
+       */}
+
+      <div className="rounded-md border border-border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -417,9 +470,9 @@ const Users = () => {
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                   </TableHead>
                 ))}
               </TableRow>
@@ -427,18 +480,20 @@ const Users = () => {
           </TableHeader>
 
           <TableBody>
+            {/* Loading */}
             {isLoading && users.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="text-center h-24"
+                  className="h-24 text-center"
                 >
                   <div className="flex items-center justify-center">
-                    <div className="w-6 h-6 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
                   </div>
                 </TableCell>
               </TableRow>
             ) : users.length ? (
+              /* Users */
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
@@ -452,10 +507,11 @@ const Users = () => {
                 </TableRow>
               ))
             ) : (
+              /* Empty */
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="text-center h-24"
+                  className="h-24 text-center text-muted-foreground"
                 >
                   No users found.
                 </TableCell>
@@ -465,32 +521,45 @@ const Users = () => {
         </Table>
       </div>
 
+      {/* 
+          Pagination
+       */}
+
       <div className="flex items-center justify-between px-2">
         <div className="flex-1 text-sm text-muted-foreground">
           {totalUsers > 0 && (
             <>
-              Showing {pagination.pageIndex * pagination.pageSize + 1} to{" "}
+              Showing{" "}
+              {pagination.pageIndex * pagination.pageSize + 1}{" "}
+              to{" "}
               {Math.min(
-                (pagination.pageIndex + 1) * pagination.pageSize,
+                (pagination.pageIndex + 1) *
+                  pagination.pageSize,
                 totalUsers
               )}{" "}
               of {totalUsers} users
             </>
           )}
         </div>
+
         <div className="flex items-center space-x-6 lg:space-x-8">
           <div className="flex items-center space-x-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage() || isLoading}
+              disabled={
+                !table.getCanPreviousPage() || isLoading
+              }
             >
               Previous
             </Button>
-            <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-              Page {pagination.pageIndex + 1} of {pageCount || 1}
+
+            <div className="flex w-[100px] items-center justify-center text-sm font-medium text-foreground">
+              Page {pagination.pageIndex + 1} of{" "}
+              {pageCount || 1}
             </div>
+
             <Button
               variant="outline"
               size="sm"

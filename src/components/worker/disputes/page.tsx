@@ -39,10 +39,10 @@ const COMPLAINT_LABELS: Record<string, string> = {
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  pending: 'bg-amber-50 text-amber-700 border-amber-200',
-  in_review: 'bg-blue-50 text-blue-700 border-blue-200',
-  resolved: 'bg-green-50 text-green-700 border-green-200',
-  dismissed: 'bg-gray-50 text-gray-600 border-gray-200',
+  pending: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900',
+  in_review: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-900',
+  resolved: 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950/40 dark:text-green-400 dark:border-green-900',
+  dismissed: 'bg-muted text-muted-foreground border-border',
 };
 
 function DisputeRow({ dispute }: { dispute: Dispute }) {
@@ -52,7 +52,7 @@ function DisputeRow({ dispute }: { dispute: Dispute }) {
     COMPLAINT_LABELS[dispute.complaintType] || dispute.complaintType;
 
   return (
-    <div className="overflow-hidden rounded-xl border bg-white shadow-sm transition-shadow hover:shadow-md">
+    <div className="overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm transition-shadow hover:shadow-md">
 
       {/* Collapsed Header */}
       <button
@@ -65,8 +65,8 @@ function DisputeRow({ dispute }: { dispute: Dispute }) {
           {/* Left */}
           <div className="flex min-w-0 items-center gap-3">
 
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100">
-              <MessageSquareWarning className="h-5 w-5 text-red-500" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted">
+              <MessageSquareWarning className="h-5 w-5 text-red-500 dark:text-red-400" />
             </div>
 
             <div className="min-w-0">
@@ -117,7 +117,7 @@ function DisputeRow({ dispute }: { dispute: Dispute }) {
 
       {/* Expanded Details */}
       {expanded && (
-        <div className="space-y-5 border-t bg-gray-50/70 px-4 pb-5">
+        <div className="space-y-5 border-t bg-muted/30 px-4 pb-5">
 
           {/* Complaint Details */}
           <div className="pt-4">
@@ -130,7 +130,7 @@ function DisputeRow({ dispute }: { dispute: Dispute }) {
               </p>
             </div>
 
-            <div className="rounded-lg border bg-white p-4">
+            <div className="rounded-lg border bg-card p-4">
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
@@ -167,7 +167,7 @@ function DisputeRow({ dispute }: { dispute: Dispute }) {
                   Complaint Description
                 </p>
 
-                <p className="mt-1 text-sm leading-6 text-gray-700">
+                <p className="mt-1 text-sm leading-6 text-foreground/80">
                   {dispute.description}
                 </p>
 
@@ -192,7 +192,7 @@ function DisputeRow({ dispute }: { dispute: Dispute }) {
                 {dispute.actions.map((action, index) => (
                   <div
                     key={index}
-                    className="rounded-lg border bg-white p-4"
+                    className="rounded-lg border bg-card p-4"
                   >
 
                     <div className="flex items-start justify-between gap-3">
@@ -209,7 +209,7 @@ function DisputeRow({ dispute }: { dispute: Dispute }) {
 
                       </div>
 
-                      <span className="shrink-0 rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-600">
+                      <span className="shrink-0 rounded-full bg-muted px-2 py-1 text-xs text-muted-foreground">
                         Admin
                       </span>
 
@@ -272,7 +272,7 @@ export default function WorkerDisputes() {
   if (loading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -292,11 +292,11 @@ export default function WorkerDisputes() {
       </div> */}
 
       {disputes.length === 0 ? (
-        <div className="rounded-xl border bg-white py-12 text-center">
+        <div className="rounded-xl border bg-card py-12 text-center">
 
-          <MessageSquareWarning className="mx-auto mb-3 h-10 w-10 text-gray-300" />
+          <MessageSquareWarning className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
 
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             No complaints have been filed against you.
           </p>
 
