@@ -16,4 +16,5 @@ export const WORK_ENDPOINTS = {
     GET_UPLOAD_SIGN: "/work/worker/profile-image/upload-signature",
     SAVE_WORKER_PROF_URI_FROM_CLOUD: "/work/worker/profile-image",
     UPDATE_WORKER_PROFILE: "/work/worker/profile",
+    WORK_MEDIA_UPLOAD_SIGNATURE: "/work/work-media/upload-signature",
 };

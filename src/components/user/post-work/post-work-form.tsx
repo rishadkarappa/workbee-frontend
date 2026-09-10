@@ -33,6 +33,8 @@ import { CalendarIcon, Check } from "lucide-react"
 import { format } from "date-fns"
 import { TimePicker, TimePickerContent, TimePickerHour, TimePickerInput, TimePickerInputGroup, TimePickerLabel, TimePickerMinute, TimePickerPeriod, TimePickerSeparator, TimePickerTrigger } from "@/components/ui/time-picker"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import type { MediaItem } from "@/services/cloudinary-work-media-service"
+import { MediaUploader } from "./components/media-uploader"
 
 export function PostWorkForm({ className, ...props }: React.ComponentProps<"div">) {
   const [form, setForm] = useState({
@@ -44,8 +46,10 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
     startDate: "",
     endDate: "",
     time: "",
-    description: "",
     voiceFile: null as File | null,
+    images: [] as MediaItem[],
+    videos: [] as MediaItem[],
+    description: "",
     videoFile: null as File | null,
     duration: "",
     budget: "",
@@ -121,24 +125,21 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
 
       const formData = new FormData()
 
-      // Add all form fields except latitude, longitude, and location
       Object.entries(form).forEach(([key, value]) => {
-        if (key === 'latitude' || key === 'longitude' || key === 'location') {
-          return
-        }
-        if (value === null || value === "") {
-          return
-        }
+        if (key === 'latitude' || key === 'longitude' || key === 'location') return
+        if (key === 'images' || key === 'videos') return // handled separately below
+        if (value === null || value === "") return
         if (value instanceof File) {
           formData.append(key, value)
         } else if (typeof value === 'boolean') {
           formData.append(key, value.toString())
         } else {
-          formData.append(key, value)
+          formData.append(key, value as string)
         }
       })
 
-
+      formData.append('images', JSON.stringify(form.images))
+      formData.append('videos', JSON.stringify(form.videos))
       formData.append('latitude', form.latitude)
       formData.append('longitude', form.longitude)
 
@@ -457,7 +458,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* ---------- LEFT SIDE ---------- */}
               <div className="flex flex-col gap-4">
-                
+
                 <Field>
                   <FieldLabel htmlFor="description">
                     Tell about your work
@@ -493,7 +494,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
               </div>
 
               {/* ---------- RIGHT SIDE ---------- */}
-              <div className="flex flex-col gap-4">
+              {/* <div className="flex flex-col gap-4">
                 <Field>
                   <FieldLabel htmlFor="videoFile">Video, describe your work through video note(optional)</FieldLabel>
                   <Input
@@ -513,6 +514,28 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                     type="file"
                     accept="image/*"
                     onChange={handleFileChange}
+                  />
+                </Field>
+              </div> */}
+              {/* ---------- RIGHT SIDE ---------- */}
+              <div className="flex flex-col gap-4">
+                <Field>
+                  <FieldLabel>Images (up to 3, optional)</FieldLabel>
+                  <MediaUploader
+                    type="image"
+                    max={3}
+                    value={form.images}
+                    onChange={(images) => setForm(prev => ({ ...prev, images }))}
+                  />
+                </Field>
+
+                <Field>
+                  <FieldLabel>Videos (up to 3, optional)</FieldLabel>
+                  <MediaUploader
+                    type="video"
+                    max={3}
+                    value={form.videos}
+                    onChange={(videos) => setForm(prev => ({ ...prev, videos }))}
                   />
                 </Field>
               </div>

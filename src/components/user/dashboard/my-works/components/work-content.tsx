@@ -63,6 +63,11 @@ import {
 
 import { getErrorMessage } from "@/utils/error-helper";
 
+interface MediaItem {
+    url: string;
+    publicId: string;
+}
+
 interface Work {
     id: string;
     userId: string;
@@ -73,6 +78,8 @@ interface Work {
     startDate?: string;
     endDate?: string;
     time?: string;
+    images?: MediaItem[];
+    videos?: MediaItem[];
     description?: string;
     location?: {
         type: string;
@@ -556,6 +563,42 @@ function WorkCard({
                                         )}
                                     </div>
                                 )}
+                        </div>
+                    )}
+
+                {/* Media Preview */}
+                {((work.images && work.images.length > 0) ||
+                    (work.videos && work.videos.length > 0)) && (
+                        <div className="border-t border-border pt-4">
+                            <Label className="text-sm font-medium mb-2 block">
+                                Media
+                            </Label>
+                            <div className="flex flex-wrap gap-2">
+                                {work.images?.map((img) => (
+                                    <a
+                                        key={img.publicId}
+                                        href={img.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="block h-16 w-16 overflow-hidden rounded-md border border-border transition-opacity hover:opacity-90"
+                                    >
+                                        <img
+                                            src={img.url}
+                                            alt="work"
+                                            className="h-full w-full object-cover"
+                                        />
+                                    </a>
+                                ))}
+
+                                {work.videos?.map((vid) => (
+                                    <video
+                                        key={vid.publicId}
+                                        src={vid.url}
+                                        className="h-16 w-16 rounded-md object-cover border border-border bg-black"
+                                        muted
+                                    />
+                                ))}
+                            </div>
                         </div>
                     )}
 
