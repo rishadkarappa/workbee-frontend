@@ -1,15 +1,56 @@
 import { useEffect, useRef, useState } from "react";
 
 import axios from "axios";
-import { Camera, Mail, MapPin, Calendar, Briefcase } from "lucide-react";
+import {
+  Camera,
+  Mail,
+  MapPin,
+  Calendar,
+  Briefcase,
+  Pencil,
+  LockKeyhole,
+  UserRound,
+  Loader2,
+  Check,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { WorkService } from "@/services/work-service";
 import ChangePasswordModal from "./modals/change-password-modal";
 import type { WorkerProfileData } from "./types/types";
 
-const TABS = ["Personal", "Work Info", "Security"] as const;
-type Tab = (typeof TABS)[number];
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+
+const TABS = [
+  {
+    value: "Personal",
+    label: "Personal",
+    icon: UserRound,
+  },
+  {
+    value: "Work Info",
+    label: "Work Info",
+    icon: Briefcase,
+  },
+  {
+    value: "Security",
+    label: "Security",
+    icon: LockKeyhole,
+  },
+] as const;
+
+type Tab = (typeof TABS)[number]["value"];
 
 export default function WorkerAccountSettings() {
   const [worker, setWorker] = useState<WorkerProfileData | null>(null);
@@ -34,6 +75,8 @@ export default function WorkerAccountSettings() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Get worker profile
+
   useEffect(() => {
     const getWorkerProfile = async () => {
       try {
@@ -51,18 +94,27 @@ export default function WorkerAccountSettings() {
     getWorkerProfile();
   }, []);
 
+  // Focus name when editing
+
   useEffect(() => {
     if (isEditing) {
       nameInputRef.current?.focus();
     }
   }, [isEditing]);
 
+  // Profile image
+
   const handleProfileImageClick = () => {
+    if (uploading) return;
+
     fileInputRef.current?.click();
   };
 
+  // Start editing
+
   const handleEditProfile = () => {
     if (!worker) return;
+
     setEditForm({
       name: worker.name ?? "",
       phone: String(worker.phone ?? ""),
@@ -73,8 +125,11 @@ export default function WorkerAccountSettings() {
     setIsEditing(true);
   };
 
+  // Cancel editing
+
   const handleCancelEdit = () => {
     if (!worker) return;
+
     setEditForm({
       name: worker.name ?? "",
       phone: String(worker.phone ?? ""),
@@ -84,6 +139,8 @@ export default function WorkerAccountSettings() {
 
     setIsEditing(false);
   };
+
+  // Edit change
 
   const handleEditChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -96,6 +153,7 @@ export default function WorkerAccountSettings() {
     }));
   };
 
+  // Update profile
 
   const handleUpdateProfile = async () => {
     if (!editForm.name.trim()) {
@@ -171,6 +229,8 @@ export default function WorkerAccountSettings() {
     }
   };
 
+  // Profile image upload
+
   const handleFileChange = async (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -178,10 +238,19 @@ export default function WorkerAccountSettings() {
 
     if (!file) return;
 
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ];
 
     if (!allowedTypes.includes(file.type)) {
       toast.warning("Only JPG, PNG and WEBP images are allowed");
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+
       return;
     }
 
@@ -189,17 +258,28 @@ export default function WorkerAccountSettings() {
 
     if (file.size > maxSize) {
       toast.error("Image must be smaller than 5MB");
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+
       return;
     }
 
     try {
       setUploading(true);
 
-      // 1. Get signed Cloudinary upload data from Work Service
-      const signatureResponse = await WorkService.getUploadSign();
+      // 1. Get signed Cloudinary upload data
+      const signatureResponse =
+        await WorkService.getUploadSign();
 
-      const { signature, timestamp, apiKey, cloudName, folder } =
-        signatureResponse.data.data;
+      const {
+        signature,
+        timestamp,
+        apiKey,
+        cloudName,
+        folder,
+      } = signatureResponse.data.data;
 
       // 2. Upload directly to Cloudinary
       const formData = new FormData();
@@ -212,15 +292,20 @@ export default function WorkerAccountSettings() {
 
       const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
 
-      const cloudinaryResponse = await axios.post(cloudinaryUrl, formData);
+      const cloudinaryResponse = await axios.post(
+        cloudinaryUrl,
+        formData
+      );
 
-      const { secure_url, public_id } = cloudinaryResponse.data;
+      const { secure_url, public_id } =
+        cloudinaryResponse.data;
 
-      // 3. Save Cloudinary information in Worker DB
-      const saveResponse = await WorkService.saveImageUrlFromCloud({
-        imageUrl: secure_url,
-        publicId: public_id,
-      });
+      // 3. Save Cloudinary information
+      const saveResponse =
+        await WorkService.saveImageUrlFromCloud({
+          imageUrl: secure_url,
+          publicId: public_id,
+        });
 
       if (saveResponse.data.success) {
         setWorker((prev) =>
@@ -247,15 +332,24 @@ export default function WorkerAccountSettings() {
     }
   };
 
+  // Loading
+
   if (!worker) {
     return (
-      <div className="mx-auto w-full max-w-5xl space-y-6 p-4">
-        <div className="rounded-xl border border-gray-200 bg-white p-6 text-sm text-gray-500">
-          Loading worker profile...
-        </div>
+      <div className="mx-auto w-full max-w-6xl space-y-6 p-4">
+        <Card>
+          <CardContent className="flex min-h-32 items-center justify-center">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Loading worker profile...
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
+
+  // Derived values
 
   const initials = worker.name
     ?.split(" ")
@@ -271,272 +365,371 @@ export default function WorkerAccountSettings() {
     })
     : "—";
 
+  // Render
+
   return (
-    <div className="mx-auto w-full space-y-6 p-4">
-      {/* ---------- header card ---------- */}
-      <div className="flex flex-col gap-6 rounded-xl border border-gray-200 bg-white p-6 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-5">
-          {/* avatar */}
-          <div className="relative h-20 w-20 flex-shrink-0">
-            <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gray-100 text-xl font-medium text-gray-500">
-              {worker.workerProfileImage ? (
-                <img
-                  src={worker.workerProfileImage}
-                  alt="Worker profile"
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <span>{initials}</span>
-              )}
-            </div>
+    <div className="mx-auto w-full max-w-6xl space-y-6 p-4 pb-8">
+      {/* 
+          PROFILE HEADER
+       */}
 
-            <button
-              type="button"
-              onClick={handleProfileImageClick}
-              disabled={uploading}
-              className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50"
-            >
-              <Camera className="h-3.5 w-3.5 text-gray-600" />
-            </button>
+      <Card className="overflow-hidden">
+        <CardContent className="p-0">
+          <div className="relative h-20">
+            <div className="flex h-full items-center px-6 sm:px-8">
+              <div className="flex w-full items-center gap-5">
+                {/* Avatar */}
+                <div className="relative h-16 w-16 shrink-0">
+                  <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-background bg-muted text-xl font-semibold text-muted-foreground shadow-sm">
+                    {worker.workerProfileImage ? (
+                      <img
+                        src={worker.workerProfileImage}
+                        alt="Worker profile"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span>{initials}</span>
+                    )}
+                  </div>
 
-            {uploading && (
-              <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 text-[10px] text-white">
-                Uploading...
+                  {/* Camera */}
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="secondary"
+                    onClick={handleProfileImageClick}
+                    disabled={uploading}
+                    className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full border-2 border-background shadow-sm"
+                  >
+                    {uploading ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Camera className="h-3 w-3" />
+                    )}
+
+                    <span className="sr-only">
+                      Change profile image
+                    </span>
+                  </Button>
+
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+
+                  {uploading && (
+                    <div className="absolute inset-0 flex items-center justify-center rounded-full bg-background/70 backdrop-blur-sm">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Profile information */}
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h1 className="text-xl font-semibold tracking-tight text-foreground">
+                      {worker.name}
+                    </h1>
+
+                    <span className="inline-flex items-center rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                      Worker
+                    </span>
+                  </div>
+
+                  <p className="mt-0.5 text-sm text-muted-foreground">
+                    {worker.workType}
+                  </p>
+
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-muted-foreground">
+                    <span className="flex min-w-0 items-center gap-2">
+                      <Mail className="h-4 w-4 shrink-0" />
+                      <span className="truncate">
+                        {worker.email ?? "—"}
+                      </span>
+                    </span>
+
+                    <span className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 shrink-0" />
+                      {worker.location ?? "—"}
+                    </span>
+
+                    <span className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 shrink-0" />
+                      Joined {joinedDate}
+                    </span>
+                  </div>
+                </div>
               </div>
-            )}
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={handleFileChange}
-              className="hidden"
-            />
-          </div>
-
-          {/* name + meta */}
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-gray-900">
-                {worker.name}
-              </h1>
-              <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
-                Worker
-              </span>
-            </div>
-            <p className="mt-0.5 text-sm text-gray-500">{worker.workType}</p>
-
-            <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-gray-500">
-              <span className="flex items-center gap-1.5">
-                <Mail className="h-3.5 w-3.5" />
-                {worker.email ?? "—"}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5" />
-                {worker.location ?? "—"}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Calendar className="h-3.5 w-3.5" />
-                Joined {joinedDate}
-              </span>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* 
+          TABS
+       */}
+
+      <div className="rounded-xl border border-border bg-muted/40 p-1">
+        <div className="grid grid-cols-3 gap-1">
+          {TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.value;
+
+            return (
+              <button
+                key={tab.value}
+                type="button"
+                onClick={() => setActiveTab(tab.value)}
+                className={`
+                  flex items-center justify-center gap-2
+                  rounded-lg px-3 py-2.5
+                  text-sm font-medium
+                  transition-all
+                  focus-visible:outline-none
+                  focus-visible:ring-2
+                  focus-visible:ring-ring
+                  focus-visible:ring-offset-2
+                  focus-visible:ring-offset-background
+                  ${isActive
+                    ? "bg-background text-foreground shadow-sm ring-1 ring-border"
+                    : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
+                  }
+                `}
+              >
+                <Icon className="h-4 w-4" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* ---------- tabs ---------- */}
-      <div className="flex gap-1 rounded-lg bg-gray-100 p-1">
-        {TABS.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${activeTab === tab
-              ? "bg-white text-gray-900 shadow-sm"
-              : "text-gray-600 hover:text-gray-700"
-              }`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
+      {/* 
+          PERSONAL
+       */}
 
-      {/* ---------- tab content ---------- */}
       {activeTab === "Personal" && (
-        <div className="rounded-xl border border-gray-200 bg-white p-6">
-          {/* Section Header */}
-          <div className="flex items-start justify-between gap-4">
+        <Card>
+          <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h2 className="text-lg font-bold text-gray-900">
+              <CardTitle className="text-lg">
                 Personal Information
-              </h2>
+              </CardTitle>
 
-              <p className="mt-1 text-sm text-gray-500">
+              <CardDescription className="mt-1">
                 Your personal details on file.
-              </p>
+              </CardDescription>
             </div>
 
-            {/* Edit / Update Actions */}
+            {/* Actions */}
             {!isEditing ? (
-              <button
+              <Button
                 type="button"
                 onClick={handleEditProfile}
-                className="shrink-0 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+                className="shrink-0 gap-2"
               >
+                <Pencil className="h-4 w-4" />
                 Edit Profile
-              </button>
+              </Button>
             ) : (
               <div className="flex shrink-0 gap-2">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={handleCancelEdit}
                   disabled={isUpdating}
-                  className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="gap-2"
                 >
+                  <X className="h-4 w-4" />
                   Cancel
-                </button>
+                </Button>
 
-                <button
+                <Button
                   type="button"
                   onClick={handleUpdateProfile}
                   disabled={isUpdating}
-                  className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="gap-2"
                 >
-                  {isUpdating ? "Updating..." : "Update Profile"}
-                </button>
+                  {isUpdating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="h-4 w-4" />
+                      Update Profile
+                    </>
+                  )}
+                </Button>
               </div>
             )}
-          </div>
+          </CardHeader>
 
-          {/* Personal Fields */}
-          <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <Field
-              label="Name"
-              value={isEditing ? editForm.name : worker.name}
-              name="name"
-              disabled={!isEditing}
-              onChange={handleEditChange}
-              inputRef={nameInputRef}
-              isEditing={isEditing}
-            />
+          <CardContent className="space-y-6">
+            {/* Personal fields */}
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              <WorkerField
+                label="Name"
+                value={
+                  isEditing ? editForm.name : worker.name
+                }
+                name="name"
+                disabled={!isEditing}
+                onChange={handleEditChange}
+                inputRef={nameInputRef}
+              />
 
-            <Field
-              label="Email"
-              value={worker.email}
-              disabled
-            />
+              <WorkerField
+                label="Email"
+                value={worker.email}
+                disabled
+              />
 
-            <Field
-              label="Phone"
-              value={
-                isEditing
-                  ? editForm.phone
-                  : String(worker.phone ?? "—")
-              }
-              name="phone"
-              disabled={!isEditing}
-              onChange={handleEditChange}
-              inputRef={phoneInputRef}
-              isEditing={isEditing}
-            />
+              <WorkerField
+                label="Phone"
+                value={
+                  isEditing
+                    ? editForm.phone
+                    : String(worker.phone ?? "—")
+                }
+                name="phone"
+                disabled={!isEditing}
+                onChange={handleEditChange}
+                inputRef={phoneInputRef}
+              />
 
-            <Field
-              label="Location"
-              value={
-                isEditing
-                  ? editForm.location
-                  : worker.location ?? "—"
-              }
-              name="location"
-              disabled={!isEditing}
-              onChange={handleEditChange}
-              inputRef={locationInputRef}
-              isEditing={isEditing}
-            />
-          </div>
+              <WorkerField
+                label="Location"
+                value={
+                  isEditing
+                    ? editForm.location
+                    : worker.location ?? "—"
+                }
+                name="location"
+                disabled={!isEditing}
+                onChange={handleEditChange}
+                inputRef={locationInputRef}
+              />
+            </div>
 
-          {/* Bio */}
-          <div className="mt-5">
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Bio
-            </label>
+            {/* Bio */}
+            <div className="space-y-2">
+              <Label htmlFor="worker-bio">Bio</Label>
 
-            <textarea
-              ref={bioInputRef}
-              name="bio"
-              value={isEditing ? editForm.bio : worker.bio ?? ""}
-              onChange={handleEditChange}
-              disabled={!isEditing}
-              rows={4}
-              maxLength={500}
-              className={`w-full resize-none rounded-lg border px-3 py-2 text-sm text-gray-800 outline-none
-          ${isEditing
-                  ? "border-gray-400 ring-2 ring-gray-200"
-                  : "border-gray-200 disabled:bg-gray-50 disabled:text-gray-500"
-                }`}
-            />
+              <Textarea
+                id="worker-bio"
+                ref={bioInputRef}
+                name="bio"
+                value={
+                  isEditing
+                    ? editForm.bio
+                    : worker.bio ?? ""
+                }
+                onChange={handleEditChange}
+                disabled={!isEditing}
+                rows={4}
+                maxLength={500}
+                placeholder="Tell clients a little about yourself..."
+                className="resize-none"
+              />
 
-            {isEditing && (
-              <p className="mt-1 text-right text-xs text-gray-400">
-                {editForm.bio.length}/500
-              </p>
-            )}
-          </div>
-        </div>
+              {isEditing && (
+                <div className="flex justify-end">
+                  <p className="text-xs text-muted-foreground">
+                    {editForm.bio.length}/500
+                  </p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       )}
+
+      {/* 
+          WORK INFO
+       */}
 
       {activeTab === "Work Info" && (
-        <div className="rounded-xl border border-gray-200 bg-white p-6">
-          <div className="flex items-center gap-2">
-            <Briefcase className="h-4 w-4 text-gray-500" />
-            <h2 className="text-lg font-bold text-gray-900">Work Details</h2>
-          </div>
-          <p className="mt-1 text-sm text-gray-500">
-            The type of work and preferences tied to your worker profile.
-          </p>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Briefcase className="h-5 w-5" />
+              Work Details
+            </CardTitle>
 
-          <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <Field label="Work Type" value={worker.workType} disabled />
-            <Field
-              label="Preferred Works"
-              value={worker.preferredWorks?.join(", ") || "—"}
-              disabled
-            />
-          </div>
-        </div>
+            <CardDescription>
+              The type of work and preferences tied to your
+              worker profile.
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              <WorkerField
+                label="Work Type"
+                value={worker.workType}
+                disabled
+              />
+
+              <WorkerField
+                label="Preferred Works"
+                value={
+                  worker.preferredWorks?.join(", ") || "—"
+                }
+                disabled
+              />
+            </div>
+          </CardContent>
+        </Card>
       )}
+
+      {/* 
+          SECURITY
+       */}
 
       {activeTab === "Security" && (
-        <div className="rounded-xl border border-gray-200 bg-white p-6">
-          <h2 className="text-lg font-bold text-gray-900">
-            Security
-          </h2>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <LockKeyhole className="h-5 w-5" />
+              Security
+            </CardTitle>
 
-          <p className="mt-1 text-sm text-gray-500">
-            Manage your account security and password.
-          </p>
+            <CardDescription>
+              Manage your account security and password.
+            </CardDescription>
+          </CardHeader>
 
-          <div className="mt-6 border-t border-gray-100 pt-6">
-            <div>
-              <h3 className="text-sm font-semibold text-gray-900">
-                Password
-              </h3>
+          <CardContent>
+            <div className="flex flex-col gap-5 rounded-lg border border-border bg-muted/30 p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-1">
+                <h3 className="text-sm font-semibold text-foreground">
+                  Password
+                </h3>
 
-              <p className="mt-1 text-sm text-gray-500">
-                Keep your account secure by regularly updating your password.
-              </p>
+                <p className="max-w-xl text-sm text-muted-foreground">
+                  Keep your account secure by regularly
+                  updating your password.
+                </p>
+              </div>
 
-              <button
+              <Button
                 type="button"
                 onClick={() => setIsPasswordModalOpen(true)}
-                className="mt-4 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+                className="shrink-0"
               >
                 Change Password
-              </button>
+              </Button>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
+      {/* Password modal */}
       <ChangePasswordModal
         isOpen={isPasswordModalOpen}
         setIsOpen={setIsPasswordModalOpen}
@@ -545,41 +738,43 @@ export default function WorkerAccountSettings() {
   );
 }
 
-function Field({
+/* 
+   WORKER FIELD
+ */
+
+function WorkerField({
   label,
   value,
   name,
   onChange,
   disabled,
   inputRef,
-  isEditing,
 }: {
   label: string;
   value: string;
   name?: string;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange?: (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => void;
   disabled?: boolean;
   inputRef?: React.RefObject<HTMLInputElement | null>;
-  isEditing?: boolean;
 }) {
-  return (
-    <div>
-      <label className="mb-1.5 block text-sm font-medium text-gray-700">
-        {label}
-      </label>
+  const id = `worker-${label
+    .toLowerCase()
+    .replace(/\s+/g, "-")}`;
 
-      <input
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={id}>{label}</Label>
+
+      <Input
         ref={inputRef}
+        id={id}
         type="text"
         name={name}
         value={value}
         disabled={disabled}
         onChange={onChange}
-        className={`w-full rounded-lg border px-3 py-2 text-sm text-gray-800 outline-none
-          ${isEditing
-            ? "border-gray-400 ring-2 ring-gray-200"
-            : "border-gray-200 disabled:bg-gray-50 disabled:text-gray-500"
-          }`}
       />
     </div>
   );

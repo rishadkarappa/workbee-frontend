@@ -2,12 +2,62 @@ import { useEffect, useRef, useState } from "react";
 import ChangePasswordModal from "./models/change-password-modal";
 import { toast } from "sonner";
 import axios from "axios";
-import { Camera, Mail, MapPin, Calendar } from "lucide-react";
+import {
+  Camera,
+  Mail,
+  MapPin,
+  Calendar,
+  Pencil,
+  ShieldCheck,
+  LockKeyhole,
+  Bell,
+  UserRound,
+  Settings2,
+  Loader2,
+  Check,
+  X,
+} from "lucide-react";
+
 import type { UserProfileData } from "./types/types";
 import { AuthService } from "@/services/auth-service";
 
-const TABS = ["Personal", "Account", "Security", "Notifications"] as const;
-type Tab = (typeof TABS)[number];
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+
+const TABS = [
+  {
+    value: "Personal",
+    label: "Personal",
+    icon: UserRound,
+  },
+  {
+    value: "Account",
+    label: "Account",
+    icon: Settings2,
+  },
+  {
+    value: "Security",
+    label: "Security",
+    icon: LockKeyhole,
+  },
+  {
+    value: "Notifications",
+    label: "Notifications",
+    icon: Bell,
+  },
+] as const;
+
+type Tab = (typeof TABS)[number]["value"];
 
 export default function ProfileSettings() {
   const [userProfileData, setUserProfileData] =
@@ -29,8 +79,8 @@ export default function ProfileSettings() {
     bio: "",
   });
 
-
   // Get user profile
+
   useEffect(() => {
     const userDetails = async () => {
       try {
@@ -57,8 +107,8 @@ export default function ProfileSettings() {
     userDetails();
   }, []);
 
-
   // Start editing
+
   const handleEditProfile = () => {
     if (!userProfileData) return;
 
@@ -72,8 +122,8 @@ export default function ProfileSettings() {
     setIsEditing(true);
   };
 
-
   // Cancel editing
+
   const handleCancelEdit = () => {
     if (!userProfileData) return;
 
@@ -87,8 +137,8 @@ export default function ProfileSettings() {
     setIsEditing(false);
   };
 
-
   // Update profile
+
   const handleUpdateProfile = async () => {
     try {
       if (!editData.name.trim()) {
@@ -136,8 +186,8 @@ export default function ProfileSettings() {
     }
   };
 
-
   // Joined date
+
   const joinedDate = userProfileData?.createdAt
     ? new Date(userProfileData.createdAt).toLocaleDateString("en-US", {
       month: "long",
@@ -145,8 +195,8 @@ export default function ProfileSettings() {
     })
     : "—";
 
-
   // Initials
+
   const initials = userProfileData?.name
     ? userProfileData.name
       .split(" ")
@@ -156,10 +206,11 @@ export default function ProfileSettings() {
       .toUpperCase()
     : "U";
 
-
   // Profile image
+
   const handleAddProfileImage = () => {
     if (uploading) return;
+
     fileInputRef.current?.click();
   };
 
@@ -170,7 +221,11 @@ export default function ProfileSettings() {
 
     if (!file) return;
 
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp",];
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ];
 
     if (!allowedTypes.includes(file.type)) {
       toast.warning("Only JPG, PNG and WEBP images are allowed");
@@ -200,7 +255,13 @@ export default function ProfileSettings() {
       // Get signed Cloudinary upload data
       const signatureResponse = await AuthService.getUploadSign();
 
-      const { signature, timestamp, apiKey, cloudeName, folder, } = signatureResponse.data.data;
+      const {
+        signature,
+        timestamp,
+        apiKey,
+        cloudeName,
+        folder,
+      } = signatureResponse.data.data;
 
       // Prepare Cloudinary upload
       const formData = new FormData();
@@ -214,9 +275,12 @@ export default function ProfileSettings() {
       const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloudeName}/image/upload`;
 
       // Upload to Cloudinary
-      const cloudinaryResponse = await axios.post(cloudinaryUrl, formData);
+      const cloudinaryResponse = await axios.post(
+        cloudinaryUrl,
+        formData
+      );
 
-      const { secure_url, public_id, } = cloudinaryResponse.data;
+      const { secure_url, public_id } = cloudinaryResponse.data;
 
       // Save image URL in backend
       const saveResponse =
@@ -249,303 +313,370 @@ export default function ProfileSettings() {
     }
   };
 
+  // Render
+
   return (
-    <div className="mx-auto w-full space-y-6">
+    <div className="mx-auto w-full max-w-6xl space-y-6 pb-8">
+      {/* 
+          PROFILE HEADER
+       */}
 
-      {/* HEADER CARD*/}
-      <div className="flex flex-col gap-6 rounded-xl border border-gray-200 bg-white p-6">
-        {/* LEFT SIDE */}
-        <div className="flex items-center gap-5">
+      <Card className="overflow-hidden">
+        <CardContent className="p-0">
+          <div className="relative h-20">
+            <div className="flex h-full items-center px-6 sm:px-8">
+              <div className="flex w-full items-center gap-5">
+                {/* Avatar */}
+                <div className="relative h-16 w-16 shrink-0">
+                  <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-4 border-background bg-muted text-xl font-semibold text-muted-foreground shadow-sm">
+                    {userProfileData?.userProfileImage ? (
+                      <img
+                        src={userProfileData.userProfileImage}
+                        alt="Profile"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span>{initials}</span>
+                    )}
+                  </div>
 
-          {/* Avatar */}
-          <div className="relative h-20 w-20 flex-shrink-0">
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="secondary"
+                    onClick={handleAddProfileImage}
+                    disabled={uploading}
+                    className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full border-2 border-background shadow-sm"
+                  >
+                    {uploading ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Camera className="h-3 w-3" />
+                    )}
 
-            <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gray-100 text-xl font-medium text-gray-500">
+                    <span className="sr-only">
+                      Change profile image
+                    </span>
+                  </Button>
 
-              {userProfileData?.userProfileImage ? (
-                <img
-                  src={userProfileData.userProfileImage}
-                  alt="Profile"
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <span>{initials}</span>
-              )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
 
-            </div>
+                  {uploading && (
+                    <div className="absolute inset-0 flex items-center justify-center rounded-full bg-background/70 backdrop-blur-sm">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    </div>
+                  )}
+                </div>
 
-            {/* Camera button */}
-            <button
-              type="button"
-              onClick={handleAddProfileImage}
-              disabled={uploading}
-              className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <Camera className="h-3.5 w-3.5 text-gray-600" />
-            </button>
+                {/* Profile information */}
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h1 className="text-xl font-semibold tracking-tight text-foreground">
+                      {userProfileData?.name ?? "User"}
+                    </h1>
 
-            {/* Upload overlay */}
-            {uploading && (
-              <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 text-[10px] text-white">
-                Uploading...
+                    <div className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                      <ShieldCheck className="h-3.5 w-3.5" />
+                      Verified
+                    </div>
+                  </div>
+
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-muted-foreground">
+                    <span className="flex min-w-0 items-center gap-2">
+                      <Mail className="h-4 w-4 shrink-0" />
+                      <span className="truncate">
+                        {userProfileData?.email ?? "—"}
+                      </span>
+                    </span>
+
+                    <span className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 shrink-0" />
+                      {userProfileData?.location || "Not added"}
+                    </span>
+
+                    <span className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 shrink-0" />
+                      Joined {joinedDate}
+                    </span>
+                  </div>
+                </div>
               </div>
-            )}
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={handleFileChange}
-              className="hidden"
-            />
-          </div>
-
-          {/* Name + Meta */}
-          <div>
-
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-gray-900">
-                {userProfileData?.name ?? "User"}
-              </h1>
-
-              <span className="rounded-full bg-gray-200 px-2.5 py-0.5 text-xs font-medium text-gray-900">
-                Verified User
-              </span>
-            </div>
-
-            <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-gray-500">
-
-              <span className="flex items-center gap-1.5">
-                <Mail className="h-3.5 w-3.5" />
-                {userProfileData?.email ?? "—"}
-              </span>
-
-              <span className="flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5" />
-                {userProfileData?.location || "Not added"}
-              </span>
-
-              <span className="flex items-center gap-1.5">
-                <Calendar className="h-3.5 w-3.5" />
-                Joined {joinedDate}
-              </span>
-
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* 
+          TABS
+       */}
+
+      <div className="rounded-xl border border-border bg-muted/40 p-1">
+        <div className="grid grid-cols-2 gap-1 sm:grid-cols-4">
+          {TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.value;
+
+            return (
+              <button
+                key={tab.value}
+                type="button"
+                onClick={() => setActiveTab(tab.value)}
+                className={`
+                  flex items-center justify-center gap-2
+                  rounded-lg px-3 py-2.5
+                  text-sm font-medium
+                  transition-all
+                  focus-visible:outline-none
+                  focus-visible:ring-2
+                  focus-visible:ring-ring
+                  focus-visible:ring-offset-2
+                  focus-visible:ring-offset-background
+                  ${isActive
+                    ? "bg-background text-foreground shadow-sm ring-1 ring-border"
+                    : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
+                  }
+                `}
+              >
+                <Icon className="h-4 w-4" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
         </div>
-
-      </div>
-
-      {/*      TABS*/}
-      <div className="flex gap-1 rounded-lg bg-gray-100 p-1">
-
-        {TABS.map((tab) => (
-          <button
-            key={tab}
-            type="button"
-            onClick={() => setActiveTab(tab)}
-            className={`flex-1 rounded-md py-2 text-sm font-medium transition-colors ${activeTab === tab
-              ? "bg-white text-gray-900 shadow-sm"
-              : "text-gray-500 hover:text-gray-700"
-              }`}
-          >
-            {tab}
-          </button>
-        ))}
-
       </div>
 
       {/* 
-          PERSONAL TAB
+          PERSONAL
        */}
+
       {activeTab === "Personal" && (
-        <div className="rounded-xl border border-gray-200 bg-white p-6">
-
-          <div className="flex items-start justify-between gap-4">
+        <Card>
+          <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h2 className="text-lg font-bold text-gray-900">
+              <CardTitle className="text-lg">
                 Personal Information
-              </h2>
+              </CardTitle>
 
-              <p className="mt-1 text-sm text-gray-500">
+              <CardDescription className="mt-1">
                 Update your personal details and profile information.
-              </p>
+              </CardDescription>
             </div>
 
-            {/* Profile Actions */}
-            <div className="flex shrink-0 items-center gap-3">
+            {/* Profile actions */}
+            <div className="flex shrink-0 items-center gap-2">
               {!isEditing ? (
-                <button
+                <Button
                   type="button"
                   onClick={handleEditProfile}
-                  className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
+                  className="gap-2"
                 >
+                  <Pencil className="h-4 w-4" />
                   Edit Profile
-                </button>
+                </Button>
               ) : (
                 <>
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
                     onClick={handleCancelEdit}
                     disabled={saving}
-                    className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="gap-2"
                   >
+                    <X className="h-4 w-4" />
                     Cancel
-                  </button>
+                  </Button>
 
-                  <button
+                  <Button
                     type="button"
                     onClick={handleUpdateProfile}
                     disabled={saving}
-                    className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="gap-2"
                   >
-                    {saving ? "Saving..." : "Save Changes"}
-                  </button>
+                    {saving ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="h-4 w-4" />
+                        Save Changes
+                      </>
+                    )}
+                  </Button>
                 </>
               )}
             </div>
-          </div>
+          </CardHeader>
 
-          <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <CardContent className="space-y-6">
+            {/* Fields */}
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              {/* Name */}
+              <ProfileField
+                label="Name"
+                value={
+                  isEditing
+                    ? editData.name
+                    : userProfileData?.name ?? ""
+                }
+                disabled={!isEditing}
+                onChange={(value) =>
+                  setEditData((prev) => ({
+                    ...prev,
+                    name: value,
+                  }))
+                }
+              />
 
-            {/* Name */}
-            <Field
-              label="Name"
-              value={
-                isEditing
-                  ? editData.name
-                  : userProfileData?.name ?? ""
-              }
-              disabled={!isEditing}
-              onChange={(value) =>
-                setEditData((prev) => ({
-                  ...prev,
-                  name: value,
-                }))
-              }
-            />
+              {/* Email */}
+              <ProfileField
+                label="Email"
+                value={userProfileData?.email ?? ""}
+                disabled
+              />
 
-            {/* Email */}
-            <Field
-              label="Email"
-              value={userProfileData?.email ?? ""}
-              disabled
-            />
+              {/* Phone */}
+              <ProfileField
+                label="Phone"
+                value={
+                  isEditing
+                    ? editData.phone
+                    : userProfileData?.phone ?? ""
+                }
+                disabled={!isEditing}
+                onChange={(value) =>
+                  setEditData((prev) => ({
+                    ...prev,
+                    phone: value,
+                  }))
+                }
+              />
 
-            {/* Phone */}
-            <Field
-              label="Phone"
-              value={
-                isEditing
-                  ? editData.phone
-                  : userProfileData?.phone ?? ""
-              }
-              disabled={!isEditing}
-              onChange={(value) =>
-                setEditData((prev) => ({
-                  ...prev,
-                  phone: value,
-                }))
-              }
-            />
+              {/* Location */}
+              <ProfileField
+                label="Location"
+                value={
+                  isEditing
+                    ? editData.location
+                    : userProfileData?.location || "Not added"
+                }
+                disabled={!isEditing}
+                onChange={(value) =>
+                  setEditData((prev) => ({
+                    ...prev,
+                    location: value,
+                  }))
+                }
+              />
+            </div>
 
-            {/* Location */}
-            <Field
-              label="Location"
-              value={
-                isEditing
-                  ? editData.location
-                  : userProfileData?.location || "Not added"
-              }
-              disabled={!isEditing}
-              onChange={(value) =>
-                setEditData((prev) => ({
-                  ...prev,
-                  location: value,
-                }))
-              }
-            />
+            {/* Bio */}
+            <div className="space-y-2">
+              <Label htmlFor="profile-bio">Bio</Label>
 
-          </div>
+              <Textarea
+                id="profile-bio"
+                value={
+                  isEditing
+                    ? editData.bio
+                    : userProfileData?.bio ?? ""
+                }
+                disabled={!isEditing}
+                onChange={(e) =>
+                  setEditData((prev) => ({
+                    ...prev,
+                    bio: e.target.value,
+                  }))
+                }
+                placeholder="Add a short bio..."
+                maxLength={500}
+                rows={4}
+                className="resize-none"
+              />
 
-          {/* Bio */}
-          <div className="mt-5">
-
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Bio
-            </label>
-
-            <textarea
-              value={
-                isEditing
-                  ? editData.bio
-                  : userProfileData?.bio ?? ""
-              }
-              disabled={!isEditing}
-              onChange={(e) =>
-                setEditData((prev) => ({
-                  ...prev,
-                  bio: e.target.value,
-                }))
-              }
-              placeholder="Add a short bio..."
-              maxLength={500}
-              rows={3}
-              className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none focus:border-gray-400 disabled:bg-gray-50 disabled:text-gray-500"
-            />
-
-            {isEditing && (
-              <p className="mt-1 text-right text-xs text-gray-400">
-                {editData.bio.length}/500
-              </p>
-            )}
-
-          </div>
-
-        </div>
+              {isEditing && (
+                <div className="flex justify-end">
+                  <p className="text-xs text-muted-foreground">
+                    {editData.bio.length}/500
+                  </p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
-      {/* ACCOUNT TAB */}
+      {/* 
+          ACCOUNT
+       */}
+
       {activeTab === "Account" && (
-        <PlaceholderPanel title="Account" />
+        <PlaceholderPanel
+          title="Account"
+          description="Manage your account preferences and settings."
+          icon={Settings2}
+        />
       )}
 
-      {/*  SECURITY TAB */}
+      {/* 
+          SECURITY
+       */}
+
       {activeTab === "Security" && (
-        <div className="rounded-xl border border-gray-200 bg-white p-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <LockKeyhole className="h-5 w-5" />
+              Security
+            </CardTitle>
 
-          <h2 className="text-lg font-bold text-gray-900">
-            Security
-          </h2>
+            <CardDescription>
+              Manage your account security and password.
+            </CardDescription>
+          </CardHeader>
 
-          <p className="mt-1 text-sm text-gray-500">
-            Manage your account security and password.
-          </p>
+          <CardContent>
+            <div className="flex flex-col gap-5 rounded-lg border border-border bg-muted/30 p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-1">
+                <h3 className="text-sm font-semibold text-foreground">
+                  Password
+                </h3>
 
-          <div className="mt-6 border-t border-gray-100 pt-6">
+                <p className="max-w-xl text-sm text-muted-foreground">
+                  Keep your account secure by regularly updating
+                  your password.
+                </p>
+              </div>
 
-            <h3 className="text-sm font-semibold text-gray-900">
-              Password
-            </h3>
-
-            <p className="mt-1 text-sm text-gray-500">
-              Keep your account secure by regularly updating your password.
-            </p>
-
-            <button
-              type="button"
-              onClick={() => setIsOpen(true)}
-              className="mt-4 rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
-            >
-              Change Password
-            </button>
-
-          </div>
-        </div>
+              <Button
+                type="button"
+                onClick={() => setIsOpen(true)}
+                className="shrink-0"
+              >
+                Change Password
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       )}
+
+      {/* 
+          NOTIFICATIONS
+       */}
 
       {activeTab === "Notifications" && (
-        <PlaceholderPanel title="Notifications" />
+        <PlaceholderPanel
+          title="Notifications"
+          description="Manage how you receive notifications and updates."
+          icon={Bell}
+        />
       )}
 
       {/* Password modal */}
@@ -553,14 +684,15 @@ export default function ProfileSettings() {
         isOpen={isOpen}
         setIsOpen={setIsOpen}
       />
-
     </div>
   );
 }
 
-/* FIELD COMPONENT */
+/* 
+   PROFILE FIELD
+ */
 
-function Field({
+function ProfileField({
   label,
   value,
   onChange,
@@ -571,39 +703,60 @@ function Field({
   onChange?: (value: string) => void;
   disabled?: boolean;
 }) {
+  const id = `profile-${label.toLowerCase().replace(/\s+/g, "-")}`;
+
   return (
-    <div>
+    <div className="space-y-2">
+      <Label htmlFor={id}>{label}</Label>
 
-      <label className="mb-1.5 block text-sm font-medium text-gray-700">
-        {label}
-      </label>
-
-      <input
+      <Input
+        id={id}
         type="text"
         value={value}
         disabled={disabled}
         onChange={(e) => onChange?.(e.target.value)}
-        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none focus:border-gray-400 disabled:bg-gray-50 disabled:text-gray-500"
       />
-
     </div>
   );
 }
 
-/*  PLACEHOLDER COMPONENT*/
+/* 
+   PLACEHOLDER PANEL
+ */
 
-function PlaceholderPanel({title,}: {title: string;}) {
+function PlaceholderPanel({
+  title,
+  description,
+  icon: Icon,
+}: {
+  title: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+}) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6">
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <Icon className="h-5 w-5" />
+          {title}
+        </CardTitle>
 
-      <h2 className="text-lg font-bold text-gray-900">
-        {title}
-      </h2>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
 
-      <p className="mt-1 text-sm text-gray-500">
-        This section isn't wired up yet — coming soon.
-      </p>
+      <CardContent>
+        <div className="flex min-h-32 items-center justify-center rounded-lg border border-dashed border-border bg-muted/20">
+          <div className="text-center">
+            <p className="text-sm font-medium text-foreground">
+              Coming soon
+            </p>
 
-    </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              This section isn't wired up yet.
+            </p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
