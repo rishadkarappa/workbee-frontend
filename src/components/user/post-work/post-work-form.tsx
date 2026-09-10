@@ -29,9 +29,10 @@ import { PhoneInput } from "../../ui/phone-input"
 import SelectWorkCategory from "./components/select-work-gategory"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { CalendarIcon, Clock8Icon } from "lucide-react"
+import { CalendarIcon, Check } from "lucide-react"
 import { format } from "date-fns"
 import { TimePicker, TimePickerContent, TimePickerHour, TimePickerInput, TimePickerInputGroup, TimePickerLabel, TimePickerMinute, TimePickerPeriod, TimePickerSeparator, TimePickerTrigger } from "@/components/ui/time-picker"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 
 export function PostWorkForm({ className, ...props }: React.ComponentProps<"div">) {
   const [form, setForm] = useState({
@@ -215,32 +216,48 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
 
               {/* ---------- RIGHT SIDE ---------- */}
               <div className="flex flex-col gap-4">
+
                 <Field>
-                  <FieldLabel>Work Duration Type</FieldLabel>
-                  <div className="flex gap-4 mt-2">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="workType"
-                        value="oneDay"
-                        checked={form.workType === "oneDay"}
-                        onChange={handleChange}
-                        className="w-4 h-4 cursor-pointer"
-                      />
-                      <span className="text-sm">One Day Work</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="workType"
-                        value="multipleDay"
-                        checked={form.workType === "multipleDay"}
-                        onChange={handleChange}
-                        className="w-4 h-4 cursor-pointer"
-                      />
-                      <span className="text-sm">Multiple Day Work</span>
-                    </label>
-                  </div>
+                  <FieldLabel>Select Work Duration Type</FieldLabel>
+
+                  <ToggleGroup
+                    type="single"
+                    value={form.workType}
+                    onValueChange={(value) => {
+                      if (!value) return
+
+                      setForm((prev) => ({
+                        ...prev,
+                        workType: value,
+                        date: value === "oneDay" ? prev.date : "",
+                        startDate: value === "multipleDay" ? prev.startDate : "",
+                        endDate: value === "multipleDay" ? prev.endDate : "",
+                      }))
+                    }}
+                    className="w-full justify-start"
+                  >
+                    <ToggleGroupItem
+                      value="oneDay"
+                      aria-label="Select one day work"
+                      className="flex-1 gap-2"
+                    >
+                      {form.workType === "oneDay" && (
+                        <Check className="size-4" />
+                      )}
+                      One Day Work
+                    </ToggleGroupItem>
+
+                    <ToggleGroupItem
+                      value="multipleDay"
+                      aria-label="Select multiple day work"
+                      className="flex-1 gap-2"
+                    >
+                      {form.workType === "multipleDay" && (
+                        <Check className="size-4" />
+                      )}
+                      Multiple Day Work
+                    </ToggleGroupItem>
+                  </ToggleGroup>
                 </Field>
 
                 {form.workType === "oneDay" && (
@@ -440,16 +457,27 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* ---------- LEFT SIDE ---------- */}
               <div className="flex flex-col gap-4">
+                
                 <Field>
-                  <FieldLabel htmlFor="description">Description about your work (min 30 words)</FieldLabel>
+                  <FieldLabel htmlFor="description">
+                    Tell about your work
+                  </FieldLabel>
+
                   <Textarea
                     id="description"
                     name="description"
                     value={form.description}
                     onChange={handleChange}
                     placeholder="Explain what needs to be done..."
+                    maxLength={500}
                     required
                   />
+
+                  <div className="flex justify-end">
+                    <span className="text-xs text-muted-foreground">
+                      {500 - form.description.length} characters remaining
+                    </span>
+                  </div>
                 </Field>
 
                 <Field>

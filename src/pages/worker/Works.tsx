@@ -1,4 +1,4 @@
-import WorksTable from "@/components/worker/works-table"
+import WorksTable from "@/components/worker/works/works-table"
 
 export default function Works() {
   return (
