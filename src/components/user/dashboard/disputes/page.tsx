@@ -41,10 +41,10 @@ const COMPLAINT_LABELS: Record<string, string> = {
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  pending: 'bg-amber-50 text-amber-700 border-amber-200',
-  in_review: 'bg-blue-50 text-blue-700 border-blue-200',
-  resolved: 'bg-green-50 text-green-700 border-green-200',
-  dismissed: 'bg-gray-50 text-gray-600 border-gray-200',
+  pending: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-900',
+  in_review: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-900',
+  resolved: 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950/30 dark:text-green-400 dark:border-green-900',
+  dismissed: 'bg-muted text-muted-foreground border-border',
 };
 
 function DisputeRow({ dispute }: { dispute: Dispute }) {
@@ -54,7 +54,7 @@ function DisputeRow({ dispute }: { dispute: Dispute }) {
     COMPLAINT_LABELS[dispute.complaintType] || dispute.complaintType;
 
   return (
-    <div className="overflow-hidden rounded-xl border bg-white shadow-sm transition-shadow hover:shadow-md">
+    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md">
 
       {/* Collapsed Header */}
       <button
@@ -67,8 +67,8 @@ function DisputeRow({ dispute }: { dispute: Dispute }) {
           {/* Left */}
           <div className="flex min-w-0 items-center gap-3">
 
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50">
-              <FileWarning className="h-5 w-5" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-destructive/10">
+              <FileWarning className="h-5 w-5 text-destructive" />
             </div>
 
             <div className="min-w-0">
@@ -116,7 +116,7 @@ function DisputeRow({ dispute }: { dispute: Dispute }) {
 
       {/* Expanded Details */}
       {expanded && (
-        <div className="space-y-5 border-t bg-gray-50/70 px-4 pb-5">
+        <div className="space-y-5 border-t border-border bg-muted/40 px-4 pb-5">
 
           {/* Complaint Details */}
           <div className="pt-4">
@@ -128,7 +128,7 @@ function DisputeRow({ dispute }: { dispute: Dispute }) {
               </p>
             </div>
 
-            <div className="rounded-lg border bg-white p-4">
+            <div className="rounded-lg border border-border bg-card p-4">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
                 <div>
@@ -156,12 +156,12 @@ function DisputeRow({ dispute }: { dispute: Dispute }) {
                 </div>
               </div>
 
-              <div className="mt-4 border-t pt-4">
+              <div className="mt-4 border-t border-border pt-4">
                 <p className="text-xs font-medium text-muted-foreground">
                   Description
                 </p>
 
-                <p className="mt-1 text-sm leading-6 text-gray-700">
+                <p className="mt-1 text-sm leading-6 text-foreground/80">
                   {dispute.description}
                 </p>
               </div>
@@ -179,7 +179,7 @@ function DisputeRow({ dispute }: { dispute: Dispute }) {
                 </p>
               </div>
 
-              <div className="rounded-lg border bg-white p-4">
+              <div className="rounded-lg border border-border bg-card p-4">
                 <div className="flex flex-wrap gap-3">
 
                   {dispute.proofImages.map((img, index) => (
@@ -187,14 +187,14 @@ function DisputeRow({ dispute }: { dispute: Dispute }) {
                       key={`${img}-${index}`}
                       src={img}
                       alt={`Proof ${index + 1}`}
-                      className="h-24 w-24 rounded-lg border object-cover transition-transform hover:scale-105"
+                      className="h-24 w-24 rounded-lg border border-border object-cover transition-transform hover:scale-105"
                     />
                   ))}
 
                   {dispute.proofVideo && (
                     <video
                       src={dispute.proofVideo}
-                      className="h-24 w-40 rounded-lg border object-cover"
+                      className="h-24 w-40 rounded-lg border border-border object-cover"
                       controls
                     />
                   )}
@@ -218,7 +218,7 @@ function DisputeRow({ dispute }: { dispute: Dispute }) {
                 {dispute.actions.map((action, index) => (
                   <div
                     key={index}
-                    className="rounded-lg border bg-white p-4"
+                    className="rounded-lg border border-border bg-card p-4"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -231,7 +231,7 @@ function DisputeRow({ dispute }: { dispute: Dispute }) {
                         </p>
                       </div>
 
-                      <span className="shrink-0 rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-600">
+                      <span className="shrink-0 rounded-full bg-muted px-2 py-1 text-xs text-muted-foreground">
                         Admin
                       </span>
                     </div>
@@ -254,7 +254,7 @@ function DisputeRow({ dispute }: { dispute: Dispute }) {
           )}
 
           {/* Filed Date */}
-          <div className="flex items-center gap-2 border-t pt-3 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
             <CalendarDays className="h-3.5 w-3.5" />
 
             <span>
@@ -288,7 +288,7 @@ export default function Disputes() {
   if (loading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -297,10 +297,10 @@ export default function Disputes() {
     <div className="w-full space-y-4 p-4 sm:p-6">
 
       {disputes.length === 0 ? (
-        <div className="rounded-xl border bg-white py-12 text-center">
-          <MessageSquareWarning className="mx-auto mb-3 h-10 w-10 text-gray-300" />
+        <div className="rounded-xl border border-border bg-card py-12 text-center">
+          <MessageSquareWarning className="mx-auto mb-3 h-10 w-10 text-muted-foreground/50" />
 
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             You haven't raised any complaints yet.
           </p>
         </div>
