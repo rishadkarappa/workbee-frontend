@@ -6,11 +6,19 @@ import { AppRoutes } from "@/constants/routes/app-routes";
 import { toast } from "sonner";
 import Stack from "@/components/Stack";
 
+// hero imgs
+import heroOne from '@/assets/hero/hero.moving.one.webp';
+import heroTwo from '@/assets/hero/hero.cleaning.two.webp';
+import heroThree from '@/assets/hero/hero.three.gardening.webp';
+import heroFour from '@/assets/hero/hero.four.furnitureAssemply.jpg';
+import heroFive from '@/assets/hero/hero.five.carwash.jpg';
+
 const images = [
-  "",
-  "https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=500&auto=format",
-  "https://images.unsplash.com/photo-1452626212852-811d58933cae?q=80&w=500&auto=format",
-  "https://images.unsplash.com/photo-1572120360610-d971b9d7767c?q=80&w=500&auto=format"
+  heroOne,
+  heroTwo,
+  heroThree,
+  heroFour,
+  heroFive,
 ];
 
 export default function Login() {
