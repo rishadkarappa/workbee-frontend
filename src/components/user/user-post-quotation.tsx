@@ -1,10 +1,9 @@
-
 import Navbar from "@/components/user/navbar";
 import { PostWorkForm } from "./post-work-form";
 
 export default function PostQuotationForm() {
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col">
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
       <Navbar />
 
       <main className="flex flex-1 items-center justify-center py-8">
