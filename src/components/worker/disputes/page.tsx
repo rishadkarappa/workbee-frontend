@@ -7,6 +7,11 @@ import {
   ShieldCheck,
   CalendarDays,
   FileWarning,
+  ShieldAlert,
+  XCircle,
+  CheckCircle2,
+  Clock3,
+  List,
 } from 'lucide-react';
 
 import { DisputeService } from '@/services/dispute-service';
@@ -20,6 +25,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
+import { Badge } from '@/components/ui/badge';
 
 interface DisputeActionItem {
   actionType: string;
@@ -55,18 +61,43 @@ const STATUS_STYLES: Record<string, string> = {
   dismissed: 'bg-muted text-muted-foreground border-border',
 };
 
-// Tabs: status filters + a special "against me" filter (complaintType === 'against_worker')
-type TabValue = 'all'|'pending' | 'resolved' | 'dismissed' | 'against_me';
+type TabValue =
+  | 'all'
+  | 'pending'
+  | 'resolved'
+  | 'dismissed'
+  | 'against_me';
 
-const TABS: { value: TabValue; label: string }[] = [
-  { value: 'all', label: 'All' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'resolved', label: 'Resolved' },
-  { value: 'dismissed', label: 'Dismissed' },
-  { value: 'against_me', label: 'Action Against Me' },
+const TABS = [
+  {
+    value: 'all' as const,
+    label: 'All',
+    Icon: List,
+  },
+  {
+    value: 'pending' as const,
+    label: 'Pending',
+    Icon: Clock3,
+  },
+  {
+    value: 'resolved' as const,
+    label: 'Resolved',
+    Icon: CheckCircle2,
+  },
+  {
+    value: 'dismissed' as const,
+    label: 'Dismissed',
+    Icon: XCircle,
+  },
+  {
+    value: 'against_me' as const,
+    label: 'Action Against Me',
+    Icon: ShieldAlert,
+  },
 ];
 
 const PAGE_SIZE = 5;
+
 
 function DisputeRow({ dispute }: { dispute: Dispute }) {
   const [expanded, setExpanded] = useState(false);
@@ -367,18 +398,18 @@ export default function WorkerDisputes() {
 
   // Filtered list for the active tab
   const filteredDisputes = useMemo(() => {
-  if (activeTab === 'all') {
-    return disputes;
-  }
+    if (activeTab === 'all') {
+      return disputes;
+    }
 
-  if (activeTab === 'against_me') {
-    return disputes.filter((d) =>
-      d.actions.some((a) => a.actionType.endsWith('_worker'))
-    );
-  }
+    if (activeTab === 'against_me') {
+      return disputes.filter((d) =>
+        d.actions.some((a) => a.actionType.endsWith('_worker'))
+      );
+    }
 
-  return disputes.filter((d) => d.status === activeTab);
-}, [disputes, activeTab]);
+    return disputes.filter((d) => d.status === activeTab);
+  }, [disputes, activeTab]);
 
   const totalPages = Math.max(1, Math.ceil(filteredDisputes.length / PAGE_SIZE));
 
@@ -392,6 +423,30 @@ export default function WorkerDisputes() {
     setPage(1);
   };
 
+  const tabCounts = useMemo(() => {
+    return {
+      all: disputes.length,
+
+      pending: disputes.filter(
+        (dispute) => dispute.status === 'pending'
+      ).length,
+
+      resolved: disputes.filter(
+        (dispute) => dispute.status === 'resolved'
+      ).length,
+
+      dismissed: disputes.filter(
+        (dispute) => dispute.status === 'dismissed'
+      ).length,
+
+      against_me: disputes.filter((dispute) =>
+        dispute.actions.some((action) =>
+          action.actionType.endsWith('_worker')
+        )
+      ).length,
+    };
+  }, [disputes]);
+
   if (loading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
@@ -400,6 +455,7 @@ export default function WorkerDisputes() {
     );
   }
 
+
   return (
     <div className="w-full space-y-4 p-4 sm:p-6">
 
@@ -407,11 +463,28 @@ export default function WorkerDisputes() {
 
       <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="grid w-full grid-cols-5 sm:w-fit sm:inline-grid">
-          {TABS.map((tab) => (
-            <TabsTrigger key={tab.value} value={tab.value}>
-              {tab.label}
-            </TabsTrigger>
-          ))}
+          {TABS.map((tab) => {
+            const { Icon } = tab;
+
+            return (
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className="flex items-center gap-1.5"
+              >
+                <Icon className="h-3.5 w-3.5" />
+
+                <span>{tab.label}</span>
+
+                <Badge
+                  variant="secondary"
+                  className="ml-1 px-1.5 py-0 text-xs"
+                >
+                  {tabCounts[tab.value]}
+                </Badge>
+              </TabsTrigger>
+            );
+          })}
         </TabsList>
       </Tabs>
 
