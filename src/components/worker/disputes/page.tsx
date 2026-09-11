@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ChevronDown,
   ChevronUp,
@@ -10,6 +10,16 @@ import {
 } from 'lucide-react';
 
 import { DisputeService } from '@/services/dispute-service';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 
 interface DisputeActionItem {
   actionType: string;
@@ -44,6 +54,19 @@ const STATUS_STYLES: Record<string, string> = {
   resolved: 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950/40 dark:text-green-400 dark:border-green-900',
   dismissed: 'bg-muted text-muted-foreground border-border',
 };
+
+// Tabs: status filters + a special "against me" filter (complaintType === 'against_worker')
+type TabValue = 'all'|'pending' | 'resolved' | 'dismissed' | 'against_me';
+
+const TABS: { value: TabValue; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'resolved', label: 'Resolved' },
+  { value: 'dismissed', label: 'Dismissed' },
+  { value: 'against_me', label: 'Action Against Me' },
+];
+
+const PAGE_SIZE = 5;
 
 function DisputeRow({ dispute }: { dispute: Dispute }) {
   const [expanded, setExpanded] = useState(false);
@@ -98,9 +121,8 @@ function DisputeRow({ dispute }: { dispute: Dispute }) {
           <div className="flex shrink-0 items-center gap-3">
 
             <span
-              className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium capitalize ${
-                STATUS_STYLES[dispute.status]
-              }`}
+              className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium capitalize ${STATUS_STYLES[dispute.status]
+                }`}
             >
               {dispute.status.replace('_', ' ')}
             </span>
@@ -150,9 +172,8 @@ function DisputeRow({ dispute }: { dispute: Dispute }) {
                   </p>
 
                   <span
-                    className={`mt-1 inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium capitalize ${
-                      STATUS_STYLES[dispute.status]
-                    }`}
+                    className={`mt-1 inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium capitalize ${STATUS_STYLES[dispute.status]
+                      }`}
                   >
                     {dispute.status.replace('_', ' ')}
                   </span>
@@ -258,9 +279,84 @@ function DisputeRow({ dispute }: { dispute: Dispute }) {
   );
 }
 
+function DisputePagination({
+  page,
+  totalPages,
+  onPageChange,
+}: {
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}) {
+  if (totalPages <= 1) return null;
+
+  // Build a compact page list with ellipses
+  const pages: (number | 'ellipsis')[] = [];
+  const addPage = (p: number) => pages.push(p);
+
+  addPage(1);
+  if (page > 3) pages.push('ellipsis');
+  for (let p = Math.max(2, page - 1); p <= Math.min(totalPages - 1, page + 1); p++) {
+    addPage(p);
+  }
+  if (page < totalPages - 2) pages.push('ellipsis');
+  if (totalPages > 1) addPage(totalPages);
+
+  return (
+    <Pagination>
+      <PaginationContent>
+        <PaginationItem>
+          <PaginationPrevious
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              if (page > 1) onPageChange(page - 1);
+            }}
+            className={page === 1 ? 'pointer-events-none opacity-50' : ''}
+          />
+        </PaginationItem>
+
+        {pages.map((p, idx) =>
+          p === 'ellipsis' ? (
+            <PaginationItem key={`ellipsis-${idx}`}>
+              <PaginationEllipsis />
+            </PaginationItem>
+          ) : (
+            <PaginationItem key={p}>
+              <PaginationLink
+                href="#"
+                isActive={p === page}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onPageChange(p);
+                }}
+              >
+                {p}
+              </PaginationLink>
+            </PaginationItem>
+          )
+        )}
+
+        <PaginationItem>
+          <PaginationNext
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              if (page < totalPages) onPageChange(page + 1);
+            }}
+            className={page === totalPages ? 'pointer-events-none opacity-50' : ''}
+          />
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
+  );
+}
+
 export default function WorkerDisputes() {
   const [disputes, setDisputes] = useState<Dispute[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<TabValue>('all');
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     DisputeService.getWorkerDisputes()
@@ -268,6 +364,33 @@ export default function WorkerDisputes() {
       .catch(() => setDisputes([]))
       .finally(() => setLoading(false));
   }, []);
+
+  // Filtered list for the active tab
+  const filteredDisputes = useMemo(() => {
+  if (activeTab === 'all') {
+    return disputes;
+  }
+
+  if (activeTab === 'against_me') {
+    return disputes.filter((d) =>
+      d.actions.some((a) => a.actionType.endsWith('_worker'))
+    );
+  }
+
+  return disputes.filter((d) => d.status === activeTab);
+}, [disputes, activeTab]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredDisputes.length / PAGE_SIZE));
+
+  const paginatedDisputes = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return filteredDisputes.slice(start, start + PAGE_SIZE);
+  }, [filteredDisputes, page]);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value as TabValue);
+    setPage(1);
+  };
 
   if (loading) {
     return (
@@ -281,33 +404,46 @@ export default function WorkerDisputes() {
     <div className="w-full space-y-4 p-4 sm:p-6">
 
       {/* Header */}
-      {/* <div>
-        <h1 className="text-xl font-semibold">
-          Disputes Against You
-        </h1>
 
-        <p className="mt-1 text-sm text-muted-foreground">
-          Review complaints and actions related to your completed work.
-        </p>
-      </div> */}
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
+        <TabsList className="grid w-full grid-cols-5 sm:w-fit sm:inline-grid">
+          {TABS.map((tab) => (
+            <TabsTrigger key={tab.value} value={tab.value}>
+              {tab.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
 
-      {disputes.length === 0 ? (
+      {filteredDisputes.length === 0 ? (
         <div className="rounded-xl border bg-card py-12 text-center">
 
           <MessageSquareWarning className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
 
           <p className="text-sm text-muted-foreground">
-            No complaints have been filed against you.
+            No complaints found for this filter.
           </p>
 
         </div>
       ) : (
-        disputes.map((dispute) => (
-          <DisputeRow
-            key={dispute.id}
-            dispute={dispute}
-          />
-        ))
+        <>
+          <div className="space-y-4">
+            {paginatedDisputes.map((dispute) => (
+              <DisputeRow
+                key={dispute.id}
+                dispute={dispute}
+              />
+            ))}
+          </div>
+
+          <div className="pt-2">
+            <DisputePagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={setPage}
+            />
+          </div>
+        </>
       )}
 
     </div>
