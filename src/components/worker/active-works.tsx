@@ -2,7 +2,7 @@ import { WorkService } from "@/services/work-service";
 import { ChatService } from "@/services/chat-service";
 import { socketService } from "@/services/chat-socket-service";
 import { AuthHelper } from "@/utils/auth-helper";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Calendar, MapPin, Briefcase, IndianRupeeIcon,
@@ -13,6 +13,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+
 import { notifyWorkCompleted } from "@/utils/work-completion-helper";
 
 
@@ -81,6 +93,8 @@ const PROGRESS_STEPS = [
     border: 'border-green-200 dark:border-green-900',
   },
 ];
+
+const ITEMS_PER_PAGE = 6;
 
 function ProgressTracker({
   progress,
@@ -294,6 +308,10 @@ export default function ActiveWorks() {
   } | null>(null);
   const [progressSubmitting, setProgressSubmitting] = useState(false);
 
+  // ── Tabs + pagination state ─────────────────────────────────────────────
+  const [activeTab, setActiveTab] = useState<string>('started');
+  const [currentPage, setCurrentPage] = useState(1);
+
   const user = AuthHelper.getUser();
   const userId = user?.id || AuthHelper.getUserId();
   const token = AuthHelper.getAccessToken();
@@ -352,6 +370,58 @@ export default function ActiveWorks() {
       socketService.offWorkProgressChanged(handleProgressChange);
     };
   }, [token]);
+
+  // ── Bucket a work into one of the 3 tabs ──────────────────────────────────
+  // Works with no progress set yet (just assigned) are treated as "started"
+  // so nothing silently disappears from all tabs.
+  const getWorkBucket = (work: Work) => work.progress || 'started';
+
+  // ── Tab counts (computed off the full works list, not the paginated one) ──
+  const tabCounts = useMemo(() => {
+    return PROGRESS_STEPS.reduce<Record<string, number>>((acc, step) => {
+      acc[step.value] = works.filter(w => getWorkBucket(w) === step.value).length;
+      return acc;
+    }, {});
+  }, [works]);
+
+  // ── Works filtered by the active tab ───────────────────────────────────────
+  const filteredWorks = useMemo(() => {
+    return works.filter(w => getWorkBucket(w) === activeTab);
+  }, [works, activeTab]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredWorks.length / ITEMS_PER_PAGE));
+
+  // Keep currentPage in range whenever the filtered list shrinks/grows
+  // (e.g. after a progress update moves a work to another tab).
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
+
+  const paginatedWorks = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredWorks.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredWorks, currentPage]);
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    setCurrentPage(1);
+  };
+
+  const getPageNumbers = (): (number | 'ellipsis')[] => {
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    const pages: (number | 'ellipsis')[] = [1];
+    if (currentPage > 3) pages.push('ellipsis');
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+    for (let i = start; i <= end; i++) pages.push(i);
+    if (currentPage < totalPages - 2) pages.push('ellipsis');
+    pages.push(totalPages);
+    return pages;
+  };
 
   // ── Handle progress step click ────────────────────────────────────────────
   const handleProgressUpdate = (work: Work, newProgress: string) => {
@@ -497,26 +567,91 @@ export default function ActiveWorks() {
 
   return (
     <div className="space-y-6 p-6 w-full">
-      
-      {/* active work page heading */}
-      {/* <div>
-        <h1 className="text-3xl font-bold tracking-tight">Active Works</h1>
-        <p className="text-muted-foreground mt-2">
-          {works.length} assigned work{works.length !== 1 ? 's' : ''} — update progress as you go
-        </p>
-      </div> */}
 
-      <div className="grid gap-4 w-full">
-        {works.map(work => (
-          <WorkCard
-            key={work.id}
-            work={work}
-            onProgressUpdate={handleProgressUpdate}
-            onChatWithUser={handleChatWithUser}
-            getStatusColor={getStatusColor}
-          />
-        ))}
-      </div>
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
+        <TabsList>
+          {PROGRESS_STEPS.map(step => (
+            <TabsTrigger key={step.value} value={step.value} className="flex items-center gap-1.5">
+              <step.Icon className="h-3.5 w-3.5" />
+              {step.label}
+              <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs">
+                {tabCounts[step.value] ?? 0}
+              </Badge>
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
+
+      {filteredWorks.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">
+            No {PROGRESS_STEPS.find(s => s.value === activeTab)?.label.toLowerCase()} works right now.
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="grid gap-4 w-full">
+            {paginatedWorks.map(work => (
+              <WorkCard
+                key={work.id}
+                work={work}
+                onProgressUpdate={handleProgressUpdate}
+                onChatWithUser={handleChatWithUser}
+                getStatusColor={getStatusColor}
+              />
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (currentPage > 1) setCurrentPage(currentPage - 1);
+                    }}
+                    className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
+                  />
+                </PaginationItem>
+
+                {getPageNumbers().map((page, idx) =>
+                  page === 'ellipsis' ? (
+                    <PaginationItem key={`ellipsis-${idx}`}>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  ) : (
+                    <PaginationItem key={page}>
+                      <PaginationLink
+                        href="#"
+                        isActive={page === currentPage}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setCurrentPage(page);
+                        }}
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  )
+                )}
+
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+                    }}
+                    className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
+        </>
+      )}
 
       {/* Progress confirmation dialog */}
       {progressDialog && (
