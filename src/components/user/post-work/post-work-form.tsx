@@ -36,42 +36,47 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import type { MediaItem } from "@/services/cloudinary-work-media-service"
 import { MediaUploader } from "./components/media-uploader"
 import { VoiceRecorder } from "./components/voice-recorder"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export function PostWorkForm({ className, ...props }: React.ComponentProps<"div">) {
+  
   const [form, setForm] = useState({
-    userId: "",
-    workTitle: "",
-    workCategory: "",
-    workType: "",
-    date: "",
-    startDate: "",
-    endDate: "",
-    time: "",
-    voiceFile: null as MediaItem | null,
-    images: [] as MediaItem[],
-    videos: [] as MediaItem[],
-    description: "",
-    duration: "",
-    budget: "",
+  userId: "",
+  workTitle: "",
+  workCategory: "",
+  workType: "",
+  date: "",
+  startDate: "",
+  endDate: "",
+  time: "",
+  voiceFile: null as MediaItem | null,
+  images: [] as MediaItem[],
+  videos: [] as MediaItem[],
+  description: "",
 
-    location: "", 
+  duration: "",
+  durationUnit: "",
 
-    latitude: "", 
-    longitude: "", 
+  budget: "",
 
-    currentLocation: "",
-    manualAddress: "",
-    landmark: "",
-    contactNumber: "",
-    petrolAllowance: "",
-    extraRequirements: "",
-    anythingElse: "",
-    termsAccepted: false,
-  })
+  location: "",
+  latitude: "",
+  longitude: "",
+
+  currentLocation: "",
+  manualAddress: "",
+  landmark: "",
+  contactNumber: "",
+  petrolAllowance: "",
+  extraRequirements: "",
+  anythingElse: "",
+  termsAccepted: false,
+})
 
   const [isLocationDialogOpen, setIsLocationDialogOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  // const [durationUnit, setDurationUnit] = useState<"minutes" | "hours">("hours")
 
   const navigate = useNavigate()
 
@@ -160,18 +165,21 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
 
     // STEP 3
     if (step === 3) {
-      if (form.duration.trim()) {
-        if (!/^\d+(\.\d+)?$/.test(form.duration.trim())) {
-          newErrors.duration = "Duration must contain numbers only"
-        }
+      // Duration & Timing - required, numbers only
+      if (!form.durationUnit) {
+        newErrors.duration = "Please select a duration unit"
+      } else if (!form.duration) {
+        newErrors.duration = "Please select the work duration"
       }
 
-      if (form.budget.trim()) {
-        if (!/^\d+(\.\d+)?$/.test(form.budget.trim())) {
-          newErrors.budget = "Budget must contain numbers only"
-        }
+      // Budget - required, numbers only
+      if (!form.budget.trim()) {
+        newErrors.budget = "Budget is required"
+      } else if (!/^\d+(\.\d+)?$/.test(form.budget.trim())) {
+        newErrors.budget = "Budget must contain numbers only"
       }
 
+      // Travel allowance - optional, but numbers only if provided
       if (form.petrolAllowance.trim()) {
         if (!/^\d+(\.\d+)?$/.test(form.petrolAllowance.trim())) {
           newErrors.petrolAllowance =
@@ -289,7 +297,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <CardContent>
-      
+
         <TaskBookStepper
           initialStep={1}
           onSubmit={handleSubmit}
@@ -303,7 +311,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* ---------- LEFT SIDE ---------- */}
               <div className="flex flex-col gap-4">
-             
+
                 <Field>
                   <FieldLabel htmlFor="workTitle">
                     What is your work
@@ -318,13 +326,13 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                   />
 
                   {errors.workTitle && (
-                    <p className="text-sm text-destructive">
+                    <p className="text-[0.7rem] font-sm text-destructive">
                       {errors.workTitle}
                     </p>
                   )}
                 </Field>
 
-              
+
                 <Field>
                   <FieldLabel htmlFor="workCategory">
                     Work Category
@@ -341,7 +349,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                   />
 
                   {errors.workCategory && (
-                    <p className="text-sm text-destructive">
+                    <p className="text-[0.7rem] font-sm text-destructive">
                       {errors.workCategory}
                     </p>
                   )}
@@ -393,7 +401,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                     </ToggleGroupItem>
                   </ToggleGroup>
                   {errors.workType && (
-                    <p className="text-sm text-destructive">
+                    <p className="text-[0.7rem] font-sm text-destructive">
                       {errors.workType}
                     </p>
                   )}
@@ -434,7 +442,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                               date: format(date, "yyyy-MM-dd"),
                             }))
                           }}
-                          
+
                           disabled={(date) => {
                             const today = new Date()
                             today.setHours(0, 0, 0, 0)
@@ -455,7 +463,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                       </PopoverContent>
                     </Popover>
                     {errors.date && (
-                      <p className="text-sm text-destructive">
+                      <p className="text-[0.7rem] font-sm text-destructive">
                         {errors.date}
                       </p>
                     )}
@@ -513,7 +521,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                         </PopoverContent>
                       </Popover>
                       {errors.startDate && (
-                        <p className="text-sm text-destructive">
+                        <p className="text-[0.7rem] font-sm text-destructive">
                           {errors.startDate}
                         </p>
                       )}
@@ -573,7 +581,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                         </PopoverContent>
                       </Popover>
                       {errors.endDate && (
-                        <p className="text-sm text-destructive">
+                        <p className="text-[0.7rem] font-sm text-destructive">
                           {errors.endDate}
                         </p>
                       )}
@@ -623,7 +631,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
               {/* ---------- LEFT SIDE ---------- */}
               <div className="flex flex-col gap-4">
 
-            
+
                 <Field>
                   <FieldLabel htmlFor="description">
                     Tell about your work
@@ -665,7 +673,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
               {/* ---------- RIGHT SIDE ---------- */}
               <div className="flex flex-col gap-4">
                 <Field>
-                  <FieldLabel>Images (up to 3, optional)</FieldLabel>
+                  <FieldLabel>Add Images (optional)</FieldLabel>
                   <MediaUploader
                     type="image"
                     max={3}
@@ -675,7 +683,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                 </Field>
 
                 <Field>
-                  <FieldLabel>Videos (up to 3, optional)</FieldLabel>
+                  <FieldLabel>Add Video Detail About your work (optional)</FieldLabel>
                   <MediaUploader
                     type="video"
                     max={3}
@@ -691,22 +699,69 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
 
           <Step>
             <FieldGroup>
-            
+
               <Field>
-                <FieldLabel htmlFor="duration">
+                <FieldLabel>
                   Duration & Timing
                 </FieldLabel>
 
-                <Input
-                  id="duration"
-                  name="duration"
-                  value={form.duration}
-                  onChange={handleChange}
-                  placeholder="E.g., 2"
-                />
+                <div className="grid grid-cols-2 gap-3">
+                  <Select
+                    value={form.durationUnit}
+                    onValueChange={(value) => {
+                      setForm((prev) => ({
+                        ...prev,
+                        durationUnit: value,
+                        duration: "",
+                      }))
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Unit" />
+                    </SelectTrigger>
+
+                    <SelectContent>
+                      <SelectItem value="minutes">Minutes</SelectItem>
+                      <SelectItem value="hours">Hours</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select
+                    value={form.duration}
+                    onValueChange={(value) => {
+                      setForm((prev) => ({
+                        ...prev,
+                        duration: value,
+                      }))
+                    }}
+                    disabled={!form.durationUnit}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Duration" />
+                    </SelectTrigger>
+
+                    <SelectContent>
+                      {form.durationUnit === "hours" &&
+                        Array.from({ length: 24 }, (_, index) => index + 1).map(
+                          (hour) => (
+                            <SelectItem key={hour} value={String(hour)}>
+                              {hour} {hour === 1 ? "hour" : "hours"}
+                            </SelectItem>
+                          )
+                        )}
+
+                      {form.durationUnit === "minutes" &&
+                        [5, 10, 15, 20, 30, 45, 60].map((minute) => (
+                          <SelectItem key={minute} value={String(minute)}>
+                            {minute} minutes
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
                 {errors.duration && (
-                  <p className="text-sm text-destructive">
+                  <p className="text-[0.7rem] font-medium text-red-500">
                     {errors.duration}
                   </p>
                 )}
@@ -727,7 +782,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                 />
 
                 {errors.budget && (
-                  <p className="text-sm text-destructive">
+                  <p className="text-[0.7rem] font-sm text-destructive">
                     {errors.budget}
                   </p>
                 )}
@@ -735,7 +790,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
 
               <Field>
                 <FieldLabel htmlFor="petrolAllowance">
-                  Travel Allowance
+                  Travel Allowance if have (optional)
                 </FieldLabel>
 
                 <Input
@@ -748,7 +803,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                 />
 
                 {errors.petrolAllowance && (
-                  <p className="text-sm text-destructive">
+                  <p className="text-[0.7rem] font-sm text-destructive">
                     {errors.petrolAllowance}
                   </p>
                 )}
@@ -787,13 +842,13 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                     </DialogContent>
                   </Dialog>
                   {errors.location && (
-                    <p className="text-sm text-destructive">
+                    <p className="text-[0.7rem] font-sm text-destructive">
                       {errors.location}
                     </p>
                   )}
                 </Field>
 
-               
+
                 <Field>
                   <FieldLabel htmlFor="manualAddress">
                     Address details
@@ -808,7 +863,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                   />
 
                   {errors.manualAddress && (
-                    <p className="text-sm text-destructive">
+                    <p className="text-[0.7rem] font-sm text-destructive">
                       {errors.manualAddress}
                     </p>
                   )}
@@ -817,7 +872,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
 
               {/* ---------- RIGHT SIDE ---------- */}
               <div className="flex flex-col gap-4">
-               
+
                 <Field>
                   <FieldLabel htmlFor="landmark">
                     Landmark
@@ -832,13 +887,13 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                   />
 
                   {errors.landmark && (
-                    <p className="text-sm text-destructive">
+                    <p className="text-[0.7rem] font-sm text-destructive">
                       {errors.landmark}
                     </p>
                   )}
                 </Field>
 
-                
+
                 <Field>
                   <FieldLabel htmlFor="contactNumber">
                     Phone Number
@@ -859,7 +914,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                   />
 
                   {errors.contactNumber && (
-                    <p className="text-sm text-destructive">
+                    <p className="text-[0.7rem] font-sm text-destructive">
                       {errors.contactNumber}
                     </p>
                   )}
@@ -873,13 +928,13 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
           <Step>
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="extraRequirements">Extra Requirements</FieldLabel>
+                <FieldLabel htmlFor="extraRequirements">Extra Requirements (optional)</FieldLabel>
                 <Textarea
                   id="extraRequirements"
                   name="extraRequirements"
                   value={form.extraRequirements}
                   onChange={handleChange}
-                  placeholder="Tools, materials, or worker count etc."
+                  placeholder="Have any extra information or somethings to provide.."
                 />
               </Field>
 
@@ -894,7 +949,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                 />
               </Field>
 
-             
+
               <label className="flex items-start gap-2 mt-3">
                 <Checkbox
                   checked={form.termsAccepted}
@@ -910,7 +965,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                   <span>I agree to the terms and conditions</span>
 
                   {errors.termsAccepted && (
-                    <p className="text-sm text-destructive mt-1">
+                    <p className="text-[0.7rem] font-sm text-destructive">
                       {errors.termsAccepted}
                     </p>
                   )}
