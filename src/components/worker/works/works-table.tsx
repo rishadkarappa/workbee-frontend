@@ -962,11 +962,6 @@ const WorkDetailsModal = ({
               VOICE NOTE
            */}
 
-
-          {/* 
-              VOICE NOTE
-           */}
-
           {work.voiceFile?.url && (
             <div className="border-t border-border pt-4">
 
@@ -977,7 +972,7 @@ const WorkDetailsModal = ({
               <audio
                 controls
                 src={work.voiceFile.url}
-                className="w-full max-w-md"
+                className="w-full max-w-md dark:[color-scheme:dark]"
               />
 
             </div>

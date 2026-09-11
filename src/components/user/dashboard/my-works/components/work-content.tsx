@@ -569,13 +569,19 @@ function WorkCard({
                     )}
 
                 {/* Voice Note */}
+                
                 {work.voiceFile?.url && (
                     <div className="border-t border-border pt-4">
                         <Label className="text-sm font-medium mb-2 flex items-center gap-1.5">
                             <Mic className="h-4 w-4" />
                             Voice Note
                         </Label>
-                        <audio controls src={work.voiceFile.url} className="w-full max-w-sm" />
+
+                        <audio
+                            controls
+                            src={work.voiceFile.url}
+                            className="w-full max-w-sm dark:[color-scheme:dark]"
+                        />
                     </div>
                 )}
 

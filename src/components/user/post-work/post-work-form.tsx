@@ -530,7 +530,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
           <Step>
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="duration">Duration & Timing(how much times want to complate this word)</FieldLabel>
+                <FieldLabel htmlFor="duration">Duration & Timing(how much times want to complate this word as expected)</FieldLabel>
                 <Input
                   id="duration"
                   name="duration"
