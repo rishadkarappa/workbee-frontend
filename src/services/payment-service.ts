@@ -27,8 +27,16 @@ export const PaymentService = {
     return api.get(PAYMENT_ENDPOINTS.ADMIN.SUMMARY);
   },
 
-  getAdminPaymentsList: (page = 1, limit = 15) => {
-    return api.get(PAYMENT_ENDPOINTS.ADMIN.PAYMENTS, { params: { page, limit } });
+  // getAdminPaymentsList: (page = 1, limit = 15) => {
+  //   return api.get(PAYMENT_ENDPOINTS.ADMIN.PAYMENTS, { params: { page, limit } });
+  // },
+  
+  getAdminPaymentsList: (page = 1, limit = 15,
+    filters?: { status?: string; startDate?: string; endDate?: string; }
+  ) => {
+    return api.get(PAYMENT_ENDPOINTS.ADMIN.PAYMENTS, {
+      params: { page, limit, ...filters, },
+    });
   },
 
   getWorkerEarningsStats: () => {

@@ -1,4 +1,6 @@
-import { useEffect, useState, useCallback, Fragment } from "react";
+import { useEffect, useState, useCallback, useMemo, Fragment } from "react";
+import type { DateRange } from "react-day-picker";
+import { format } from "date-fns";
 import {
   IndianRupee,
   TrendingUp,
@@ -12,10 +14,14 @@ import {
   ChevronRight,
   BarChart3,
   Users,
+  CalendarIcon,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Table,
   TableHeader,
@@ -24,6 +30,7 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import { PaymentService } from "@/services/payment-service";
 import { getErrorMessage } from "@/utils/error-helper";
 
@@ -52,6 +59,9 @@ interface PaymentRecord {
   createdAt: string;
   updatedAt: string;
 }
+
+type StatusFilter = "all" | "pending" | "paid" | "worker_credited" | "refunded" | "failed";
+type DateFilterMode = "range" | "single";
 
 const formatAmount = (amount: number) =>
   new Intl.NumberFormat("en-IN", {
@@ -126,14 +136,9 @@ function StatusBadge({ status }: { status: string }) {
   }
 }
 
-// ── Lifecycle stage pill ──────────────────────────────────────────────────────
 function StagePill({ payment }: { payment: PaymentRecord }) {
   if (payment.status === "worker_credited") {
-    return (
-      <span className="text-xs text-green-600 dark:text-green-400 font-medium">
-        ✓ Fully settled
-      </span>
-    );
+    return <span className="text-xs text-green-600 dark:text-green-400 font-medium">✓ Fully settled</span>;
   }
   if (payment.status === "paid" && payment.payoutScheduledAt) {
     return (
@@ -144,11 +149,7 @@ function StagePill({ payment }: { payment: PaymentRecord }) {
     );
   }
   if (payment.status === "paid") {
-    return (
-      <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-        Work in progress
-      </span>
-    );
+    return <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">Work in progress</span>;
   }
   if (payment.status === "refunded") {
     return <span className="text-xs text-purple-600 dark:text-purple-400 font-medium">Refunded</span>;
@@ -161,71 +162,38 @@ interface StatCardProps {
   value: string;
   subtitle: string;
   icon: LucideIcon;
-  accent?: "gray" | "green" | "yellow" | "red";
 }
 
-function StatCard({
-  title,
-  value,
-  subtitle,
-  icon: Icon,
-}: StatCardProps) {
+function StatCard({ title, value, subtitle, icon: Icon }: StatCardProps) {
   return (
-    <Card
-      data-slot="card"
-      className="@container/card bg-gradient-to-t from-primary/5 to-card shadow-xs dark:bg-card"
-    >
+    <Card data-slot="card" className="@container/card bg-gradient-to-t from-primary/5 to-card shadow-xs dark:bg-card">
       <CardHeader>
         <CardDescription>{title}</CardDescription>
-
-        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-          {value}
-        </CardTitle>
-
+        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">{value}</CardTitle>
         <CardAction>
           <div className="rounded-md bg-muted p-2">
             <Icon className="size-4 text-muted-foreground" />
           </div>
         </CardAction>
       </CardHeader>
-
       <CardFooter className="flex-col items-start gap-1.5 text-sm">
-        <div className="text-muted-foreground">
-          {subtitle}
-        </div>
+        <div className="text-muted-foreground">{subtitle}</div>
       </CardFooter>
     </Card>
   );
 }
 
-// ── Payment lifecycle timeline ───────────────────────────────────────────────
 function PaymentTimeline({ payment }: { payment: PaymentRecord }) {
   const steps = [
-    {
-      label: "Payment initiated",
-      time: payment.createdAt,
-      done: true,
-    },
+    { label: "Payment initiated", time: payment.createdAt, done: true },
     {
       label: "Payment confirmed",
       time: payment.status !== "pending" ? payment.updatedAt : undefined,
       done: payment.status !== "pending" && payment.status !== "failed",
     },
-    {
-      label: "Work completed",
-      time: payment.workCompletedAt,
-      done: !!payment.workCompletedAt,
-    },
-    {
-      label: "Payout scheduled",
-      time: payment.payoutScheduledAt,
-      done: !!payment.payoutScheduledAt,
-    },
-    {
-      label: "Worker credited",
-      time: payment.payoutCompletedAt,
-      done: payment.status === "worker_credited",
-    },
+    { label: "Work completed", time: payment.workCompletedAt, done: !!payment.workCompletedAt },
+    { label: "Payout scheduled", time: payment.payoutScheduledAt, done: !!payment.payoutScheduledAt },
+    { label: "Worker credited", time: payment.payoutCompletedAt, done: payment.status === "worker_credited" },
   ];
 
   return (
@@ -233,38 +201,160 @@ function PaymentTimeline({ payment }: { payment: PaymentRecord }) {
       {steps.map((step, i) => (
         <div key={i} className="flex-1 flex flex-col items-center">
           <div className="flex items-center w-full">
-            {i > 0 && (
-              <div className={`flex-1 h-0.5 ${step.done ? "bg-foreground/80" : "bg-muted"}`} />
-            )}
+            {i > 0 && <div className={`flex-1 h-0.5 ${step.done ? "bg-foreground/80" : "bg-muted"}`} />}
             <div
-              className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${step.done
-                ? "bg-foreground text-background"
-                : "bg-muted text-muted-foreground"
+              className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${step.done ? "bg-foreground text-background" : "bg-muted text-muted-foreground"
                 }`}
             >
-              {step.done ? (
-                <CheckCircle2 className="w-3 h-3" />
-              ) : (
-                <div className="w-2 h-2 rounded-full bg-current" />
-              )}
+              {step.done ? <CheckCircle2 className="w-3 h-3" /> : <div className="w-2 h-2 rounded-full bg-current" />}
             </div>
             {i < steps.length - 1 && (
               <div className={`flex-1 h-0.5 ${steps[i + 1].done ? "bg-foreground/50" : "bg-muted"}`} />
             )}
           </div>
-          <p className="text-[10px] text-muted-foreground mt-1 text-center leading-tight px-1">
-            {step.label}
-          </p>
-          {step.time && (
-            <p className="text-[9px] text-muted-foreground text-center">
-              {formatDate(step.time)}
-            </p>
-          )}
+          <p className="text-[10px] text-muted-foreground mt-1 text-center leading-tight px-1">{step.label}</p>
+          {step.time && <p className="text-[9px] text-muted-foreground text-center">{formatDate(step.time)}</p>}
         </div>
       ))}
     </div>
   );
 }
+
+/* ---------------------------------------------------------------------- */
+/* Date filter bar — shared range/single-day popover                       */
+/* ---------------------------------------------------------------------- */
+
+function DateFilterBar({
+  mode,
+  onModeChange,
+  range,
+  onRangeChange,
+  single,
+  onSingleChange,
+  onClear,
+  hasActiveFilter,
+}: {
+  mode: DateFilterMode;
+  onModeChange: (m: DateFilterMode) => void;
+  range: DateRange | undefined;
+  onRangeChange: (r: DateRange | undefined) => void;
+  single: Date | undefined;
+  onSingleChange: (d: Date | undefined) => void;
+  onClear: () => void;
+  hasActiveFilter: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [draftRange, setDraftRange] = useState<DateRange | undefined>(range);
+
+  useEffect(() => {
+    setDraftRange(range);
+  }, [range, open]);
+
+  const label = useMemo(() => {
+    if (mode === "single") {
+      return single ? format(single, "d MMM yyyy") : "Pick a date";
+    }
+    if (range?.from && range?.to) {
+      return `${format(range.from, "d MMM yyyy")} – ${format(range.to, "d MMM yyyy")}`;
+    }
+    if (range?.from) return `${format(range.from, "d MMM yyyy")} – ...`;
+    return "Pick a date range";
+  }, [mode, range, single]);
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex rounded-full bg-muted p-0.5 text-xs font-medium">
+        <button
+          onClick={() => onModeChange("single")}
+          className={cn(
+            "px-3 py-1 rounded-full transition-colors",
+            mode === "single" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          Single Day
+        </button>
+        <button
+          onClick={() => onModeChange("range")}
+          className={cn(
+            "px-3 py-1 rounded-full transition-colors",
+            mode === "range" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          Date Range
+        </button>
+      </div>
+
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className={cn("justify-start text-left font-normal", !hasActiveFilter && "text-muted-foreground")}
+          >
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {label}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          {mode === "single" ? (
+            <Calendar
+              mode="single"
+              selected={single}
+              onSelect={(d) => {
+                onSingleChange(d);
+                setOpen(false);
+              }}
+              disabled={(d) => d > new Date()}
+            />
+          ) : (
+            <>
+              <Calendar
+                mode="range"
+                selected={draftRange}
+                onSelect={setDraftRange}
+                numberOfMonths={2}
+                disabled={(d) => d > new Date()}
+              />
+
+              <div className="flex justify-end gap-2 border-t p-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setDraftRange(undefined)}
+                >
+                  Reset
+                </Button>
+
+                <Button
+                  size="sm"
+                  disabled={!draftRange?.from || !draftRange?.to}
+                  onClick={() => {
+                    onRangeChange(draftRange);
+                    setOpen(false);
+                  }}
+                >
+                  Apply
+                </Button>
+              </div>
+            </>
+          )}
+        </PopoverContent>
+      </Popover>
+
+      {hasActiveFilter && (
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClear} title="Clear date filter">
+          <X className="h-4 w-4" />
+        </Button>
+      )}
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------------- */
+/* Main component                                                          */
+/* ---------------------------------------------------------------------- */
+
+const LIMIT = 15;
 
 export default function Payments() {
   const [summary, setSummary] = useState<AdminSummary | null>(null);
@@ -272,12 +362,19 @@ export default function Payments() {
   const [loading, setLoading] = useState(true);
   const [tableLoading, setTableLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-  const [statusFilter, setStatusFilter] = useState("all");
+
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [dateMode, setDateMode] = useState<DateFilterMode>("range");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [singleDate, setSingleDate] = useState<Date | undefined>(undefined);
+
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
-  const LIMIT = 15;
+
+  const hasActiveDateFilter = dateMode === "single" ? !!singleDate : !!(dateRange?.from && dateRange?.to);
 
   const fetchSummary = async () => {
     try {
@@ -288,20 +385,38 @@ export default function Payments() {
     }
   };
 
-  const fetchPayments = useCallback(async (p: number) => {
-    try {
-      setTableLoading(true);
-      const res = await PaymentService.getAdminPaymentsList(p, LIMIT);
-      const data = res.data.data;
-      setPayments(data.payments || []);
-      setTotal(data.total || 0);
-      setTotalPages(data.totalPages || 1);
-    } catch (err) {
-      console.error("Failed to load payments:", err);
-    } finally {
-      setTableLoading(false);
-    }
-  }, []);
+  // Filters are sent to the backend so pagination reflects the FILTERED result set,
+  // not just whatever 15 rows happen to be on the current raw page.
+  const fetchPayments = useCallback(
+    async (p: number) => {
+      try {
+        setTableLoading(true);
+
+        const filters: Record<string, string> = {};
+        if (statusFilter !== "all") filters.status = statusFilter;
+
+        if (dateMode === "single" && singleDate) {
+          filters.startDate = format(singleDate, "yyyy-MM-dd");
+          filters.endDate = format(singleDate, "yyyy-MM-dd");
+        } else if (dateMode === "range" && dateRange?.from && dateRange?.to) {
+          filters.startDate = format(dateRange.from, "yyyy-MM-dd");
+          filters.endDate = format(dateRange.to, "yyyy-MM-dd");
+        }
+
+        const res = await PaymentService.getAdminPaymentsList(p, LIMIT, filters);
+
+        const data = res.data.data;
+        setPayments(data.payments || []);
+        setTotal(data.total || 0);
+        setTotalPages(data.totalPages || 1);
+      } catch (err) {
+        console.error("Failed to load payments:", err);
+      } finally {
+        setTableLoading(false);
+      }
+    },
+    [statusFilter, dateMode, dateRange, singleDate]
+  );
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
@@ -309,33 +424,32 @@ export default function Payments() {
     setLoading(false);
   }, [fetchPayments]);
 
+  // Initial load
   useEffect(() => {
     fetchAll();
-  }, [fetchAll]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
+  // Any filter change → reset to page 1 and refetch
+  useEffect(() => {
+    setPage(1);
+    fetchPayments(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter, dateMode, dateRange, singleDate]);
+
+  // Page change (not caused by a filter change) → refetch that page
   useEffect(() => {
     fetchPayments(page);
-  }, [page, fetchPayments]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page]);
 
-  // Client-side status filter
-  const filtered =
-    statusFilter === "all"
-      ? payments
-      : payments.filter((p) => p.status === statusFilter);
-
-  // Counts for filter pills
-  const counts = {
-    all: payments.length,
-    pending: payments.filter(p => p.status === "pending").length,
-    paid: payments.filter(p => p.status === "paid").length,
-    worker_credited: payments.filter(p => p.status === "worker_credited").length,
-    refunded: payments.filter(p => p.status === "refunded").length,
-    failed: payments.filter(p => p.status === "failed").length,
+  const clearDateFilter = () => {
+    setDateRange(undefined);
+    setSingleDate(undefined);
   };
 
-  // Derived stats
-  const settledCount = payments.filter(p => p.status === "worker_credited").length;
-  const pendingPayoutCount = payments.filter(p => p.status === "paid").length;
+  const settledCount = payments.filter((p) => p.status === "worker_credited").length;
+  const pendingPayoutCount = payments.filter((p) => p.status === "paid").length;
 
   if (loading) {
     return (
@@ -350,7 +464,9 @@ export default function Payments() {
       <div className="p-6 text-center space-y-3">
         <AlertCircle className="w-10 h-10 text-red-400 dark:text-red-500 mx-auto" />
         <p className="text-red-500 dark:text-red-400">{error}</p>
-        <Button variant="outline" onClick={fetchAll}>Try Again</Button>
+        <Button variant="outline" onClick={fetchAll}>
+          Try Again
+        </Button>
       </div>
     );
   }
@@ -366,40 +482,16 @@ export default function Payments() {
       </div>
 
       {/* Primary Summary Cards */}
-
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Gross Revenue"
-          value={formatAmount(summary?.totalRevenue ?? 0)}
-          subtitle="All completed payments"
-          icon={TrendingUp}
-          accent="gray"
-        />
-
-        <StatCard
-          title="Platform Earnings"
-          value={formatAmount(summary?.totalPlatformFees ?? 0)}
-          subtitle="1% fee on each job"
-          icon={Banknote}
-          accent="green"
-        />
-
+        <StatCard title="Gross Revenue" value={formatAmount(summary?.totalRevenue ?? 0)} subtitle="All completed payments" icon={TrendingUp} />
+        <StatCard title="Platform Earnings" value={formatAmount(summary?.totalPlatformFees ?? 0)} subtitle="1% fee on each job" icon={Banknote} />
         <StatCard
           title="Pending Payouts"
           value={formatAmount(summary?.pendingPayouts ?? 0)}
-          subtitle={`${pendingPayoutCount} worker payment${pendingPayoutCount !== 1 ? "s" : ""
-            } queued`}
+          subtitle={`${pendingPayoutCount} worker payment${pendingPayoutCount !== 1 ? "s" : ""} on this page`}
           icon={Clock}
-          accent="yellow"
         />
-
-        <StatCard
-          title="Total Refunded"
-          value={formatAmount(summary?.refundedAmount ?? 0)}
-          subtitle="Dispute & cancellation refunds"
-          icon={RefreshCw}
-          accent="red"
-        />
+        <StatCard title="Total Refunded" value={formatAmount(summary?.refundedAmount ?? 0)} subtitle="Dispute & cancellation refunds" icon={RefreshCw} />
       </div>
 
       {/* Secondary stats row */}
@@ -410,7 +502,7 @@ export default function Payments() {
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Fully Settled</p>
                 <p className="text-xl font-bold text-foreground">{settledCount}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Worker credited & closed</p>
+                <p className="text-xs text-muted-foreground mt-0.5">On this page</p>
               </div>
               <div className="w-10 h-10 bg-green-50 dark:bg-green-950 rounded-xl flex items-center justify-center">
                 <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
@@ -425,7 +517,7 @@ export default function Payments() {
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Active Jobs</p>
                 <p className="text-xl font-bold text-foreground">{pendingPayoutCount}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Payment made, work ongoing</p>
+                <p className="text-xs text-muted-foreground mt-0.5">On this page</p>
               </div>
               <div className="w-10 h-10 bg-blue-50 dark:bg-blue-950 rounded-xl flex items-center justify-center">
                 <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -440,7 +532,7 @@ export default function Payments() {
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Total Transactions</p>
                 <p className="text-xl font-bold text-foreground">{total}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Across all statuses</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Matching current filters</p>
               </div>
               <div className="w-10 h-10 bg-muted rounded-xl flex items-center justify-center">
                 <BarChart3 className="w-5 h-5 text-muted-foreground" />
@@ -457,10 +549,10 @@ export default function Payments() {
             <div>
               <CardTitle className="text-base font-semibold">All Transactions</CardTitle>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {total} total · click any row for full timeline
+                {total} matching · click any row for full timeline
               </p>
             </div>
-            {/* Status filter pills */}
+
             <div className="flex items-center gap-1.5 flex-wrap">
               {(["all", "pending", "paid", "worker_credited", "refunded", "failed"] as const).map((s) => (
                 <Button
@@ -472,31 +564,43 @@ export default function Payments() {
                   className="h-7 rounded-full px-3 text-xs font-medium capitalize"
                 >
                   {s === "worker_credited" ? "settled" : s}
-                  {counts[s] > 0 && (
-                    <span
-                      className={
-                        statusFilter === s
-                          ? "ml-1.5 text-primary-foreground/70"
-                          : "ml-1.5 text-muted-foreground"
-                      }
-                    >
-                      {counts[s]}
-                    </span>
-                  )}
                 </Button>
               ))}
             </div>
           </div>
+
+          {/* Date filter row */}
+          <div className="pt-3">
+            <DateFilterBar
+              mode={dateMode}
+              onModeChange={(m) => {
+                setDateMode(m);
+                if (m === "single") setDateRange(undefined);
+                else setSingleDate(undefined);
+              }}
+              range={dateRange}
+              onRangeChange={setDateRange}
+              single={singleDate}
+              onSingleChange={setSingleDate}
+              onClear={clearDateFilter}
+              hasActiveFilter={hasActiveDateFilter}
+            />
+          </div>
         </CardHeader>
+
         <CardContent className="p-0">
           {tableLoading ? (
             <div className="flex items-center justify-center py-12">
               <div className="w-6 h-6 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
             </div>
-          ) : filtered.length === 0 ? (
+          ) : payments.length === 0 ? (
             <div className="text-center py-12">
               <IndianRupee className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-              <p className="text-muted-foreground text-sm">No payments found.</p>
+              <p className="text-muted-foreground text-sm">
+                {statusFilter === "all" && !hasActiveDateFilter
+                  ? "No payments found."
+                  : "No payments match the selected filters."}
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -513,13 +617,11 @@ export default function Payments() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.map((payment) => (
+                  {payments.map((payment) => (
                     <Fragment key={payment.id}>
                       <TableRow
                         className={`cursor-pointer ${expandedRow === payment.id ? "bg-muted/40" : ""}`}
-                        onClick={() =>
-                          setExpandedRow(expandedRow === payment.id ? null : payment.id)
-                        }
+                        onClick={() => setExpandedRow(expandedRow === payment.id ? null : payment.id)}
                       >
                         <TableCell>
                           <p className="font-medium text-foreground truncate max-w-[160px]">
@@ -549,110 +651,76 @@ export default function Payments() {
                         </TableCell>
                       </TableRow>
 
-                      {/* ── Expanded detail row ── */}
                       {expandedRow === payment.id && (
                         <TableRow className="bg-muted/20 hover:bg-muted/20">
                           <TableCell colSpan={7} className="px-4 py-5">
-                            {/* Timeline */}
                             <PaymentTimeline payment={payment} />
 
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs mt-5 pt-4 border-t">
                               <div>
-                                <p className="font-medium text-muted-foreground uppercase tracking-wide mb-1">
-                                  Payment started
-                                </p>
+                                <p className="font-medium text-muted-foreground uppercase tracking-wide mb-1">Payment started</p>
                                 <p className="text-foreground">{formatDateTime(payment.createdAt)}</p>
                               </div>
                               <div>
-                                <p className="font-medium text-muted-foreground uppercase tracking-wide mb-1">
-                                  Work completed
-                                </p>
+                                <p className="font-medium text-muted-foreground uppercase tracking-wide mb-1">Work completed</p>
                                 <p className="text-foreground">{formatDateTime(payment.workCompletedAt)}</p>
                               </div>
                               <div>
-                                <p className="font-medium text-muted-foreground uppercase tracking-wide mb-1">
-                                  Payout queued
-                                </p>
+                                <p className="font-medium text-muted-foreground uppercase tracking-wide mb-1">Payout queued</p>
                                 <p className="text-foreground">{formatDateTime(payment.payoutScheduledAt)}</p>
                               </div>
                               <div>
-                                <p className="font-medium text-muted-foreground uppercase tracking-wide mb-1">
-                                  Worker credited
-                                </p>
+                                <p className="font-medium text-muted-foreground uppercase tracking-wide mb-1">Worker credited</p>
                                 <p className="text-foreground">
-                                  {payment.payoutCompletedAt
-                                    ? formatDateTime(payment.payoutCompletedAt)
-                                    : payment.status === "paid"
-                                      ? <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1"><Clock className="w-3 h-3 inline" /> Within 1 hour of completion</span>
-                                      : "—"
-                                  }
+                                  {payment.payoutCompletedAt ? (
+                                    formatDateTime(payment.payoutCompletedAt)
+                                  ) : payment.status === "paid" ? (
+                                    <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                                      <Clock className="w-3 h-3 inline" /> Within 1 hour of completion
+                                    </span>
+                                  ) : (
+                                    "—"
+                                  )}
                                 </p>
                               </div>
 
-                              {/* IDs */}
                               {payment.razorpayOrderId && (
                                 <div className="col-span-2">
-                                  <p className="font-medium text-muted-foreground uppercase tracking-wide mb-1">
-                                    Razorpay Order ID
-                                  </p>
-                                  <p className="text-foreground font-mono text-xs break-all">
-                                    {payment.razorpayOrderId}
-                                  </p>
+                                  <p className="font-medium text-muted-foreground uppercase tracking-wide mb-1">Razorpay Order ID</p>
+                                  <p className="text-foreground font-mono text-xs break-all">{payment.razorpayOrderId}</p>
                                 </div>
                               )}
                               {payment.razorpayPaymentId && (
                                 <div className="col-span-2">
-                                  <p className="font-medium text-muted-foreground uppercase tracking-wide mb-1">
-                                    Razorpay Payment ID
-                                  </p>
-                                  <p className="text-foreground font-mono text-xs break-all">
-                                    {payment.razorpayPaymentId}
-                                  </p>
+                                  <p className="font-medium text-muted-foreground uppercase tracking-wide mb-1">Razorpay Payment ID</p>
+                                  <p className="text-foreground font-mono text-xs break-all">{payment.razorpayPaymentId}</p>
                                 </div>
                               )}
                               <div>
-                                <p className="font-medium text-muted-foreground uppercase tracking-wide mb-1">
-                                  User ID
-                                </p>
+                                <p className="font-medium text-muted-foreground uppercase tracking-wide mb-1">User ID</p>
                                 <p className="text-foreground font-mono truncate">{payment.userId}</p>
                               </div>
                               <div>
-                                <p className="font-medium text-muted-foreground uppercase tracking-wide mb-1">
-                                  Worker ID
-                                </p>
+                                <p className="font-medium text-muted-foreground uppercase tracking-wide mb-1">Worker ID</p>
                                 <p className="text-foreground font-mono truncate">{payment.workerId}</p>
                               </div>
 
-                              {/* Fee breakdown */}
                               <div className="col-span-2 sm:col-span-4">
-                                <p className="font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                                  Fee Breakdown
-                                </p>
-
+                                <p className="font-medium text-muted-foreground uppercase tracking-wide mb-2">Fee Breakdown</p>
                                 <div className="flex items-center gap-3 flex-wrap">
                                   <div className="flex items-center gap-2 bg-background border rounded-lg px-3 py-2">
                                     <span className="text-muted-foreground">Client paid</span>
-                                    <span className="font-semibold text-foreground">
-                                      {formatAmount(payment.amount)}
-                                    </span>
+                                    <span className="font-semibold text-foreground">{formatAmount(payment.amount)}</span>
                                   </div>
-
                                   <span className="text-muted-foreground">→</span>
-
                                   <div className="flex items-center gap-2 bg-muted border rounded-lg px-3 py-2">
                                     <span className="text-foreground/80">Platform earns</span>
-                                    <span className="font-semibold text-foreground">
-                                      {formatAmount(payment.platformFee)}
-                                    </span>
+                                    <span className="font-semibold text-foreground">{formatAmount(payment.platformFee)}</span>
                                   </div>
-
                                   <span className="text-muted-foreground">+</span>
-
                                   <div className="flex items-center gap-2 bg-muted border rounded-lg px-3 py-2">
                                     <span className="text-foreground/80">Worker receives</span>
-                                    <span className="font-semibold text-foreground">
-                                      {formatAmount(payment.workerPayout)}
-                                    </span>
+                                    <span className="font-semibold text-foreground">{formatAmount(payment.workerPayout)}</span>
                                   </div>
                                 </div>
                               </div>
@@ -670,9 +738,7 @@ export default function Payments() {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-3 border-t">
-              <p className="text-xs text-muted-foreground">
-                Page {page} of {totalPages} · {total} total
-              </p>
+
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
@@ -683,6 +749,11 @@ export default function Payments() {
                   <ChevronLeft className="w-4 h-4" />
                   Prev
                 </Button>
+                
+                <p className="text-xs text-muted-foreground">
+                  Page {page} of {totalPages} · {total} total
+                </p>
+
                 <Button
                   variant="outline"
                   size="sm"
@@ -701,9 +772,7 @@ export default function Payments() {
       {/* How it works */}
       <Card className="border border-dashed bg-muted/30">
         <CardContent className="p-4">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-            How WorkBee payments work
-          </p>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">How WorkBee payments work</p>
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs text-muted-foreground">
             <div className="flex items-start gap-2">
               <span className="w-5 h-5 rounded-full bg-foreground text-background flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">1</span>
