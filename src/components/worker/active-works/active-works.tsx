@@ -37,7 +37,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { getErrorMessage } from "@/utils/error-helper";
-import type { Chat } from "./messages/types/messages.types";
+import type { Chat } from "../messages/types/messages.types";
 
 interface Work {
   id: string;

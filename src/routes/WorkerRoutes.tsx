@@ -11,7 +11,7 @@ import WorkerLogin from "@/pages/worker/WorkerLogin";
 import Works from "@/pages/worker/Works";
 import ClientMessages from "@/components/worker/messages/messages";
 import ActiveWorks from "@/components/worker/active-works";
-import WorkerWallet from "@/components/worker/wallet";
+import WorkerWallet from "@/components/worker/wallet/wallet";
 import WorkerAccountSettings from "@/components/worker/profile/account-settings";
 import WorkerDisputes from "@/components/worker/disputes/page";
 
