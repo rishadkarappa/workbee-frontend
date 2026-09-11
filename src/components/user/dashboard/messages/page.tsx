@@ -61,6 +61,21 @@ interface Work {
   workerId?: string;
 }
 
+// A Razorpay order we've already created. Kept around so a retry re-opens
+// the SAME order instead of calling createOrder again (which would create
+// a duplicate pending Payment row for the same work).
+interface PendingOrder {
+  kind: 'bid' | 'confirm';
+  workId: string;
+  workerId: string;
+  workTitle: string;
+  amount: number;
+  orderId: string;
+  amountPaise: number;
+  currency: string;
+  keyId: string;
+}
+
 const loadRazorpayScript = (): Promise<boolean> => {
   return new Promise((resolve) => {
     if (window.Razorpay) {
@@ -96,6 +111,11 @@ export default function ClientMessages() {
 
   const [respondedConfirms, setRespondedConfirms] = useState<Set<string>>(new Set());
 
+  // Payment error + retry, kept fully separate from sendError (message-send failures)
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [retryPayment, setRetryPayment] = useState<(() => void) | null>(null);
+  const pendingOrderRef = useRef<PendingOrder | null>(null);
+
   //review states
   const [reviewModalData, setReviewModalData] = useState<{
     workId: string; workerId: string; workerName: string; workTitle: string;
@@ -115,27 +135,17 @@ export default function ClientMessages() {
   const selectedChatRef = useRef<Chat | null>(null);
   const isInitialLoadRef = useRef(false);
 
-  const processBidPayment = async (workId: string, workerId: string, title: string, amount: number,
-    onSuccess: () => Promise<void>
-  ) => {
-    const loaded = await loadRazorpayScript();
-    if (!loaded) {
-      setSendError('Failed to load payment. Please check your internet connection.');
-      return;
-    }
-
-    const orderRes = await PaymentService.createOrder({ workId, workerId, workTitle: title, amount });
-
-    const { orderId, amount: amountPaise, currency, keyId } = orderRes.data.data;
-
-    await new Promise<void>((resolve, reject) => {
+  // Opens Razorpay checkout for an already-created order, verifies on success,
+  // and reports failures back to the backend so they show up in the wallet.
+  const openCheckoutAndVerify = (pending: PendingOrder, onSuccess: () => Promise<void>): Promise<void> => {
+    return new Promise<void>((resolve, reject) => {
       const options: RazorpayOptions = {
-        key: keyId,
-        amount: amountPaise,
-        currency,
+        key: pending.keyId,
+        amount: pending.amountPaise,
+        currency: pending.currency,
         name: 'WorkBee',
-        description: title,
-        order_id: orderId,
+        description: pending.workTitle,
+        order_id: pending.orderId,
         prefill: {},
         theme: { color: '#000000' },
         handler: async (response) => {
@@ -148,10 +158,22 @@ export default function ClientMessages() {
             await onSuccess();
             resolve();
           } catch (err) {
+            PaymentService.notifyPaymentFailed({
+              razorpayOrderId: pending.orderId,
+              reason: 'verification_failed',
+            }).catch(() => { /* best-effort */ });
             reject(err);
           }
         },
-        modal: { ondismiss: () => reject(new Error('Payment cancelled')) },
+        modal: {
+          ondismiss: () => {
+            PaymentService.notifyPaymentFailed({
+              razorpayOrderId: pending.orderId,
+              reason: 'cancelled',
+            }).catch(() => { /* best-effort */ });
+            reject(new Error('Payment cancelled'));
+          },
+        },
       };
 
       if (!window.Razorpay) {
@@ -161,6 +183,10 @@ export default function ClientMessages() {
 
       const rzp = new window.Razorpay(options);
       rzp.on('payment.failed', (response) => {
+        PaymentService.notifyPaymentFailed({
+          razorpayOrderId: pending.orderId,
+          reason: response.error?.description || 'payment_failed',
+        }).catch(() => { /* best-effort */ });
         reject(new Error(response.error?.description || 'Payment failed'));
       });
       rzp.open();
@@ -183,10 +209,42 @@ export default function ClientMessages() {
     }
   };
 
-  const handleBidPay = async (payload: BidPayload) => {
+  const runBidPayment = async (payload: BidPayload) => {
     if (!selectedChat) return;
+    setPaymentError(null);
     try {
-      await processBidPayment(payload.workId, payload.workerId, payload.workTitle, payload.amount, async () => {
+      let pending = pendingOrderRef.current;
+      if (!pending || pending.kind !== 'bid' || pending.workId !== payload.workId) {
+        const loaded = await loadRazorpayScript();
+        if (!loaded) {
+          setPaymentError('Failed to load payment. Please check your internet connection.');
+          setRetryPayment(() => () => runBidPayment(payload));
+          return;
+        }
+
+        const orderRes = await PaymentService.createOrder({
+          workId: payload.workId,
+          workerId: payload.workerId,
+          workTitle: payload.workTitle,
+          amount: payload.amount,
+        });
+        const { orderId, amount: amountPaise, currency, keyId } = orderRes.data.data;
+
+        pending = {
+          kind: 'bid',
+          workId: payload.workId,
+          workerId: payload.workerId,
+          workTitle: payload.workTitle,
+          amount: payload.amount,
+          orderId,
+          amountPaise,
+          currency,
+          keyId,
+        };
+        pendingOrderRef.current = pending;
+      }
+
+      await openCheckoutAndVerify(pending, async () => {
         await WorkService.updateWork(payload.workId, { status: 'assigned', workerId: payload.workerId });
         await BidService.notifyPaymentCompleted({
           chatId: selectedChat.id,
@@ -198,12 +256,23 @@ export default function ClientMessages() {
           workerName: payload.workerName,
           amount: payload.amount,
         });
-
       });
+
+      pendingOrderRef.current = null;
+      setPaymentError(null);
+      setRetryPayment(null);
     } catch (err) {
-      if (getErrorMessage(err) === 'Payment cancelled') return;
-      setSendError('Payment failed. Please try again.');
+      if (getErrorMessage(err) === 'Payment cancelled') {
+        setPaymentError('Payment was cancelled. You can retry when ready.');
+      } else {
+        setPaymentError('Payment failed. Please try again.');
+      }
+      setRetryPayment(() => () => runBidPayment(payload));
     }
+  };
+
+  const handleBidPay = (payload: BidPayload) => {
+    runBidPayment(payload);
   };
 
   const scrollToBottomInstant = useCallback(() => {
@@ -318,6 +387,10 @@ export default function ClientMessages() {
     ChatService.markChatAsRead(selectedChat.id).catch(err =>
       console.error('[Chat] markChatAsRead failed:', err)
     );
+    // Switching chats invalidates any pending payment retry for the previous chat's work.
+    pendingOrderRef.current = null;
+    setPaymentError(null);
+    setRetryPayment(null);
     return () => {
       socketService.leaveChat(selectedChat.id);
     };
@@ -366,7 +439,6 @@ export default function ClientMessages() {
             const workerId = chat.participants.workerId;
 
             try {
-              // Use your worker profile API
               const response = await ReviewService.getWorkerProfileStats(workerId);
 
               const image = response.data.data?.workerProfileImage;
@@ -461,6 +533,87 @@ export default function ClientMessages() {
     }
   };
 
+  const runConfirmPayment = async (workId: string, title: string, workerName: string) => {
+    if (!selectedChat) return;
+    const workerId = selectedChat.participants.workerId;
+    setPaymentError(null);
+
+    try {
+      let pending = pendingOrderRef.current;
+      if (!pending || pending.kind !== 'confirm' || pending.workId !== workId) {
+        const worksRes = await WorkService.getMyWorks();
+        const allWorks: Work[] = worksRes.data.data?.works || [];
+        const work = allWorks.find((w) => w.id === workId);
+        const amount = work?.budget ? Number(work.budget) : 0;
+
+        if (!amount || amount <= 0) {
+          await WorkService.updateWork(workId, { status: "assigned", workerId });
+          await socketService.confirmResponse({
+            chatId: selectedChat.id,
+            workId,
+            workTitle: title,
+            accepted: true,
+            userId: userId!,
+            workerName,
+            workerId,
+          });
+          setRespondedConfirms((prev) => new Set(prev).add(workId));
+          pendingOrderRef.current = null;
+          return;
+        }
+
+        const loaded = await loadRazorpayScript();
+        if (!loaded) {
+          setPaymentError("Failed to load payment. Please check your internet connection.");
+          setRetryPayment(() => () => runConfirmPayment(workId, title, workerName));
+          return;
+        }
+
+        const orderRes = await PaymentService.createOrder({ workId, workerId, workTitle: title, amount });
+        const { orderId, amount: amountPaise, currency, keyId } = orderRes.data.data;
+
+        pending = {
+          kind: 'confirm',
+          workId,
+          workerId,
+          workTitle: title,
+          amount,
+          orderId,
+          amountPaise,
+          currency,
+          keyId,
+        };
+        pendingOrderRef.current = pending;
+      }
+
+      await openCheckoutAndVerify(pending, async () => {
+        await WorkService.updateWork(workId, { status: "assigned", workerId });
+        await socketService.confirmResponse({
+          chatId: selectedChat.id,
+          workId,
+          workTitle: title,
+          accepted: true,
+          userId: userId!,
+          workerName,
+          workerId,
+        });
+        setRespondedConfirms((prev) => new Set(prev).add(workId));
+      });
+
+      pendingOrderRef.current = null;
+      setPaymentError(null);
+      setRetryPayment(null);
+    } catch (err) {
+      if (getErrorMessage(err) === "Payment cancelled") {
+        setPaymentError('Payment was cancelled. You can retry when ready.');
+      } else {
+        console.error("Razorpay payment error:", err);
+        setPaymentError("Payment failed. Please try again.");
+      }
+      setRetryPayment(() => () => runConfirmPayment(workId, title, workerName));
+    }
+  };
+
   const handleAcceptConfirm = async (workId: string) => {
     if (!selectedChat) return;
 
@@ -473,109 +626,8 @@ export default function ClientMessages() {
     const parsed = confirmMsg ? parseSystemMessage(confirmMsg.content) : null;
     const title = parsed?.type === "WORK_CONFIRM_REQUEST" ? parsed.workTitle : "this work";
     const workerName = parsed?.type === "WORK_CONFIRM_REQUEST" ? parsed.workerName : "Worker";
-    const workerId = selectedChat.participants.workerId;
 
-    try {
-      const worksRes = await WorkService.getMyWorks();
-      const allWorks: Work[] = worksRes.data.data?.works || [];
-      const work = allWorks.find((w) => w.id === workId);
-      const amount = work?.budget ? Number(work.budget) : 0;
-
-      if (!amount || amount <= 0) {
-        await WorkService.updateWork(workId, { status: "assigned", workerId });
-        await socketService.confirmResponse({
-          chatId: selectedChat.id,
-          workId,
-          workTitle: title,
-          accepted: true,
-          userId: userId!,
-          workerName,
-          workerId,
-        });
-        setRespondedConfirms((prev) => new Set(prev).add(workId));
-        return;
-      }
-
-      const loaded = await loadRazorpayScript();
-      if (!loaded) {
-        setSendError("Failed to load payment. Please check your internet connection.");
-        return;
-      }
-
-      const orderRes = await PaymentService.createOrder({
-        workId,
-        workerId,
-        workTitle: title,
-        amount,
-      });
-      const { orderId, amount: amountPaise, currency, keyId } = orderRes.data.data;
-
-      await new Promise<void>((resolve, reject) => {
-        const options: RazorpayOptions = {
-          key: keyId,
-          amount: amountPaise,
-          currency,
-          name: "WorkBee",
-          description: title,
-          order_id: orderId,
-          prefill: {},
-          theme: { color: "#000000" },
-
-          handler: async (response) => {
-            try {
-              await PaymentService.verifyPayment({
-                razorpayOrderId: response.razorpay_order_id,
-                razorpayPaymentId: response.razorpay_payment_id,
-                razorpaySignature: response.razorpay_signature,
-              });
-
-              await WorkService.updateWork(workId, { status: "assigned", workerId });
-
-              await socketService.confirmResponse({
-                chatId: selectedChat.id,
-                workId,
-                workTitle: title,
-                accepted: true,
-                userId: userId!,
-                workerName,
-                workerId,
-              });
-
-              setRespondedConfirms((prev) => new Set(prev).add(workId));
-              resolve();
-            } catch (err) {
-              reject(err);
-            }
-          },
-
-          modal: {
-            ondismiss: () => {
-              reject(new Error("Payment cancelled"));
-            },
-          },
-        };
-
-        if (!window.Razorpay) {
-          reject(new Error('Razorpay not loaded'));
-          return;
-        }
-
-        const rzp = new window.Razorpay(options);
-
-        rzp.on("payment.failed", (response) => {
-          reject(new Error(response.error?.description || "Payment failed"));
-        });
-
-        rzp.open();
-      });
-
-    } catch (err) {
-      if (getErrorMessage(err) === "Payment cancelled") {
-        return;
-      }
-      console.error("Razorpay payment error:", err);
-      setSendError("Payment failed. Please try again.");
-    }
+    await runConfirmPayment(workId, title, workerName);
   };
 
 
@@ -646,7 +698,7 @@ export default function ClientMessages() {
   return (
     <div className="flex w-full h-[calc(100vh-250px)] bg-background">
       {/* Sidebar */}
-  
+
       <div className="w-80 bg-card border-r border-border flex flex-col">
         {/* Search */}
         <div className="border-b border-border p-3">
@@ -851,8 +903,6 @@ export default function ClientMessages() {
                             onLoaded={scrollToBottomInstant}
                           />
                         ) : (
-                          // showing message in msg comp
-
                           <p>{msg.content}</p>
                         )}
                         <p className={`text-xs mt-1 ${isSent ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
@@ -875,6 +925,19 @@ export default function ClientMessages() {
 
             {/* Input */}
             <div className="bg-card border-t border-border p-4">
+              {paymentError && (
+                <div className="mb-2 flex items-center justify-between bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-lg px-3 py-2">
+                  <span>{paymentError}</span>
+                  {retryPayment && (
+                    <button
+                      onClick={() => { setPaymentError(null); retryPayment(); }}
+                      className="ml-3 text-destructive font-medium underline shrink-0"
+                    >
+                      Retry Payment
+                    </button>
+                  )}
+                </div>
+              )}
               {sendError && (
                 <div className="mb-2 flex items-center justify-between bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-lg px-3 py-2">
                   <span>{sendError}</span>
