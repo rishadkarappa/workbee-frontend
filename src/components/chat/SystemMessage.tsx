@@ -101,7 +101,7 @@ export function SystemMessage({
                   variant="outline"
                   className="flex-1 gap-1.5 text-xs font-semibold rounded-xl"
                 >
-                  <CheckCircle className="w-4 h-4" /> Accept
+                  <CheckCircle className="w-4 h-4" /> Accept & Pay
                 </Button>
                 <Button
                   onClick={() => onReject?.(payload.workId)}
@@ -113,7 +113,7 @@ export function SystemMessage({
             )
           ) : (
             <p className="text-xs text-center text-muted-foreground py-1">
-              {isSender ? 'Waiting for client response…' : 'Worker sent a confirmation request'}
+              {isSender ? 'Waiting for payment completion...' : 'Worker sent a confirmation request'}
             </p>
           )}
         </div>
