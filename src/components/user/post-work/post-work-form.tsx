@@ -39,39 +39,37 @@ import { VoiceRecorder } from "./components/voice-recorder"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export function PostWorkForm({ className, ...props }: React.ComponentProps<"div">) {
-  
+
   const [form, setForm] = useState({
-  userId: "",
-  workTitle: "",
-  workCategory: "",
-  workType: "",
-  date: "",
-  startDate: "",
-  endDate: "",
-  time: "",
-  voiceFile: null as MediaItem | null,
-  images: [] as MediaItem[],
-  videos: [] as MediaItem[],
-  description: "",
+    userId: "",
+    workTitle: "",
+    workCategory: "",
+    workType: "",
+    date: "",
+    startDate: "",
+    endDate: "",
+    time: "",
+    duration: "",
+    voiceFile: null as MediaItem | null,
+    images: [] as MediaItem[],
+    videos: [] as MediaItem[],
+    description: "",
 
-  duration: "",
-  durationUnit: "",
+    budget: "",
 
-  budget: "",
+    location: "",
+    latitude: "",
+    longitude: "",
 
-  location: "",
-  latitude: "",
-  longitude: "",
-
-  currentLocation: "",
-  manualAddress: "",
-  landmark: "",
-  contactNumber: "",
-  petrolAllowance: "",
-  extraRequirements: "",
-  anythingElse: "",
-  termsAccepted: false,
-})
+    currentLocation: "",
+    manualAddress: "",
+    landmark: "",
+    contactNumber: "",
+    petrolAllowance: "",
+    extraRequirements: "",
+    anythingElse: "",
+    termsAccepted: false,
+  })
 
   const [isLocationDialogOpen, setIsLocationDialogOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -121,6 +119,11 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
         if (!form.date) {
           newErrors.date = "Please select a work date"
         }
+
+        // Work duration only applies to one-day work
+        if (!form.duration) {
+          newErrors.duration = "Please select the work duration"
+        }
       }
 
       if (form.workType === "multipleDay") {
@@ -165,13 +168,6 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
 
     // STEP 3
     if (step === 3) {
-      // Duration & Timing - required, numbers only
-      if (!form.durationUnit) {
-        newErrors.duration = "Please select a duration unit"
-      } else if (!form.duration) {
-        newErrors.duration = "Please select the work duration"
-      }
-
       // Budget - required, numbers only
       if (!form.budget.trim()) {
         newErrors.budget = "Budget is required"
@@ -247,7 +243,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
         endDate: form.endDate || undefined,
         time: form.time,
         description: form.description,
-        duration: form.duration || undefined,
+        duration: form.workType === "oneDay" ? (form.duration || undefined) : undefined,
         budget: form.budget || undefined,
         latitude: Number(form.latitude),
         longitude: Number(form.longitude),
@@ -354,6 +350,49 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                     </p>
                   )}
                 </Field>
+
+                {/* work duration */}
+                {/* {form.workType === "oneDay" && (
+                  <Field>
+                    <FieldLabel>Work Duration</FieldLabel>
+
+                    <Select
+                      value={form.duration}
+                      onValueChange={(value) => {
+                        setForm((prev) => ({
+                          ...prev,
+                          duration: value,
+                        }))
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select work duration" />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        <SelectItem value="30m">
+                          30 minutes
+                        </SelectItem>
+
+                        <SelectItem value="45m">
+                          45 minutes
+                        </SelectItem>
+
+                        {Array.from({ length: 24 }, (_, index) => index + 1).map((hour) => (
+                          <SelectItem key={hour} value={`${hour}h`}>
+                            {hour} {hour === 1 ? "hour" : "hours"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    {errors.duration && (
+                      <p className="text-[0.7rem] font-medium text-red-500">
+                        {errors.duration}
+                      </p>
+                    )}
+                  </Field>
+                )} */}
               </div>
 
               {/* ---------- RIGHT SIDE ---------- */}
@@ -374,6 +413,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                         date: value === "oneDay" ? prev.date : "",
                         startDate: value === "multipleDay" ? prev.startDate : "",
                         endDate: value === "multipleDay" ? prev.endDate : "",
+                        duration: value === "oneDay" ? prev.duration : "",
                       }))
                     }}
                     className="w-full justify-start"
@@ -465,6 +505,50 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                     {errors.date && (
                       <p className="text-[0.7rem] font-sm text-destructive">
                         {errors.date}
+                      </p>
+                    )}
+                  </Field>
+
+                )}
+
+                {/* work duration */}
+                {form.workType === "oneDay" && (
+                  <Field>
+                    <FieldLabel>Work Duration</FieldLabel>
+
+                    <Select
+                      value={form.duration}
+                      onValueChange={(value) => {
+                        setForm((prev) => ({
+                          ...prev,
+                          duration: value,
+                        }))
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select work duration" />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        <SelectItem value="30m">
+                          Less than 30 minutes
+                        </SelectItem>
+
+                        <SelectItem value="45m">
+                          Less than 45 minutes
+                        </SelectItem>
+
+                        {Array.from({ length: 24 }, (_, index) => index + 1).map((hour) => (
+                          <SelectItem key={hour} value={`${hour}h`}>
+                            {hour} {hour === 1 ? "hour" : "hours"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    {errors.duration && (
+                      <p className="text-[0.7rem] font-medium text-red-500">
+                        {errors.duration}
                       </p>
                     )}
                   </Field>
@@ -701,75 +785,8 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
             <FieldGroup>
 
               <Field>
-                <FieldLabel>
-                  Duration & Timing
-                </FieldLabel>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <Select
-                    value={form.durationUnit}
-                    onValueChange={(value) => {
-                      setForm((prev) => ({
-                        ...prev,
-                        durationUnit: value,
-                        duration: "",
-                      }))
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Unit" />
-                    </SelectTrigger>
-
-                    <SelectContent>
-                      <SelectItem value="minutes">Minutes</SelectItem>
-                      <SelectItem value="hours">Hours</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <Select
-                    value={form.duration}
-                    onValueChange={(value) => {
-                      setForm((prev) => ({
-                        ...prev,
-                        duration: value,
-                      }))
-                    }}
-                    disabled={!form.durationUnit}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Duration" />
-                    </SelectTrigger>
-
-                    <SelectContent>
-                      {form.durationUnit === "hours" &&
-                        Array.from({ length: 24 }, (_, index) => index + 1).map(
-                          (hour) => (
-                            <SelectItem key={hour} value={String(hour)}>
-                              {hour} {hour === 1 ? "hour" : "hours"}
-                            </SelectItem>
-                          )
-                        )}
-
-                      {form.durationUnit === "minutes" &&
-                        [5, 10, 15, 20, 30, 45, 60].map((minute) => (
-                          <SelectItem key={minute} value={String(minute)}>
-                            {minute} minutes
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {errors.duration && (
-                  <p className="text-[0.7rem] font-medium text-red-500">
-                    {errors.duration}
-                  </p>
-                )}
-              </Field>
-
-              <Field>
                 <FieldLabel htmlFor="budget">
-                  Budget
+                  Budget ₹
                 </FieldLabel>
 
                 <Input
@@ -790,8 +807,10 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
 
               <Field>
                 <FieldLabel htmlFor="petrolAllowance">
-                  Travel Allowance if have (optional)
+                  Travel Allowance if have Per Km (optional)
+                  
                 </FieldLabel>
+                
 
                 <Input
                   id="petrolAllowance"
