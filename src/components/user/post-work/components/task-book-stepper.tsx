@@ -11,6 +11,7 @@ interface StepperProps extends HTMLAttributes<HTMLDivElement> {
   onStepChange?: (step: number) => void;
   onFinalStepCompleted?: () => void;
   onSubmit?: () => void | Promise<void>;
+  onValidateStep?: (step: number) => boolean | Promise<boolean>;
   isSubmitting?: boolean;
   stepCircleContainerClassName?: string;
   stepContainerClassName?: string;
@@ -34,6 +35,7 @@ export default function TaskBookStepper({
   onStepChange = () => { },
   onFinalStepCompleted = () => { },
   onSubmit,
+  onValidateStep,
   isSubmitting = false,
   stepCircleContainerClassName = '',
   stepContainerClassName = '',
@@ -70,12 +72,20 @@ export default function TaskBookStepper({
     }
   };
 
-  const handleNext = () => {
-    if (!isLastStep) {
-      setDirection(1);
-      updateStep(currentStep + 1);
+  const handleNext = async () => {
+    if (isLastStep) return
+
+    if (onValidateStep) {
+      const isValid = await onValidateStep(currentStep)
+
+      if (!isValid) {
+        return
+      }
     }
-  };
+
+    setDirection(1)
+    updateStep(currentStep + 1)
+  }
 
   const handleComplete = async () => {
     if (onSubmit) {
@@ -115,9 +125,17 @@ export default function TaskBookStepper({
                   renderStepIndicator({
                     step: stepNumber,
                     currentStep,
-                    onStepClick: clicked => {
-                      setDirection(clicked > currentStep ? 1 : -1);
-                      updateStep(clicked);
+                    onStepClick: async (clicked) => {
+                      if (clicked > currentStep && onValidateStep) {
+                        const isValid = await onValidateStep(currentStep)
+
+                        if (!isValid) {
+                          return
+                        }
+                      }
+
+                      setDirection(clicked > currentStep ? 1 : -1)
+                      updateStep(clicked)
                     }
                   })
                 ) : (
@@ -125,9 +143,17 @@ export default function TaskBookStepper({
                     step={stepNumber}
                     disableStepIndicators={disableStepIndicators}
                     currentStep={currentStep}
-                    onClickStep={clicked => {
-                      setDirection(clicked > currentStep ? 1 : -1);
-                      updateStep(clicked);
+                    onClickStep={async (clicked) => {
+                      if (clicked > currentStep && onValidateStep) {
+                        const isValid = await onValidateStep(currentStep)
+
+                        if (!isValid) {
+                          return
+                        }
+                      }
+
+                      setDirection(clicked > currentStep ? 1 : -1)
+                      updateStep(clicked)
                     }}
                   />
                 )}

@@ -54,10 +54,10 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
     duration: "",
     budget: "",
 
-    location: "", // Display address from map
+    location: "", 
 
-    latitude: "", // Hidden field
-    longitude: "", // Hidden field
+    latitude: "", 
+    longitude: "", 
 
     currentLocation: "",
     manualAddress: "",
@@ -71,6 +71,8 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
 
   const [isLocationDialogOpen, setIsLocationDialogOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -90,6 +92,129 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
     setForm(prev => ({ ...prev, [name]: value }))
   }
 
+  //validation
+  const validateStep = (step: number): boolean => {
+    const newErrors: Record<string, string> = {}
+
+    // STEP 1
+    if (step === 1) {
+      if (!form.workTitle.trim()) {
+        newErrors.workTitle = "Work title is required"
+      } else if (!/^.{3,}$/.test(form.workTitle.trim())) {
+        newErrors.workTitle = "Work title must contain at least 3 characters"
+      }
+
+      if (!form.workCategory) {
+        newErrors.workCategory = "Please select a work category"
+      }
+
+      if (!form.workType) {
+        newErrors.workType = "Please select a work duration type"
+      }
+
+      if (form.workType === "oneDay") {
+        if (!form.date) {
+          newErrors.date = "Please select a work date"
+        }
+      }
+
+      if (form.workType === "multipleDay") {
+        if (!form.startDate) {
+          newErrors.startDate = "Please select a start date"
+        }
+
+        if (!form.endDate) {
+          newErrors.endDate = "Please select an end date"
+        }
+
+        if (form.startDate && form.endDate) {
+          const startDate = parseLocalDate(form.startDate)
+          const endDate = parseLocalDate(form.endDate)
+
+          if (startDate && endDate && endDate <= startDate) {
+            newErrors.endDate = "End date must be after the start date"
+          }
+        }
+      }
+
+      if (!form.time) {
+        newErrors.time = "Please select a start time"
+      }
+    }
+
+    // STEP 2
+    if (step === 2) {
+      const description = form.description.trim()
+      const wordCount = description
+        .split(/\s+/)
+        .filter(Boolean)
+        .length
+
+      if (!description) {
+        newErrors.description = "Please describe your work"
+      } else if (description.length < 25 && wordCount < 5) {
+        newErrors.description =
+          "Description must contain at least 25 characters or 5 words"
+      }
+    }
+
+    // STEP 3
+    if (step === 3) {
+      if (form.duration.trim()) {
+        if (!/^\d+(\.\d+)?$/.test(form.duration.trim())) {
+          newErrors.duration = "Duration must contain numbers only"
+        }
+      }
+
+      if (form.budget.trim()) {
+        if (!/^\d+(\.\d+)?$/.test(form.budget.trim())) {
+          newErrors.budget = "Budget must contain numbers only"
+        }
+      }
+
+      if (form.petrolAllowance.trim()) {
+        if (!/^\d+(\.\d+)?$/.test(form.petrolAllowance.trim())) {
+          newErrors.petrolAllowance =
+            "Travel allowance must contain numbers only"
+        }
+      }
+    }
+
+    // STEP 4
+    if (step === 4) {
+      if (!form.latitude || !form.longitude) {
+        newErrors.location = "Please select a location from the map"
+      }
+
+      if (!form.manualAddress.trim()) {
+        newErrors.manualAddress = "Address details are required"
+      } else if (form.manualAddress.trim().length < 5) {
+        newErrors.manualAddress =
+          "Address details must contain at least 5 characters"
+      }
+
+      if (form.landmark.trim() && form.landmark.trim().length < 2) {
+        newErrors.landmark = "Landmark must contain at least 2 characters"
+      }
+
+      if (!form.contactNumber.trim()) {
+        newErrors.contactNumber = "Phone number is required"
+      }
+    }
+
+    // STEP 5
+    if (step === 5) {
+      if (!form.termsAccepted) {
+        newErrors.termsAccepted =
+          "You must agree to the terms and conditions"
+      }
+    }
+
+    setErrors(newErrors)
+
+    return Object.keys(newErrors).length === 0
+  }
+
   const handleSubmit = async () => {
     try {
       setIsLoading(true)
@@ -100,54 +225,32 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
         return
       }
 
-      if (!form.workTitle || !form.workCategory || !form.contactNumber) {
-        alert("Please fill required fields.")
+      if (!validateStep(5)) {
         return
       }
-
-      if (!form.workType) {
-        alert("Please select work duration type (One Day or Multiple Days)")
-        return
-      }
-
-      if (!form.latitude || !form.longitude) {
-        alert("Please select location from map")
-        return
-      }
-
 
       const workData = {
         userId: form.userId,
         workTitle: form.workTitle,
         workCategory: form.workCategory,
         workType: form.workType,
-
         date: form.date || undefined,
         startDate: form.startDate || undefined,
         endDate: form.endDate || undefined,
-
         time: form.time,
-
         description: form.description,
-
         duration: form.duration || undefined,
         budget: form.budget || undefined,
-
         latitude: Number(form.latitude),
         longitude: Number(form.longitude),
-
         currentLocation: form.currentLocation || undefined,
         manualAddress: form.manualAddress || undefined,
         landmark: form.landmark || undefined,
-
         contactNumber: form.contactNumber,
-
         petrolAllowance: form.petrolAllowance || undefined,
         extraRequirements: form.extraRequirements || undefined,
         anythingElse: form.anythingElse || undefined,
-
         termsAccepted: form.termsAccepted,
-
         images: form.images,
         videos: form.videos,
         voiceFile: form.voiceFile,
@@ -159,13 +262,15 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
 
       if (result.data.success) {
         toast.success("Task successfully submitted!", {
-          description: "We'll connect you with workers soon."
+          description: "We'll connect you with workers soon.",
         })
+
         navigate(AppRoutes.USER.DASHBOARD.MY_WORKS)
       }
     } catch (error) {
       console.error("Full error object:", error)
       console.error("Error response:", getErrorMessage(error))
+
       toast.error(`Error submitting task: ${getErrorMessage(error)}`)
     } finally {
       setIsLoading(false)
@@ -184,9 +289,11 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <CardContent>
+      
         <TaskBookStepper
           initialStep={1}
           onSubmit={handleSubmit}
+          onValidateStep={validateStep}
           isSubmitting={isLoading}
           backButtonText="Previous"
           nextButtonText="Next"
@@ -196,18 +303,28 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* ---------- LEFT SIDE ---------- */}
               <div className="flex flex-col gap-4">
+             
                 <Field>
-                  <FieldLabel htmlFor="workTitle">What is your work</FieldLabel>
+                  <FieldLabel htmlFor="workTitle">
+                    What is your work
+                  </FieldLabel>
+
                   <Input
                     id="workTitle"
                     name="workTitle"
                     value={form.workTitle}
                     onChange={handleChange}
                     placeholder="E.g., Fix kitchen sink"
-                    required
                   />
+
+                  {errors.workTitle && (
+                    <p className="text-sm text-destructive">
+                      {errors.workTitle}
+                    </p>
+                  )}
                 </Field>
 
+              
                 <Field>
                   <FieldLabel htmlFor="workCategory">
                     Work Category
@@ -222,6 +339,12 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                       }))
                     }
                   />
+
+                  {errors.workCategory && (
+                    <p className="text-sm text-destructive">
+                      {errors.workCategory}
+                    </p>
+                  )}
                 </Field>
               </div>
 
@@ -269,6 +392,11 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                       Multiple Day Work
                     </ToggleGroupItem>
                   </ToggleGroup>
+                  {errors.workType && (
+                    <p className="text-sm text-destructive">
+                      {errors.workType}
+                    </p>
+                  )}
                 </Field>
 
                 {form.workType === "oneDay" && (
@@ -306,15 +434,31 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                               date: format(date, "yyyy-MM-dd"),
                             }))
                           }}
+                          
                           disabled={(date) => {
                             const today = new Date()
                             today.setHours(0, 0, 0, 0)
 
-                            return date < today
+                            if (date < today) return true
+
+                            if (form.startDate) {
+                              const startDate = parseLocalDate(form.startDate)
+
+                              if (startDate) {
+                                return date <= startDate
+                              }
+                            }
+
+                            return false
                           }}
                         />
                       </PopoverContent>
                     </Popover>
+                    {errors.date && (
+                      <p className="text-sm text-destructive">
+                        {errors.date}
+                      </p>
+                    )}
                   </Field>
                 )}
 
@@ -368,6 +512,11 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                           />
                         </PopoverContent>
                       </Popover>
+                      {errors.startDate && (
+                        <p className="text-sm text-destructive">
+                          {errors.startDate}
+                        </p>
+                      )}
                     </Field>
 
 
@@ -414,7 +563,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                                 const startDate = parseLocalDate(form.startDate)
 
                                 if (startDate) {
-                                  return date < startDate
+                                  return date <= startDate
                                 }
                               }
 
@@ -423,6 +572,11 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                           />
                         </PopoverContent>
                       </Popover>
+                      {errors.endDate && (
+                        <p className="text-sm text-destructive">
+                          {errors.endDate}
+                        </p>
+                      )}
                     </Field>
                   </>
                 )}
@@ -469,6 +623,7 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
               {/* ---------- LEFT SIDE ---------- */}
               <div className="flex flex-col gap-4">
 
+            
                 <Field>
                   <FieldLabel htmlFor="description">
                     Tell about your work
@@ -481,10 +636,17 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                     onChange={handleChange}
                     placeholder="Explain what needs to be done..."
                     maxLength={500}
-                    required
                   />
 
-                  <div className="flex justify-end">
+                  <div className="flex justify-between">
+                    {errors.description ? (
+                      <span className="text-xs text-destructive">
+                        {errors.description}
+                      </span>
+                    ) : (
+                      <span />
+                    )}
+
                     <span className="text-xs text-muted-foreground">
                       {500 - form.description.length} characters remaining
                     </span>
@@ -529,19 +691,32 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
 
           <Step>
             <FieldGroup>
+            
               <Field>
-                <FieldLabel htmlFor="duration">Duration & Timing(how much times want to complate this word as expected)</FieldLabel>
+                <FieldLabel htmlFor="duration">
+                  Duration & Timing
+                </FieldLabel>
+
                 <Input
                   id="duration"
                   name="duration"
                   value={form.duration}
                   onChange={handleChange}
-                  placeholder="E.g., 2 hours / 9am to 11am"
+                  placeholder="E.g., 2"
                 />
+
+                {errors.duration && (
+                  <p className="text-sm text-destructive">
+                    {errors.duration}
+                  </p>
+                )}
               </Field>
 
               <Field>
-                <FieldLabel htmlFor="budget">Budget(how much pay for this work)</FieldLabel>
+                <FieldLabel htmlFor="budget">
+                  Budget
+                </FieldLabel>
+
                 <Input
                   id="budget"
                   name="budget"
@@ -550,10 +725,19 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                   onChange={handleChange}
                   placeholder="Enter estimated budget"
                 />
+
+                {errors.budget && (
+                  <p className="text-sm text-destructive">
+                    {errors.budget}
+                  </p>
+                )}
               </Field>
 
               <Field>
-                <FieldLabel htmlFor="petrolAllowance">Travel Allowance</FieldLabel>
+                <FieldLabel htmlFor="petrolAllowance">
+                  Travel Allowance
+                </FieldLabel>
+
                 <Input
                   id="petrolAllowance"
                   name="petrolAllowance"
@@ -562,6 +746,12 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                   onChange={handleChange}
                   placeholder="Optional extra for travel"
                 />
+
+                {errors.petrolAllowance && (
+                  <p className="text-sm text-destructive">
+                    {errors.petrolAllowance}
+                  </p>
+                )}
               </Field>
             </FieldGroup>
           </Step>
@@ -596,10 +786,19 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                       />
                     </DialogContent>
                   </Dialog>
+                  {errors.location && (
+                    <p className="text-sm text-destructive">
+                      {errors.location}
+                    </p>
+                  )}
                 </Field>
 
+               
                 <Field>
-                  <FieldLabel htmlFor="manualAddress">Address details</FieldLabel>
+                  <FieldLabel htmlFor="manualAddress">
+                    Address details
+                  </FieldLabel>
+
                   <Textarea
                     id="manualAddress"
                     name="manualAddress"
@@ -607,13 +806,23 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                     onChange={handleChange}
                     placeholder="Street, city, pincode"
                   />
+
+                  {errors.manualAddress && (
+                    <p className="text-sm text-destructive">
+                      {errors.manualAddress}
+                    </p>
+                  )}
                 </Field>
               </div>
 
               {/* ---------- RIGHT SIDE ---------- */}
               <div className="flex flex-col gap-4">
+               
                 <Field>
-                  <FieldLabel htmlFor="landmark">Landmark</FieldLabel>
+                  <FieldLabel htmlFor="landmark">
+                    Landmark
+                  </FieldLabel>
+
                   <Input
                     id="landmark"
                     name="landmark"
@@ -621,21 +830,39 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                     onChange={handleChange}
                     placeholder="Nearby landmark"
                   />
+
+                  {errors.landmark && (
+                    <p className="text-sm text-destructive">
+                      {errors.landmark}
+                    </p>
+                  )}
                 </Field>
 
+                
                 <Field>
-                  <FieldLabel htmlFor="contactNumber">Phone Number</FieldLabel>
+                  <FieldLabel htmlFor="contactNumber">
+                    Phone Number
+                  </FieldLabel>
+
                   <PhoneInput
                     id="contactNumber"
                     variant="lg"
                     defaultCountry="IN"
                     value={form.contactNumber}
                     onChange={(value) =>
-                      setForm((prev) => ({ ...prev, contactNumber: value, }))
+                      setForm((prev) => ({
+                        ...prev,
+                        contactNumber: value,
+                      }))
                     }
                     placeholder="Enter contact number"
-                    required
                   />
+
+                  {errors.contactNumber && (
+                    <p className="text-sm text-destructive">
+                      {errors.contactNumber}
+                    </p>
+                  )}
                 </Field>
 
               </div>
@@ -667,14 +894,27 @@ export function PostWorkForm({ className, ...props }: React.ComponentProps<"div"
                 />
               </Field>
 
-              <label className="flex items-center gap-2 mt-3">
+             
+              <label className="flex items-start gap-2 mt-3">
                 <Checkbox
                   checked={form.termsAccepted}
-                  onCheckedChange={() =>
-                    setForm({ ...form, termsAccepted: !form.termsAccepted })
+                  onCheckedChange={(checked) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      termsAccepted: checked === true,
+                    }))
                   }
                 />
-                <span>I agree to the terms and conditions</span>
+
+                <div>
+                  <span>I agree to the terms and conditions</span>
+
+                  {errors.termsAccepted && (
+                    <p className="text-sm text-destructive mt-1">
+                      {errors.termsAccepted}
+                    </p>
+                  )}
+                </div>
               </label>
             </FieldGroup>
           </Step>
