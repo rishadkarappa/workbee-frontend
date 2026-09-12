@@ -90,60 +90,94 @@ export function AddressStep({ value, onChange, errors, clearError }: AddressStep
   }, [value.pincode])
 
   return (
-    <form className="flex flex-col gap-4">
+      <form className="flex flex-col gap-3">
       <FieldGroup>
-        <Field>
-          <FieldLabel htmlFor="state">State</FieldLabel>
-          <Select
-            value={value.state}
-            onValueChange={(v) => {
-              set({ state: v })
-              if (errors.state) clearError("state")
-            }}
-          >
-            <SelectTrigger
-              id="state"
-              aria-invalid={!!errors.state}
-              className={errors.state ? "border-red-500 focus-visible:ring-red-500 w-full" : "w-full"}
-            >
-              <SelectValue placeholder="Select your state" />
-            </SelectTrigger>
-            <SelectContent>
-              {INDIAN_STATES.map((state) => (
-                <SelectItem key={state} value={state}>
-                  {state}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.state && <p className="text-xs text-red-800">{errors.state}</p>}
-        </Field>
+       
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field>
+            <FieldLabel htmlFor="state">State</FieldLabel>
 
-        <Field>
-          <FieldLabel htmlFor="pincode">Pincode</FieldLabel>
-          <div className="relative">
-            <Input
-              id="pincode"
-              name="pincode"
-              inputMode="numeric"
-              maxLength={6}
-              value={value.pincode}
-              onChange={(e) => {
-                const digits = e.target.value.replace(/\D/g, "").slice(0, 6)
-                set({ pincode: digits })
-                if (errors.pincode) clearError("pincode")
+            <Select
+              value={value.state}
+              onValueChange={(v) => {
+                set({ state: v })
+                if (errors.state) clearError("state")
               }}
-              placeholder="6-digit pincode"
-              aria-invalid={!!errors.pincode}
-              className={errors.pincode ? "border-red-500 focus-visible:ring-red-500" : ""}
-            />
-            {isLookingUp && (
-              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+            >
+              <SelectTrigger
+                id="state"
+                aria-invalid={!!errors.state}
+                className={
+                  errors.state
+                    ? "w-full border-red-500 focus-visible:ring-red-500"
+                    : "w-full"
+                }
+              >
+                <SelectValue placeholder="Select your state" />
+              </SelectTrigger>
+
+              <SelectContent>
+                {INDIAN_STATES.map((state) => (
+                  <SelectItem key={state} value={state}>
+                    {state}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {errors.state && (
+              <p className="text-xs text-red-800">{errors.state}</p>
             )}
-          </div>
-          {lookupError && <p className="text-xs text-muted-foreground">{lookupError}</p>}
-          {errors.pincode && <p className="text-xs text-red-800">{errors.pincode}</p>}
-        </Field>
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="pincode">Pincode</FieldLabel>
+
+            <div className="relative">
+              <Input
+                id="pincode"
+                name="pincode"
+                inputMode="numeric"
+                maxLength={6}
+                value={value.pincode}
+                onChange={(e) => {
+                  const digits = e.target.value
+                    .replace(/\D/g, "")
+                    .slice(0, 6)
+
+                  set({ pincode: digits })
+
+                  if (errors.pincode) {
+                    clearError("pincode")
+                  }
+                }}
+                placeholder="6-digit pincode"
+                aria-invalid={!!errors.pincode}
+                className={
+                  errors.pincode
+                    ? "border-red-500 focus-visible:ring-red-500"
+                    : ""
+                }
+              />
+
+              {isLookingUp && (
+                <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+              )}
+            </div>
+
+            {lookupError && (
+              <p className="text-xs text-muted-foreground">
+                {lookupError}
+              </p>
+            )}
+
+            {errors.pincode && (
+              <p className="text-xs text-red-800">
+                {errors.pincode}
+              </p>
+            )}
+          </Field>
+        </div>
 
         <Field>
           <FieldLabel htmlFor="panchayath">Panchayath / Post Office</FieldLabel>

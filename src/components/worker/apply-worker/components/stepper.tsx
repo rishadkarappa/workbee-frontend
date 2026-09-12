@@ -3,7 +3,7 @@ import type { HTMLAttributes, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import type { Variants } from 'motion/react';
 import BackButton from '@/components/common/back-button';
-import { CardDescription,CardHeader,CardTitle } from '@/components/ui/card';
+import { CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { AppRoutes } from '@/constants/routes/app-routes';
 
@@ -115,10 +115,11 @@ export default function Stepper({
       className="flex min-h-full flex-1 flex-col items-center justify-center p-4 sm:aspect-[4/3] md:aspect-[2/1]"
       {...rest}
     >
+
       <div
-        className={`relative left-1/2 -translate-x-1/2 w-[130%] items-center rounded-3xl shadow-xl border border-gray-110 ${stepCircleContainerClassName}`}
+        className={`relative w-full max-w-xl mx-auto rounded-3xl border border-gray-200 shadow-xl ${stepCircleContainerClassName}`}
       >
-        <div className='ml-5 mt-5'>
+        <div className='ml-4 mt-4'>
           <BackButton />
         </div>
         <CardHeader className='mt-5 mb-4'>
@@ -177,8 +178,8 @@ export default function Stepper({
                   onClick={handleBack}
                   disabled={isSubmitting || isValidating}
                   className={`duration-350 rounded px-2 py-1 transition ${currentStep === 1 || isSubmitting
-                      ? 'pointer-events-none opacity-50 text-neutral-400'
-                      : 'text-neutral-400 hover:text-neutral-800'
+                    ? 'pointer-events-none opacity-50 text-neutral-400'
+                    : 'text-neutral-400 hover:text-neutral-800'
                     }`}
                   {...backButtonProps}
                 >
@@ -187,7 +188,7 @@ export default function Stepper({
               )}
               <button
                 onClick={isLastStep ? handleComplete : handleNext}
-                disabled={isSubmitting || isValidating} 
+                disabled={isSubmitting || isValidating}
                 className="duration-350 flex items-center justify-center rounded-full bg-neutral-900 py-1.5 px-3.5 font-medium tracking-tight text-white transition hover:bg-neutral-800 active:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 {...nextButtonProps}
               >

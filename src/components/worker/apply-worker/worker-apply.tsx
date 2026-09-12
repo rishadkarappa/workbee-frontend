@@ -717,22 +717,7 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
       if (!validateAll()) {
         return;
       }
-
-      // const workerData: ApplyForWorkerDto = {
-      //   name: form.name,
-      //   email: form.email,
-      //   phone: form.phone ?? "",
-      //   password: form.password,
-      //   location: form.location,
-      //   workTypes: form.workTypes,
-      //   preferredWorks: form.preferredWorks,
-      //   confirmations: {
-      //     reliable: form.agreedToTerms,
-      //     experienced: form.agreedToTerms,
-      //     honest: form.agreedToTerms,
-      //     termsAccepted: form.agreedToTerms,
-      //   }
-      // };
+      
       const workerData: ApplyForWorkerDto = {
         name: form.name,
         email: form.email,
