@@ -80,6 +80,9 @@ import {
   Fan,
   Building2,
   type LucideIcon,
+  CircleAlert,
+  Notebook,
+  LucideNotebookPen,
 } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { WorkService } from "@/services/work-service"
@@ -717,7 +720,7 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
       if (!validateAll()) {
         return;
       }
-      
+
       const workerData: ApplyForWorkerDto = {
         name: form.name,
         email: form.email,
@@ -841,11 +844,13 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
           </Step>
 
           {/* ---------- STEP 3 ---------- */}
+          
           <Step>
             <form className="flex flex-col gap-4">
               <FieldGroup>
                 <Field>
                   <FieldLabel htmlFor="password">Password</FieldLabel>
+
                   <div className="relative">
                     <Input
                       id="password"
@@ -855,22 +860,32 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
                       onChange={handleChange}
                       placeholder="Enter your password"
                       aria-invalid={!!errors.password}
-                      className={errors.password ? "border-red-500 focus-visible:ring-red-500" : ""}
+                      className={
+                        errors.password
+                          ? "border-red-500 focus-visible:ring-red-500"
+                          : ""
+                      }
                     />
+
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     >
                       {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
                   </div>
+
                   {errors.password && (
                     <p className="text-xs text-red-800">{errors.password}</p>
                   )}
                 </Field>
+
                 <Field>
-                  <FieldLabel htmlFor="confirmPassword">Confirm Password</FieldLabel>
+                  <FieldLabel htmlFor="confirmPassword">
+                    Confirm Password
+                  </FieldLabel>
+
                   <div className="relative">
                     <Input
                       id="confirmPassword"
@@ -880,21 +895,44 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
                       onChange={handleChange}
                       placeholder="Confirm your password"
                       aria-invalid={!!errors.confirmPassword}
-                      className={errors.confirmPassword ? "border-red-500 focus-visible:ring-red-500" : ""}
+                      className={
+                        errors.confirmPassword
+                          ? "border-red-500 focus-visible:ring-red-500"
+                          : ""
+                      }
                     />
+
                     <button
                       type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     >
-                      {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      {showConfirmPassword ? (
+                        <EyeOff size={20} />
+                      ) : (
+                        <Eye size={20} />
+                      )}
                     </button>
                   </div>
+
                   {errors.confirmPassword && (
-                    <p className="text-xs text-red-800">{errors.confirmPassword}</p>
+                    <p className="text-xs text-red-800">
+                      {errors.confirmPassword}
+                    </p>
                   )}
                 </Field>
               </FieldGroup>
+
+              <div className="flex items-center gap-3 rounded-lg border border-border px-3 py-2.5">
+                <LucideNotebookPen className="h-5 w-5 shrink-0 text-muted-foreground" />
+
+                <p className="text-sm text-muted-foreground">
+                  This is the password you will use to log in as a worker after your
+                  application is approved by the admin.
+                </p>
+              </div>
             </form>
           </Step>
 

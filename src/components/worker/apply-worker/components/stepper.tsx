@@ -117,7 +117,7 @@ export default function Stepper({
     >
 
       <div
-        className={`relative w-full max-w-xl mx-auto rounded-3xl border border-gray-200 shadow-xl ${stepCircleContainerClassName}`}
+        className={`relative w-full max-w-xl mx-auto rounded-3xl border border-border bg-card text-card-foreground shadow-xl ${stepCircleContainerClassName}`}
       >
         <div className='ml-4 mt-4'>
           <BackButton />
