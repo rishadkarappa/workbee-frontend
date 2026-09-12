@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { WorkService, type LiveWorksParams } from "@/services/work-service";
+import { WorkService } from "@/services/work-service";
 import { getErrorMessage } from "@/utils/error-helper";
 
 export interface LiveWork {
@@ -29,13 +29,17 @@ export interface PaginationMeta {
 }
 
 export interface LiveWorkBucketCounts {
-  all: number;
-  assigned: number;
-  started: number;
-  ongoing: number;
+  active: number;
+  completed: number;
 }
 
-const emptyCounts: LiveWorkBucketCounts = { all: 0, assigned: 0, started: 0, ongoing: 0 };
+export interface LiveWorksParams {
+  page?: number;
+  limit?: number;
+  bucket?: 'active' | 'completed';
+}
+
+const emptyCounts: LiveWorkBucketCounts = { active: 0, completed: 0 };
 
 export function useLiveWorks(params: LiveWorksParams) {
   const [works, setWorks] = useState<LiveWork[]>([]);

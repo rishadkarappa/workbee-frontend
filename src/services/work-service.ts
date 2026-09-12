@@ -69,7 +69,7 @@ export interface MyWorksParams {
 export interface LiveWorksParams {
   page?: number;
   limit?: number;
-  bucket?: 'all' | 'assigned' | 'started' | 'ongoing';
+  bucket?: 'active' | 'completed';
 }
 
 export const WorkService = {

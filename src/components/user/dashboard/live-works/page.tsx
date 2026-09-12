@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Calendar, MapPin, Briefcase, IndianRupeeIcon,
-  Wrench, TrendingUp, MessageSquare, Clock, ListChecks, ClipboardList,
+  Wrench, TrendingUp, Flag, MessageSquare, Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,20 +24,19 @@ import {
 } from "@/components/ui/pagination";
 import { useLiveWorks, type LiveWork } from "@/hooks/useLiveWorks";
 
-type LiveBucket = 'all' | 'assigned' | 'started' | 'ongoing';
+type LiveTab = 'active' | 'completed';
 
-const TAB_CONFIG: { value: LiveBucket; label: string; Icon: any }[] = [
-  { value: 'all', label: 'All', Icon: ListChecks },
-  { value: 'assigned', label: 'Assigned', Icon: ClipboardList },
-  { value: 'started', label: 'Started', Icon: Wrench },
-  { value: 'ongoing', label: 'In Progress', Icon: TrendingUp },
+const TAB_CONFIG: { value: LiveTab; label: string; Icon: any }[] = [
+  { value: 'active', label: 'Active', Icon: TrendingUp },
+  { value: 'completed', label: 'Completed', Icon: Flag },
 ];
 
-// Only real progress states — "assigned" (no progress yet) is shown via the
-// empty-state message below, not as a step, since the worker hasn't acted yet.
+// Full 3-step tracker — a completed work now shows up on this page too,
+// so "Completed" needs to render as a real step, not just an empty state.
 const PROGRESS_STEPS = [
   { value: 'started', label: 'Started', Icon: Wrench, textColor: 'text-blue-700 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/30', border: 'border-blue-200 dark:border-blue-900' },
   { value: 'ongoing', label: 'In Progress', Icon: TrendingUp, textColor: 'text-amber-700 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/30', border: 'border-amber-200 dark:border-amber-900' },
+  { value: 'completed', label: 'Completed', Icon: Flag, textColor: 'text-green-700 dark:text-green-400', bg: 'bg-green-50 dark:bg-green-950/30', border: 'border-green-200 dark:border-green-900' },
 ];
 
 const ITEMS_PER_PAGE = 6;
@@ -83,6 +82,7 @@ function ProgressDisplay({ progress }: { progress?: string }) {
         <p className="text-xs text-muted-foreground">
           {progress === 'started' && '🔧 Worker has started the job'}
           {progress === 'ongoing' && '⚙️ Work is currently in progress'}
+          {progress === 'completed' && '☑ Work has been completed!'}
         </p>
       )}
     </div>
@@ -179,7 +179,7 @@ function LiveWorkCard({
 
 export default function LiveWorks() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<LiveBucket>('all');
+  const [activeTab, setActiveTab] = useState<LiveTab>('active');
   const [currentPage, setCurrentPage] = useState(1);
 
   const token = AuthHelper.getAccessToken();
@@ -198,13 +198,13 @@ export default function LiveWorks() {
     switch (status) {
       case 'assigned': return 'border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-900 dark:bg-purple-950/30 dark:text-purple-400';
       case 'in-progress': return 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-400';
+      case 'completed': return 'border-green-200 bg-green-50 text-green-700 dark:border-green-900 dark:bg-green-950/30 dark:text-green-400';
       default: return 'border-border bg-muted text-muted-foreground';
     }
   };
 
-  // Any progress change (including completion, which moves the work out of
-  // this bucket entirely) is simplest handled by a refetch — guarantees the
-  // list, tab counts, and current page all stay consistent with the backend.
+  // Any progress change — including completion, which moves a work from the
+  // Active tab to the Completed tab — is simplest handled by a refetch.
   useEffect(() => {
     if (token && !socketService.isConnected()) {
       socketService.connect(token);
@@ -250,7 +250,7 @@ export default function LiveWorks() {
     }
   };
 
-  if (loading && works.length === 0 && counts.all === 0) {
+  if (loading && works.length === 0 && counts.active === 0 && counts.completed === 0) {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -267,13 +267,13 @@ export default function LiveWorks() {
     );
   }
 
-  if (counts.all === 0) {
+  if (counts.active === 0 && counts.completed === 0) {
     return (
       <div className="space-y-6 p-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Live Works</h1>
           <p className="text-muted-foreground mt-2">
-            No active works yet. Once a worker confirms a deal, it will appear here for live tracking.
+            No works yet. Once a worker confirms a deal, it will appear here for live tracking.
           </p>
         </div>
       </div>
@@ -282,7 +282,7 @@ export default function LiveWorks() {
 
   return (
     <div className="space-y-6 p-6 w-full">
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as LiveBucket)}>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as LiveTab)}>
         <TabsList>
           {TAB_CONFIG.map(tab => (
             <TabsTrigger key={tab.value} value={tab.value} className="flex items-center gap-1.5">
