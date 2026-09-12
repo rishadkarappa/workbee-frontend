@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DateFilterBar, type DateFilterMode } from "@/components/common/wallet/DateFilterBar";
+import { DateFilterBar, type DateFilterMode } from "@/components/common/DateFilterBar";
 import { TxPagination } from "@/components/common/wallet/TxPagination";
 import { useWallet, type Transaction } from "@/hooks/useWallet";
 

@@ -52,6 +52,14 @@ interface PostWorkDto {
     termsAccepted: boolean;
 }
 
+export interface WorkerAssignedWorksParams {
+  page?: number;
+  limit?: number;
+  bucket?: 'all' | 'assigned' | 'started' | 'ongoing' | 'completed';
+  startDate?: string;
+  endDate?: string;
+}
+
 export const WorkService = {
 
     getAppliers: (page: number, limit: number, search: string) => {
@@ -126,8 +134,8 @@ export const WorkService = {
      * Returns works where status === 'assigned' and the workerId matches.
      */
 
-    getWorkerAssignedWorks: () => {
-        return api.get(WORK_ENDPOINTS.GET_WORKER_ASSIGNED_WORKS);
+    getWorkerAssignedWorks: (params?: WorkerAssignedWorksParams) => {
+        return api.get(WORK_ENDPOINTS.GET_WORKER_ASSIGNED_WORKS, { params });
     },
 
     getWorkerProfile: () => {
