@@ -43,12 +43,19 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 
 // Types
+
 interface Applier {
   id: string;
   name: string;
   email: string;
   phone: string;
-  location: string;
+  address: {
+    state: string;
+    pincode: string;
+    panchayath: string;
+    city: string;
+    place: string;
+  };
   workTypes: string[];
   preferredWorks: string[];
   confirmations: {
@@ -368,11 +375,7 @@ const WorkerApplicationDialog = ({
                     value={applier.phone}
                   />
 
-                  <InfoItem
-                    icon={MapPin}
-                    label="Location"
-                    value={applier.location}
-                  />
+
 
 
                   <InfoItem
@@ -405,6 +408,53 @@ const WorkerApplicationDialog = ({
                         ).toLocaleDateString()
                         : "N/A"
                     }
+                  />
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Address */}
+              <div>
+                <div className="mb-4">
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Address
+                  </h3>
+
+                  <p className="text-sm text-muted-foreground">
+                    Address details provided by the worker.
+                  </p>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <InfoItem
+                    icon={MapPin}
+                    label="Place / Locality"
+                    value={applier.address?.place || "N/A"}
+                  />
+
+                  <InfoItem
+                    icon={MapPin}
+                    label="Panchayath / Post Office"
+                    value={applier.address?.panchayath || "N/A"}
+                  />
+
+                  <InfoItem
+                    icon={MapPin}
+                    label="City / District"
+                    value={applier.address?.city || "N/A"}
+                  />
+
+                  <InfoItem
+                    icon={MapPin}
+                    label="State"
+                    value={applier.address?.state || "N/A"}
+                  />
+
+                  <InfoItem
+                    icon={MapPin}
+                    label="Pincode"
+                    value={applier.address?.pincode || "N/A"}
                   />
                 </div>
               </div>

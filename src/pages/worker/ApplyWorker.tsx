@@ -1,4 +1,4 @@
-import { ApplyWorkerForm } from "@/components/worker/worker-apply"
+import { ApplyWorkerForm } from "@/components/worker/apply-worker/worker-apply";
 
 export default function ApplyWorker() {
   return (

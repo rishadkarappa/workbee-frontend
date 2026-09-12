@@ -2,8 +2,8 @@ import React, { useState, Children, useRef, useLayoutEffect } from 'react';
 import type { HTMLAttributes, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import type { Variants } from 'motion/react';
-import BackButton from '../common/back-button';
-import { CardDescription, CardHeader, CardTitle } from '../ui/card';
+import BackButton from '@/components/common/back-button';
+import { CardDescription,CardHeader,CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { AppRoutes } from '@/constants/routes/app-routes';
 

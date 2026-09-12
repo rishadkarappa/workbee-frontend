@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
-import Stepper, { Step } from "./stepper"
+import Stepper, { Step } from "./components/stepper"
 import { CardContent } from "@/components/ui/card"
 import {
   Field,
@@ -86,6 +86,16 @@ import { WorkService } from "@/services/work-service"
 import { getErrorMessage } from "@/utils/error-helper"
 import { toast } from "sonner"
 import { emailRegex } from "@/constants/regex/regex"
+import type { AddressFormValue } from "./components/address-step"
+import { AddressStep } from "./components/address-step"
+
+export interface AddressDto {
+  state: string;
+  pincode: string;
+  panchayath: string;
+  city: string;
+  place: string;
+}
 
 export interface WorkerConfirmationsDto {
   reliable: boolean;
@@ -94,12 +104,13 @@ export interface WorkerConfirmationsDto {
   termsAccepted: boolean;
 }
 
+
 export interface ApplyForWorkerDto {
   name: string;
   email: string;
   phone: string;
   password: string;
-  location: string;
+  address: AddressDto;
   workTypes: string[];
   preferredWorks: string[];
   confirmations: WorkerConfirmationsDto;
@@ -111,7 +122,11 @@ type FormErrors = {
   phone?: string;
   password?: string;
   confirmPassword?: string;
-  location?: string;
+  state?: string;
+  pincode?: string;
+  panchayath?: string;
+  city?: string;
+  place?: string;
   workType?: string;
   preferredWork?: string;
   confirmations?: string;
@@ -477,11 +492,17 @@ function WorkerAgreementScroll({ agreed, onToggle, error }: WorkerAgreementScrol
           !hasScrolledToEnd && "opacity-50 cursor-not-allowed"
         )}
       >
+
         <Checkbox
           checked={agreed}
           disabled={!hasScrolledToEnd}
           onCheckedChange={() => hasScrolledToEnd && onToggle()}
-          className="mt-0.5"
+          className={cn(
+            "mt-0.5 border-2 border-foreground/40 bg-background",
+            "data-[state=checked]:border-primary",
+            "data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground",
+            "disabled:opacity-60"
+          )}
           aria-invalid={!!error}
         />
         <span>
@@ -491,7 +512,7 @@ function WorkerAgreementScroll({ agreed, onToggle, error }: WorkerAgreementScrol
 
       {!hasScrolledToEnd && (
         <p className="text-xs text-muted-foreground">
-          Scroll to the bottom of the agreement to enable this checkbox.
+          Read the agreement to enable this checkbox.
         </p>
       )}
       {error && <p className="text-xs text-red-800">{error}</p>}
@@ -502,13 +523,20 @@ function WorkerAgreementScroll({ agreed, onToggle, error }: WorkerAgreementScrol
 // ---------- Main form ----------
 
 export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"div">) {
+
   const [form, setForm] = useState({
     name: "",
     email: "",
     phone: undefined as string | undefined,
     password: "",
     confirmPassword: "",
-    location: "",
+    address: {
+      state: "",
+      pincode: "",
+      panchayath: "",
+      city: "",
+      place: "",
+    } as AddressFormValue,
     workTypes: [] as string[],
     preferredWorks: [] as string[],
     agreedToTerms: false,
@@ -524,6 +552,14 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
   const [customPreferredWorks, setCustomPreferredWorks] = useState<SelectOption[]>([])
 
   const navigate = useNavigate()
+
+  const handleAddressChange = (address: AddressFormValue) => {
+    setForm((prev) => ({ ...prev, address }))
+  }
+
+  const clearAddressError = (field: keyof AddressFormValue) => {
+    setErrors((prev) => ({ ...prev, [field]: undefined }))
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -570,9 +606,7 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
   const validateStep1 = (): boolean => {
     const stepErrors: Partial<FormErrors> = {}
 
-    if (!form.name.trim()) {
-      stepErrors.name = "Full name is required"
-    }
+    if (!form.name.trim()) stepErrors.name = "Full name is required"
 
     if (!form.email.trim()) {
       stepErrors.email = "Email is required"
@@ -592,6 +626,32 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
 
   const validateStep2 = (): boolean => {
     const stepErrors: Partial<FormErrors> = {}
+    const { state, pincode, panchayath, city, place } = form.address
+
+    if (!state.trim()) stepErrors.state = "State is required"
+    if (!pincode.trim()) {
+      stepErrors.pincode = "Pincode is required"
+    } else if (!/^\d{6}$/.test(pincode.trim())) {
+      stepErrors.pincode = "Enter a valid 6-digit pincode"
+    }
+    if (!panchayath.trim()) stepErrors.panchayath = "Select your panchayath / post office"
+    if (!city.trim()) stepErrors.city = "City / district is required"
+    if (!place.trim()) stepErrors.place = "Place is required"
+
+    setErrors((prev) => ({
+      ...prev,
+      state: undefined,
+      pincode: undefined,
+      panchayath: undefined,
+      city: undefined,
+      place: undefined,
+      ...stepErrors,
+    }))
+    return Object.keys(stepErrors).length === 0
+  }
+
+  const validateStep3 = (): boolean => {
+    const stepErrors: Partial<FormErrors> = {}
 
     if (!form.password) {
       stepErrors.password = "Password is required"
@@ -609,24 +669,17 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
     return Object.keys(stepErrors).length === 0
   }
 
-  const validateStep3 = (): boolean => {
+  const validateStep4 = (): boolean => {
     const stepErrors: Partial<FormErrors> = {}
 
-    if (!form.location.trim()) {
-      stepErrors.location = "Address is required"
-    }
-    if (form.workTypes.length === 0) {
-      stepErrors.workType = "Select at least one work type"
-    }
-    if (form.preferredWorks.length === 0) {
-      stepErrors.preferredWork = "Select at least one preferred work"
-    }
+    if (form.workTypes.length === 0) stepErrors.workType = "Select at least one work type"
+    if (form.preferredWorks.length === 0) stepErrors.preferredWork = "Select at least one preferred work"
 
-    setErrors((prev) => ({ ...prev, location: undefined, workType: undefined, preferredWork: undefined, ...stepErrors }))
+    setErrors((prev) => ({ ...prev, workType: undefined, preferredWork: undefined, ...stepErrors }))
     return Object.keys(stepErrors).length === 0
   }
 
-  const validateStep4 = (): boolean => {
+  const validateStep5 = (): boolean => {
     const stepErrors: Partial<FormErrors> = {}
 
     if (!form.agreedToTerms) {
@@ -637,13 +690,13 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
     return Object.keys(stepErrors).length === 0
   }
 
-  // Dispatcher — passed to Stepper, called on every "Next"/"Apply" click
   const validateStep = (step: number): boolean => {
     switch (step) {
       case 1: return validateStep1()
       case 2: return validateStep2()
       case 3: return validateStep3()
       case 4: return validateStep4()
+      case 5: return validateStep5()
       default: return true
     }
   }
@@ -653,7 +706,8 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
     const v2 = validateStep2()
     const v3 = validateStep3()
     const v4 = validateStep4()
-    return v1 && v2 && v3 && v4
+    const v5 = validateStep5()
+    return v1 && v2 && v3 && v4 && v5
   }
 
   const handleSubmit = async () => {
@@ -664,12 +718,27 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
         return;
       }
 
+      // const workerData: ApplyForWorkerDto = {
+      //   name: form.name,
+      //   email: form.email,
+      //   phone: form.phone ?? "",
+      //   password: form.password,
+      //   location: form.location,
+      //   workTypes: form.workTypes,
+      //   preferredWorks: form.preferredWorks,
+      //   confirmations: {
+      //     reliable: form.agreedToTerms,
+      //     experienced: form.agreedToTerms,
+      //     honest: form.agreedToTerms,
+      //     termsAccepted: form.agreedToTerms,
+      //   }
+      // };
       const workerData: ApplyForWorkerDto = {
         name: form.name,
         email: form.email,
         phone: form.phone ?? "",
         password: form.password,
-        location: form.location,
+        address: form.address,
         workTypes: form.workTypes,
         preferredWorks: form.preferredWorks,
         confirmations: {
@@ -772,6 +841,22 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
 
           {/* ---------- STEP 2 ---------- */}
           <Step>
+            <AddressStep
+              value={form.address}
+              onChange={handleAddressChange}
+              errors={{
+                state: errors.state,
+                pincode: errors.pincode,
+                panchayath: errors.panchayath,
+                city: errors.city,
+                place: errors.place,
+              }}
+              clearError={clearAddressError}
+            />
+          </Step>
+
+          {/* ---------- STEP 3 ---------- */}
+          <Step>
             <form className="flex flex-col gap-4">
               <FieldGroup>
                 <Field>
@@ -828,25 +913,11 @@ export function ApplyWorkerForm({ className, ...props }: React.ComponentProps<"d
             </form>
           </Step>
 
-          {/* ---------- STEP 3 ---------- */}
+          {/* ---------- STEP 4 ---------- */}
           <Step>
             <form className="flex flex-col gap-4">
               <FieldGroup>
-                <Field>
-                  <FieldLabel htmlFor="location">Location</FieldLabel>
-                  <Input
-                    id="location"
-                    name="location"
-                    value={form.location}
-                    onChange={handleChange}
-                    placeholder="City / State / Country"
-                    aria-invalid={!!errors.location}
-                    className={errors.location ? "border-red-500 focus-visible:ring-red-500" : ""}
-                  />
-                  {errors.location && (
-                    <p className="text-xs text-red-800">{errors.location}</p>
-                  )}
-                </Field>
+
 
                 <Field>
                   <FieldLabel htmlFor="workType">Work Types (preferred work types)</FieldLabel>
