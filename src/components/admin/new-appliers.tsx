@@ -49,15 +49,15 @@ interface Applier {
   email: string;
   phone: string;
   location: string;
-  workType: string;
+  workTypes: string[];
   preferredWorks: string[];
   confirmations: {
     reliable: boolean;
     honest: boolean;
     termsAccepted: boolean;
   };
-  rejectionReason: string;
-  rejectedAt: Date;
+  rejectionReason?: string;
+  rejectedAt?: Date;
   status: string;
   createdAt?: Date;
 }
@@ -205,7 +205,7 @@ const WorkerApplicationDialog = ({
 
       alert(
         "Error: " +
-          (getErrorMessage(error) || "Error approving worker")
+        (getErrorMessage(error) || "Error approving worker")
       );
     } finally {
       setIsSubmitting(false);
@@ -247,7 +247,7 @@ const WorkerApplicationDialog = ({
 
       alert(
         "Error: " +
-          (getErrorMessage(error) || "Error rejecting worker")
+        (getErrorMessage(error) || "Error rejecting worker")
       );
     } finally {
       setIsSubmitting(false);
@@ -374,13 +374,24 @@ const WorkerApplicationDialog = ({
                     value={applier.location}
                   />
 
+
                   <InfoItem
                     icon={Briefcase}
-                    label="Work Type"
+                    label="Work Types"
                     value={
-                      <Badge variant="secondary">
-                        {applier.workType}
-                      </Badge>
+                      applier.workTypes?.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {applier.workTypes.map((work, index) => (
+                            <Badge key={`${work}-${index}`} variant="secondary">
+                              {work}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">
+                          No work types selected
+                        </span>
+                      )
                     }
                   />
 
@@ -390,8 +401,8 @@ const WorkerApplicationDialog = ({
                     value={
                       applier.createdAt
                         ? new Date(
-                            applier.createdAt
-                          ).toLocaleDateString()
+                          applier.createdAt
+                        ).toLocaleDateString()
                         : "N/A"
                     }
                   />
@@ -434,32 +445,43 @@ const WorkerApplicationDialog = ({
               <Separator />
 
               {/* Confirmations */}
+              {/* Application Agreement */}
               <div>
                 <div className="mb-3">
                   <h3 className="text-sm font-semibold text-foreground">
-                    Confirmations
+                    Application agreement
                   </h3>
 
                   <p className="text-sm text-muted-foreground">
-                    Confirmations provided during the application process.
+                    The applicant confirmed the required worker agreement before
+                    submitting the application.
                   </p>
                 </div>
 
-                <div className="space-y-2">
-                  <ConfirmationItem
-                    label="Reliable"
-                    value={applier.confirmations.reliable}
-                  />
+                <div className="flex items-center justify-between rounded-lg border bg-card px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-green-50 dark:bg-green-950">
+                      <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    </div>
 
-                  <ConfirmationItem
-                    label="Honest"
-                    value={applier.confirmations.honest}
-                  />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">
+                        Worker agreement accepted
+                      </p>
 
-                  <ConfirmationItem
-                    label="Terms accepted"
-                    value={applier.confirmations.termsAccepted}
-                  />
+                      <p className="text-xs text-muted-foreground">
+                        All required confirmations were accepted during application.
+                      </p>
+                    </div>
+                  </div>
+
+                  <Badge
+                    variant="outline"
+                    className="border-green-200 bg-green-50 text-green-700 dark:border-green-900 dark:bg-green-950 dark:text-green-400"
+                  >
+                    <Check className="mr-1 h-3 w-3" />
+                    Accepted
+                  </Badge>
                 </div>
               </div>
             </div>
