@@ -1,6 +1,14 @@
 import { PAYMENT_ENDPOINTS } from "@/constants/api-endpoints/payment-endpoints";
 import { api } from "./axios-instance/axios-instance";
 
+export interface WalletQueryParams {
+  page?: number;
+  limit?: number;
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
 export const PaymentService = {
   createOrder: (data: { workId: string; workerId: string; workTitle: string; amount: number; }) => {
     return api.post(PAYMENT_ENDPOINTS.CREATE_ORDER, data);
@@ -19,18 +27,17 @@ export const PaymentService = {
     return api.post(PAYMENT_ENDPOINTS.WORK_COMPLETED, { workId });
   },
 
-  getMyWallet: () => {
-    return api.get(PAYMENT_ENDPOINTS.WALLET);
+  // getMyWallet: () => {
+  //   return api.get(PAYMENT_ENDPOINTS.WALLET);
+  // },
+  getMyWallet: (params?: WalletQueryParams) => {
+    return api.get(PAYMENT_ENDPOINTS.WALLET, { params });
   },
 
   getAdminSummary: () => {
     return api.get(PAYMENT_ENDPOINTS.ADMIN.SUMMARY);
   },
 
-  // getAdminPaymentsList: (page = 1, limit = 15) => {
-  //   return api.get(PAYMENT_ENDPOINTS.ADMIN.PAYMENTS, { params: { page, limit } });
-  // },
-  
   getAdminPaymentsList: (page = 1, limit = 15,
     filters?: { status?: string; startDate?: string; endDate?: string; }
   ) => {

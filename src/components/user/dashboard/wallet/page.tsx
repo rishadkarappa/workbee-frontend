@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import type { DateRange } from "react-day-picker";
+import { startOfDay, endOfDay } from "date-fns";
 import {
   Wallet,
   ArrowUpCircle,
@@ -13,52 +15,18 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PaymentService } from "@/services/payment-service";
-import { getErrorMessage } from "@/utils/error-helper";
-
-interface WalletData {
-  id: string;
-  balance: number;
-  pendingBalance: number;
-  totalSpent: number;
-  totalEarned: number;
-}
-
-interface Transaction {
-  id: string;
-  type: string;
-  amount: number;
-  currency: string;
-  status: string;
-  description: string;
-  createdAt: string;
-  metadata?: {
-    workId?: string;
-    workerId?: string;
-    razorpayOrderId?: string;
-    razorpayPaymentId?: string;
-  };
-}
+import { DateFilterBar, type DateFilterMode } from "@/components/common/wallet/DateFilterBar";
+import { TxPagination } from "@/components/common/wallet/TxPagination";
+import { useWallet, type Transaction } from "@/hooks/useWallet";
 
 const formatDate = (dateStr: string) =>
-  new Date(dateStr).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  new Date(dateStr).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 
 const formatTime = (dateStr: string) =>
-  new Date(dateStr).toLocaleTimeString("en-IN", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  new Date(dateStr).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
 
 const formatAmount = (amount: number) =>
-  new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    minimumFractionDigits: 2,
-  }).format(amount);
+  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", minimumFractionDigits: 2 }).format(amount);
 
 function StatusBadge({ status }: { status: string }) {
   switch (status) {
@@ -101,63 +69,39 @@ function StatusBadge({ status }: { status: string }) {
 
 function TransactionRow({ tx }: { tx: Transaction }) {
   const [expanded, setExpanded] = useState(false);
-
   const isDebit = tx.type === "payment";
   const label =
-    tx.type === "payment"
-      ? "Payment for work"
-      : tx.type === "hold"
-        ? "Amount held"
-        : tx.type === "credit"
-          ? "Payment received"
-          : tx.type === "refund"
-            ? "Refund"
-            : tx.type;
+    tx.type === "payment" ? "Payment for work" :
+    tx.type === "hold" ? "Amount held" :
+    tx.type === "credit" ? "Payment received" :
+    tx.type === "refund" ? "Refund" : tx.type;
 
   return (
     <div className="border border-border rounded-xl overflow-hidden">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full text-left"
-      >
+      <button onClick={() => setExpanded(!expanded)} className="w-full text-left">
         <div className="flex items-center justify-between p-4 transition-colors hover:bg-muted/50">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-muted">
-              {isDebit ? (
-                <ArrowUpCircle className="h-5 w-5 text-muted-foreground" />
-              ) : (
-                <ArrowDownCircle className="h-5 w-5 text-muted-foreground" />
-              )}
+              {isDebit ? <ArrowUpCircle className="h-5 w-5 text-muted-foreground" /> : <ArrowDownCircle className="h-5 w-5 text-muted-foreground" />}
             </div>
-
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-foreground">
-                {label}
-              </p>
-
+              <p className="truncate text-sm font-medium text-foreground">{label}</p>
               <p className="mt-0.5 text-xs text-muted-foreground">
                 {formatDate(tx.createdAt)} · {formatTime(tx.createdAt)}
               </p>
             </div>
           </div>
-
           <div className="ml-4 flex flex-shrink-0 items-center gap-3">
             <div className="text-right">
               <p className="text-sm font-semibold text-foreground">
                 {isDebit ? "−" : "+"}
                 {formatAmount(tx.amount)}
               </p>
-
               <div className="mt-0.5 flex justify-end">
                 <StatusBadge status={tx.status} />
               </div>
             </div>
-
-            {expanded ? (
-              <ChevronUp className="h-4 w-4 text-muted-foreground" />
-            ) : (
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-            )}
+            {expanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
           </div>
         </div>
       </button>
@@ -166,43 +110,29 @@ function TransactionRow({ tx }: { tx: Transaction }) {
         <div className="px-4 pb-4 bg-muted/40 border-t border-border space-y-2">
           {tx.description && (
             <div className="pt-3">
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
-                Description
-              </p>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Description</p>
               <p className="text-sm text-foreground/80">{tx.description}</p>
             </div>
           )}
           <div className="grid grid-cols-2 gap-3 pt-1">
             <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
-                Transaction ID
-              </p>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Transaction ID</p>
               <p className="text-xs text-muted-foreground font-mono truncate">{tx.id}</p>
             </div>
             <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
-                Currency
-              </p>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Currency</p>
               <p className="text-xs text-muted-foreground">{tx.currency}</p>
             </div>
             {tx.metadata?.razorpayPaymentId && (
               <div className="col-span-2">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
-                  Razorpay Payment ID
-                </p>
-                <p className="text-xs text-muted-foreground font-mono truncate">
-                  {tx.metadata.razorpayPaymentId}
-                </p>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Razorpay Payment ID</p>
+                <p className="text-xs text-muted-foreground font-mono truncate">{tx.metadata.razorpayPaymentId}</p>
               </div>
             )}
             {tx.metadata?.razorpayOrderId && (
               <div className="col-span-2">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
-                  Razorpay Order ID
-                </p>
-                <p className="text-xs text-muted-foreground font-mono truncate">
-                  {tx.metadata.razorpayOrderId}
-                </p>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Razorpay Order ID</p>
+                <p className="text-xs text-muted-foreground font-mono truncate">{tx.metadata.razorpayOrderId}</p>
               </div>
             )}
           </div>
@@ -213,48 +143,48 @@ function TransactionRow({ tx }: { tx: Transaction }) {
 }
 
 export default function UserWallet() {
-  const [wallet, setWallet] = useState<WalletData | null>(null);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"all" | "completed" | "pending" | "failed">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "completed" | "pending" | "failed">("all");
+  const [dateMode, setDateMode] = useState<DateFilterMode>("range");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [singleDate, setSingleDate] = useState<Date | undefined>(undefined);
+  const [page, setPage] = useState(1);
 
-  const fetchWallet = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const res = await PaymentService.getMyWallet();
-
-      // console.log("wallet resp", res.data);
-      // console.log("wlt dataaaa", res.data.data);
-
-      setWallet(res.data.data);
-      setTransactions(res.data.data.transactions || []);
-
-    } catch (err) {
-      setError(getErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  };
+  const hasActiveDateFilter = dateMode === "single" ? !!singleDate : !!(dateRange?.from && dateRange?.to);
 
   useEffect(() => {
-    fetchWallet();
-  }, []);
+    setPage(1);
+  }, [statusFilter, dateMode, dateRange, singleDate]);
 
-  const filtered =
-    filter === "all"
-      ? transactions
-      : transactions.filter((t) => t.status === filter);
+  const { startDate, endDate } = useMemo(() => {
+    if (dateMode === "single" && singleDate) {
+      return { startDate: startOfDay(singleDate).toISOString(), endDate: endOfDay(singleDate).toISOString() };
+    }
+    if (dateMode === "range" && dateRange?.from && dateRange?.to) {
+      return { startDate: startOfDay(dateRange.from).toISOString(), endDate: endOfDay(dateRange.to).toISOString() };
+    }
+    return { startDate: undefined, endDate: undefined };
+  }, [dateMode, dateRange, singleDate]);
 
-  const successCount = transactions.filter(
-    (t) => t.type === "payment" && t.status === "completed"
-  ).length;
+  const { wallet, transactions, pagination, loading, error, refetch } = useWallet({
+    page,
+    limit: 5,
+    status: statusFilter,
+    startDate,
+    endDate,
+  });
+
+  const clearDateFilter = () => {
+    setDateRange(undefined);
+    setSingleDate(undefined);
+  };
+
+  // Page-scoped counts (accurate summary counters need dedicated endpoints/aggregates —
+  // see note below the code)
+  const successCount = transactions.filter((t) => t.type === "payment" && t.status === "completed").length;
   const pendingCount = transactions.filter((t) => t.status === "pending").length;
   const failedCount = transactions.filter((t) => t.status === "failed").length;
 
-  if (loading) {
+  if (loading && !wallet) {
     return (
       <div className="flex items-center justify-center p-12">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -266,7 +196,7 @@ export default function UserWallet() {
     return (
       <div className="p-6 text-center space-y-3">
         <p className="text-destructive">{error}</p>
-        <Button variant="outline" onClick={fetchWallet}>
+        <Button variant="outline" onClick={refetch}>
           Try Again
         </Button>
       </div>
@@ -275,127 +205,129 @@ export default function UserWallet() {
 
   return (
     <div className="space-y-6 p-4 sm:p-6 w-full max-w-6xl mx-auto">
-      {/* Header */}
       <div className="flex items-center justify-between">
-
-        <Button variant="outline" size="sm" onClick={fetchWallet}>
-          <RefreshCw className="mr-5 w-4 h-4 mr-2" />
+        <Button variant="outline" size="sm" onClick={refetch}>
+          <RefreshCw className="w-4 h-4 mr-2" />
           Refresh
         </Button>
       </div>
 
-      {/* Summary Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {/* Total Spent */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Spent
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-
           <CardContent>
-            <div className="text-2xl font-bold">
-              {formatAmount(wallet?.totalSpent ?? 0)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Lifetime payments
-            </p>
+            <div className="text-2xl font-bold">{formatAmount(wallet?.totalSpent ?? 0)}</div>
+            <p className="text-xs text-muted-foreground">Lifetime payments</p>
           </CardContent>
         </Card>
 
-        {/* Successful */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Successful
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Successful (this page)</CardTitle>
             <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-
           <CardContent>
-            <div className="text-2xl font-bold">
-              {successCount}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Payments completed
-            </p>
+            <div className="text-2xl font-bold">{successCount}</div>
+            <p className="text-xs text-muted-foreground">Payments completed</p>
           </CardContent>
         </Card>
 
-        {/* Pending */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Pending
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Pending (this page)</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-
           <CardContent>
-            <div className="text-2xl font-bold">
-              {pendingCount}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Awaiting confirmation
-            </p>
+            <div className="text-2xl font-bold">{pendingCount}</div>
+            <p className="text-xs text-muted-foreground">Awaiting confirmation</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Transaction History */}
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between flex-wrap gap-3">
-            <CardTitle className="text-base font-semibold">
-              Transaction History
-            </CardTitle>
-            {/* Filter Pills */}
+            <CardTitle className="text-base font-semibold">Transaction History</CardTitle>
             <div className="flex gap-1.5">
-              {(["all", "completed", "pending", "failed"] as const).map(
-                (f) => (
-                  <button
-                    key={f}
-                    onClick={() => setFilter(f)}
-                    className={`px-3 py-1 rounded-full text-xs font-medium transition-colors capitalize ${filter === f
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:bg-accent"
-                      }`}
-                  >
-                    {f}
-                  </button>
-                )
-              )}
+              {(["all", "completed", "pending", "failed"] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setStatusFilter(f)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors capitalize ${
+                    statusFilter === f ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"
+                  }`}
+                >
+                  {f}
+                </button>
+              ))}
             </div>
           </div>
+
+          <div className="pt-3">
+            <DateFilterBar
+              mode={dateMode}
+              onModeChange={(m) => {
+                setDateMode(m);
+                if (m === "single") setDateRange(undefined);
+                else setSingleDate(undefined);
+              }}
+              range={dateRange}
+              onRangeChange={setDateRange}
+              single={singleDate}
+              onSingleChange={setSingleDate}
+              onClear={clearDateFilter}
+              hasActiveFilter={hasActiveDateFilter}
+            />
+          </div>
         </CardHeader>
+
         <CardContent className="space-y-2">
-          {filtered.length === 0 ? (
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="w-6 h-6 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : transactions.length === 0 ? (
             <div className="text-center py-12">
               <Wallet className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
               <p className="text-muted-foreground text-sm">
-                {filter === "all"
+                {statusFilter === "all" && !hasActiveDateFilter
                   ? "No transactions yet. Make your first payment to get started."
-                  : `No ${filter} transactions.`}
+                  : "No transactions match the selected filters."}
               </p>
             </div>
           ) : (
-            filtered.map((tx) => <TransactionRow key={tx.id} tx={tx} />)
+            <>
+              <div className="space-y-2">
+                {transactions.map((tx) => (
+                  <TransactionRow key={tx.id} tx={tx} />
+                ))}
+              </div>
+
+              <div className="pt-4 flex flex-col items-center gap-2">
+                <p className="text-xs text-muted-foreground">
+                  Showing {(pagination.page - 1) * pagination.limit + 1}–
+                  {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total}
+                </p>
+                <TxPagination page={pagination.page} totalPages={pagination.totalPages} onPageChange={setPage} />
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
 
-      {failedCount > 0 && (
+      {/* {failedCount > 0 && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 flex items-start gap-2 dark:border-red-900 dark:bg-red-950/30 dark:text-red-400">
           <XCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
           <p>
-            You have {failedCount} failed transaction
-            {failedCount > 1 ? "s" : ""}. If money was deducted, it will be
+            You have {failedCount} failed transaction{failedCount > 1 ? "s" : ""} on this page. If money was deducted, it will be
             auto-refunded within 5–7 business days.
           </p>
         </div>
-      )}
+      )} */}
+
     </div>
   );
 }
