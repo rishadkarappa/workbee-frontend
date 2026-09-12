@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { Button } from "@/components/ui/button";
+import { AuthHelper } from "@/utils/auth-helper";
 
 export function SiteHeader() {
   const { setTheme } = useTheme();
@@ -74,7 +75,7 @@ export function SiteHeader() {
           </DropdownMenu>
 
           {/* Notifications */}
-          <WorkerNotificationDropdown />
+          {!AuthHelper.isAdmin() && <WorkerNotificationDropdown />}
 
         </div>
       </div>

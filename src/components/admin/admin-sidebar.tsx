@@ -45,26 +45,26 @@ const items = [
     route: "/admin/dashboard/new-appliers",
     icon: UserPlus,
   },
-  {
-    title: "Work Management",
-    route: "/admin/dashboard/work",
-    icon: Briefcase, 
-  },
-  {
-    title: "Customer Feedbacks",
-    route: "/admin/dashboard/feedbacks",
-    icon: MessageSquare, 
-  },
+  // {
+  //   title: "Work Management",
+  //   route: "/admin/dashboard/work",
+  //   icon: Briefcase, 
+  // },
+  // {
+  //   title: "Customer Feedbacks",
+  //   route: "/admin/dashboard/feedbacks",
+  //   icon: MessageSquare, 
+  // },
   {
     title: "Disputes",
     route: "/admin/dashboard/dispute-resolution",
     icon: ShieldAlert, 
   },
-  {
-    title: "Wallet",
-    route: "/admin/dashboard/wallet",
-    icon: Wallet,
-  },
+  // {
+  //   title: "Wallet",
+  //   route: "/admin/dashboard/wallet",
+  //   icon: Wallet,
+  // },
   {
     title: "Payments",
     route: "/admin/dashboard/payments",

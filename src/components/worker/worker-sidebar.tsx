@@ -39,11 +39,11 @@ const items = [
     route: "/worker/worker-dashboard/active-works",
     icon: HardHat,
   }, 
-  {
-    title: "Notifications",
-    route: "/worker/worker-dashboard/new-appliers",
-    icon: Bell,
-  },
+  // {
+  //   title: "Notifications",
+  //   route: "/worker/worker-dashboard/new-appliers",
+  //   icon: Bell,
+  // },
   {
     title: "Feedbacks",
     route: "/worker/worker-dashboard/feedbacks",
