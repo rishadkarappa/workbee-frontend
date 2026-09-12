@@ -19,6 +19,7 @@ import { getErrorMessage } from "@/utils/error-helper";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -60,6 +61,15 @@ interface Applier {
   status: string;
   createdAt?: Date;
 }
+
+type StatusFilter = 'all' | 'pending' | 'approved' | 'rejected';
+
+const STATUS_TABS: { value: StatusFilter; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'approved', label: 'Approved' },
+  { value: 'rejected', label: 'Rejected' },
+];
 
 // Status Badge
 const ApplicationStatusBadge = ({
@@ -590,6 +600,7 @@ export default function NewAppliers() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [totalPages, setTotalPages] = useState(0);
@@ -603,10 +614,10 @@ export default function NewAppliers() {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  // Reset page when search changes
+  // Reset to page 1 whenever search or status filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearch]);
+  }, [debouncedSearch, statusFilter]);
 
   // Fetch appliers
   const getNewAppliers = useCallback(async () => {
@@ -616,7 +627,8 @@ export default function NewAppliers() {
       const response = await WorkService.getAppliers(
         currentPage,
         itemsPerPage,
-        debouncedSearch
+        debouncedSearch,
+        statusFilter
       );
 
       if (response.data.success) {
@@ -632,7 +644,7 @@ export default function NewAppliers() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, itemsPerPage, debouncedSearch]);
+  }, [currentPage, itemsPerPage, debouncedSearch, statusFilter]);
 
   useEffect(() => {
     getNewAppliers();
@@ -652,7 +664,7 @@ export default function NewAppliers() {
   };
 
   // Initial loading
-  if (loading && appliers.length === 0) {
+  if (loading && appliers.length === 0 && !searchTerm && statusFilter === 'all') {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center text-center">
@@ -668,7 +680,18 @@ export default function NewAppliers() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-7xl space-y-4">
+        {/* Status Tabs */}
+        <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
+          <TabsList className="w-full sm:w-fit">
+            {STATUS_TABS.map((tab) => (
+              <TabsTrigger key={tab.value} value={tab.value} className="flex-1 sm:flex-none">
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+
         <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
           {/* Toolbar */}
           <div className="flex flex-wrap items-center justify-between gap-4 border-b p-4">
@@ -797,7 +820,9 @@ export default function NewAppliers() {
                         </p>
 
                         <p className="mt-1 text-sm text-muted-foreground">
-                          Try changing your search.
+                          {searchTerm || statusFilter !== 'all'
+                            ? "Try changing your search or filter."
+                            : "No applications yet."}
                         </p>
                       </div>
                     </td>

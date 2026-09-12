@@ -53,18 +53,18 @@ interface PostWorkDto {
 }
 
 export interface WorkerAssignedWorksParams {
-  page?: number;
-  limit?: number;
-  bucket?: 'all' | 'assigned' | 'started' | 'ongoing' | 'completed';
-  startDate?: string;
-  endDate?: string;
+    page?: number;
+    limit?: number;
+    bucket?: 'all' | 'assigned' | 'started' | 'ongoing' | 'completed';
+    startDate?: string;
+    endDate?: string;
 }
 
 export const WorkService = {
 
-    getAppliers: (page: number, limit: number, search: string) => {
+    getAppliers: (page: number,limit: number,search: string,status: 'all' | 'pending' | 'approved' | 'rejected' = 'all') => {
         return api.get(WORK_ENDPOINTS.GET_APPLIERS, {
-            params: { page, limit, search }
+            params: { page, limit, search, status }
         });
     },
 
