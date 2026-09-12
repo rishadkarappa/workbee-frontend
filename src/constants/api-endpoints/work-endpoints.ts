@@ -7,6 +7,7 @@ export const WORK_ENDPOINTS = {
     APPLY_WORKER: "/work/apply-worker",
     BLOCK_WORKER: (id: string) => `/work/block-worker/${id}`,
     GET_MY_WORKS: "/work/get-my-works",
+    GET_LIVE_WORKS: "/work/get-live-works",
     UPDATE_WORK: (workId: string) => `/work/update-work/${workId}`,
     DELETE_MY_WORK: (workId: string) => `/work/delete-my-work/${workId}`,
     GET_WORKER_ASSIGNED_WORKS: "/work/worker-assigned-works",

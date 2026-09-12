@@ -60,9 +60,21 @@ export interface WorkerAssignedWorksParams {
     endDate?: string;
 }
 
+export interface MyWorksParams {
+  page?: number;
+  limit?: number;
+  bucket?: 'all' | 'active' | 'completed' | 'pending' | 'cancelled';
+}
+
+export interface LiveWorksParams {
+  page?: number;
+  limit?: number;
+  bucket?: 'all' | 'assigned' | 'started' | 'ongoing';
+}
+
 export const WorkService = {
 
-    getAppliers: (page: number,limit: number,search: string,status: 'all' | 'pending' | 'approved' | 'rejected' = 'all') => {
+    getAppliers: (page: number, limit: number, search: string, status: 'all' | 'pending' | 'approved' | 'rejected' = 'all') => {
         return api.get(WORK_ENDPOINTS.GET_APPLIERS, {
             params: { page, limit, search, status }
         });
@@ -115,8 +127,11 @@ export const WorkService = {
     },
 
     // - User
-    getMyWorks: () => {
-        return api.get(WORK_ENDPOINTS.GET_MY_WORKS);
+    getMyWorks: (params?: MyWorksParams) => {
+        return api.get(WORK_ENDPOINTS.GET_MY_WORKS, { params });
+    },
+    getLiveWorks: (params?: LiveWorksParams) => {
+        return api.get(WORK_ENDPOINTS.GET_LIVE_WORKS, { params });
     },
 
     updateWork: (workId: string, workData: UpdateWorkDto) => {
